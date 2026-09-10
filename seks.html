@@ -24,7 +24,7 @@
         }
 
         body {
-            background: var(--bg);
+            background: #0a0a0a;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -36,7 +36,14 @@
         }
 
         .game-container {
-            background: var(--panel);
+            background-color: #1a1a1a;
+            background-image: 
+                linear-gradient(rgba(10, 10, 10, 0.82), rgba(10, 10, 10, 0.92)),
+                url('Fon.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
             width: 100%;
             height: 100vh;
             display: flex;
@@ -58,7 +65,8 @@
             padding: 10px 15px;
             flex-shrink: 0;
             border-bottom: 1px solid var(--border);
-            background: linear-gradient(180deg, #2a2a1a, #1a1a10);
+            background: rgba(42, 42, 26, 0.7);
+            backdrop-filter: blur(4px);
             z-index: 10;
         }
 
@@ -68,7 +76,7 @@
             letter-spacing: 2px;
             color: var(--text);
             text-transform: uppercase;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
         .score-board {
@@ -78,12 +86,13 @@
             padding: 8px 15px;
             flex-shrink: 0;
             border-bottom: 1px solid var(--border);
-            background: rgba(28, 28, 14, 0.5);
+            background: rgba(28, 28, 14, 0.6);
+            backdrop-filter: blur(4px);
             z-index: 10;
         }
 
         .sexpah, .current-tool {
-            background: transparent;
+            background: rgba(37, 37, 21, 0.8);
             padding: 5px 15px;
             border-radius: 8px;
             border: 1px solid var(--border);
@@ -184,7 +193,8 @@
             border-radius: 10px;
             padding: 8px 6px;
             width: 100%;
-            background: transparent;
+            background: rgba(30, 30, 14, 0.5);
+            backdrop-filter: blur(4px);
         }
 
         .love-vertical-bg {
@@ -241,6 +251,8 @@
             will-change: transform;
             pointer-events: auto;
             z-index: 15;
+            background: rgba(30, 20, 15, 0.5);
+            backdrop-filter: blur(3px);
         }
 
         .pahom-hitbox.float {
@@ -278,7 +290,6 @@
             animation: blowupAnimation 4.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
         }
 
-        /* Максимально плавная пульсация — мягкие переходы между состояниями */
         @keyframes blowupAnimation {
             0%   { transform: scale(1); }
             6%   { transform: scale(1.15); }
@@ -323,6 +334,7 @@
             font-size: 0.85rem;
             font-weight: 700;
             white-space: nowrap;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
         .cooldown-indicator {
@@ -331,6 +343,8 @@
             color: #b0a070;
             font-size: 0.85rem;
             flex-shrink: 0;
+            background: rgba(30, 30, 14, 0.5);
+            backdrop-filter: blur(4px);
         }
 
         .notification {
@@ -347,7 +361,6 @@
             to { box-shadow: 0 0 35px #e67e22; }
         }
 
-        /* Плавная анимация разлёта смайликов */
         .flying-emoji {
             position: fixed;
             font-size: 2rem;
@@ -388,11 +401,13 @@
             opacity: 1;
             color: var(--text);
             transform: scale(1.1);
+            filter: drop-shadow(0 0 8px rgba(180, 150, 90, 0.6));
         }
 
         .tab-btn svg {
             width: 28px;
             height: 28px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
         }
 
         .tab-btn.home-btn svg {
@@ -430,7 +445,8 @@
             border-radius: 6px;
             padding: 10px 12px;
             margin-bottom: 8px;
-            background: transparent;
+            background: rgba(30, 30, 14, 0.6);
+            backdrop-filter: blur(4px);
             transition: all 0.4s;
             cursor: pointer;
             animation: itemIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
@@ -453,6 +469,7 @@
         .shop-item:hover {
             border-color: #6a6a3a;
             transform: translateX(4px);
+            background: rgba(45, 45, 26, 0.7);
         }
 
         .shop-item:active {
@@ -461,7 +478,7 @@
 
         .shop-item.selected {
             border-color: var(--gold);
-            background: rgba(184, 150, 46, 0.1);
+            background: rgba(184, 150, 46, 0.2);
         }
 
         .shop-item-info {
@@ -520,7 +537,8 @@
             border-radius: 6px;
             padding: 12px;
             margin-bottom: 8px;
-            background: rgba(184, 150, 46, 0.05);
+            background: rgba(184, 150, 46, 0.15);
+            backdrop-filter: blur(4px);
         }
 
         .inventory-item-info {
@@ -559,7 +577,8 @@
 
         .shop-tab {
             flex: 1;
-            background: transparent;
+            background: rgba(30, 30, 14, 0.6);
+            backdrop-filter: blur(4px);
             border: 1px solid var(--border);
             color: var(--text);
             padding: 8px;
@@ -572,7 +591,7 @@
 
         .shop-tab.active {
             border-color: var(--gold);
-            background: rgba(184, 150, 46, 0.1);
+            background: rgba(184, 150, 46, 0.25);
         }
 
         .loading-screen {
@@ -880,7 +899,6 @@
                 }
             }
 
-            /* Плавная анимация через requestAnimationFrame */
             function animateEmoji(emoji, startX, startY, burstX, burstY, fallY, rotation, delay) {
                 const duration = 2500;
                 const startTime = performance.now() + delay;
