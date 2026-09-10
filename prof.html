@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ПРОФИЛЬ — кликер Пахома</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg: #0a0a0a;
+            --panel: #1a1a1a;
+            --border: #4a4a2a;
+            --text: #c4b08a;
+            --accent: #8a7a5a;
+            --gold: #b8962e;
+            --red: #c0392b;
+        }
+
+        body {
+            background: var(--bg);
+            background-image: radial-gradient(circle at 30% 20%, #1a1a1a, #050505);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            touch-action: manipulation;
+            overflow: hidden;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeOut 0.8s ease 2.5s forwards;
+            pointer-events: none;
+        }
+
+        .loading-circle {
+            width: 100px;
+            height: 100px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: textGlow 1.5s ease-in-out infinite;
+        }
+
+        @keyframes textGlow {
+            0%, 100% { text-shadow: 0 0 5px rgba(184, 150, 46, 0.3); }
+            50% { text-shadow: 0 0 20px rgba(184, 150, 46, 0.8); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden; }
+        }
+
+        .profile-container {
+            background: var(--panel);
+            background-image: linear-gradient(160deg, #222222, #111111);
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            opacity: 0;
+            animation: profileAppear 0.8s ease-out 2.5s forwards;
+        }
+
+        @keyframes profileAppear {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, #2a2a1a, #1a1a10);
+            width: 100%;
+            position: relative;
+        }
+
+        .header-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            color: var(--text);
+            text-transform: uppercase;
+            margin: 0 auto;
+        }
+
+        .settings-btn {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+            z-index: 20;
+        }
+
+        .settings-btn:hover {
+            transform: translateY(-50%) rotate(45deg);
+        }
+
+        .profile-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid var(--gold);
+            background: #252515;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-nickname {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text);
+            transition: all 0.3s;
+        }
+
+        .profile-ip {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+
+        .profile-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .stat-item {
+            text-align: center;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.85rem;
+            animation: statAppear 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .stat-item:nth-child(1) { animation-delay: 0.1s; }
+        .stat-item:nth-child(2) { animation-delay: 0.2s; }
+        .stat-item:nth-child(3) { animation-delay: 0.3s; }
+
+        @keyframes statAppear {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .tabs-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 30px 80px;
+            flex-shrink: 0;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--accent);
+            opacity: 0.6;
+            transition: all 0.3s;
+            padding: 5px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+        }
+
+        .tab-btn.active {
+            opacity: 1;
+            color: var(--text);
+            transform: scale(1.1);
+        }
+
+        .tab-btn svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .tab-btn.home-btn svg {
+            width: 36px;
+            height: 36px;
+        }
+
+        .settings-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+        }
+
+        .settings-overlay.show {
+            display: flex;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .settings-box {
+            background: #24241a;
+            border-radius: 16px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            border: 2px solid var(--gold);
+            animation: modalSlideIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        @keyframes modalSlideIn {
+            from { transform: scale(0.8) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .settings-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text);
+            text-align: center;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .settings-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .settings-tab {
+            flex: 1;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+
+        .settings-tab.active {
+            border-color: var(--gold);
+            background: rgba(184, 150, 46, 0.1);
+        }
+
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .avatar-option {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+
+        .avatar-option:hover {
+            border-color: var(--gold);
+            transform: scale(1.1);
+        }
+
+        .avatar-option.selected {
+            border-color: var(--gold);
+            background: rgba(184, 150, 46, 0.2);
+            transform: scale(1.1);
+        }
+
+        .upload-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+
+        .upload-btn:hover {
+            background: rgba(74, 74, 58, 0.5);
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            background: #1a1a10;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 10px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .modal-input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 10px rgba(184, 150, 46, 0.3);
+        }
+
+        .modal-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+
+        .modal-btn:hover {
+            background: rgba(74, 74, 58, 0.5);
+        }
+
+        .error-msg {
+            color: #e74c3c;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-circle"></div>
+        <div class="loading-text">Загрузка профиля</div>
+    </div>
+
+    <div id="nicknameModal" class="settings-overlay">
+        <div class="settings-box">
+            <div class="settings-title">Создание легенды</div>
+            <p style="color: #aaa; font-size: 0.8rem; margin-bottom: 15px; text-align: center;">Только латиница и русские буквы, 2-15 символов</p>
+            <input type="text" id="nicknameInput" class="modal-input" maxlength="15" placeholder="Введите ник" autocomplete="off">
+            <div class="error-msg" id="nicknameError"></div>
+            <button id="nicknameSubmit" class="modal-btn" type="button">Подтвердить</button>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="settings-overlay">
+        <div class="settings-box">
+            <div class="settings-title">Настройка профиля</div>
+            <div class="settings-tabs">
+                <button id="nameTab" class="settings-tab active">Имя</button>
+                <button id="avatarTab" class="settings-tab">Аватарка</button>
+            </div>
+            <div id="namePanel">
+                <input type="text" id="newNameInput" class="modal-input" maxlength="15" placeholder="Новый ник">
+                <div class="error-msg" id="settingsError"></div>
+                <button id="confirmNameBtn" class="modal-btn" style="width:100%;">Сменить</button>
+            </div>
+            <div id="avatarPanel" style="display:none;">
+                <div class="avatar-grid" id="avatarGrid">
+                    <button class="avatar-option" data-emoji="👤">👤</button>
+                    <button class="avatar-option" data-emoji="👴">👴</button>
+                    <button class="avatar-option" data-emoji="🐍">🐍</button>
+                    <button class="avatar-option" data-emoji="🌲">🌲</button>
+                    <button class="avatar-option" data-emoji="🥢">🥢</button>
+                    <button class="avatar-option" data-emoji="🔧">🔧</button>
+                    <button class="avatar-option" data-emoji="🪏">🪏</button>
+                    <button class="avatar-option" data-emoji="🎖️">🎖️</button>
+                </div>
+                <button class="upload-btn" id="uploadAvatarBtn">Загрузить из галереи</button>
+                <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+            </div>
+            <button id="closeSettings" class="modal-btn" style="margin-top: 15px; width:100%;">Закрыть</button>
+        </div>
+    </div>
+
+    <div class="profile-container" id="profileContainer">
+        <div class="header">
+            <div class="header-title">ПРОФИЛЬ</div>
+            <button class="settings-btn" id="settingsBtn">⚙️</button>
+        </div>
+        <div class="profile-content">
+            <div class="profile-avatar" id="profileAvatar">👤</div>
+            <div class="profile-nickname" id="profileNickname">Игрок</div>
+            <div class="profile-ip" id="profileIP">0.0.0.0</div>
+            <div class="profile-stats">
+                <div class="stat-item">Кликов всего: <span id="totalClicks">0</span></div>
+                <div class="stat-item">Секспахомов: <span id="profileSexpah">0</span></div>
+                <div class="stat-item">Перевозбуждений: <span id="totalOverexcites">0</span></div>
+            </div>
+        </div>
+
+        <div class="tabs-bar">
+            <a href="seks.html" class="tab-btn" title="Магазин">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            </a>
+            <a href="seks.html" class="tab-btn home-btn" title="Главная">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </a>
+            <a href="prof.html" class="tab-btn active" title="Профиль">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const $ = (id) => document.getElementById(id);
+            
+            const loadingScreen = $('loadingScreen');
+            const nicknameModal = $('nicknameModal');
+            const nicknameInput = $('nicknameInput');
+            const nicknameSubmit = $('nicknameSubmit');
+            const nicknameError = $('nicknameError');
+            
+            const settingsModal = $('settingsModal');
+            const settingsBtn = $('settingsBtn');
+            const closeSettings = $('closeSettings');
+            const nameTab = $('nameTab');
+            const avatarTab = $('avatarTab');
+            const namePanel = $('namePanel');
+            const avatarPanel = $('avatarPanel');
+            const newNameInput = $('newNameInput');
+            const confirmNameBtn = $('confirmNameBtn');
+            const settingsError = $('settingsError');
+            const avatarGrid = $('avatarGrid');
+            const uploadAvatarBtn = $('uploadAvatarBtn');
+            const avatarUpload = $('avatarUpload');
+            
+            const profileNickname = $('profileNickname');
+            const profileIP = $('profileIP');
+            const profileAvatar = $('profileAvatar');
+            const totalClicksSpan = $('totalClicks');
+            const profileSexpah = $('profileSexpah');
+            const totalOverexcitesSpan = $('totalOverexcites');
+
+            let nickname = localStorage.getItem('pahomNickname') || '';
+            let playerIP = localStorage.getItem('pahomIP') || '';
+            let avatarData = localStorage.getItem('pahomAvatar') || '';
+            
+            const totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0');
+            const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0');
+            const totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0');
+
+            if (!sessionStorage.getItem('pahomProfileLoaded')) {
+                setTimeout(function() {
+                    if (loadingScreen) {
+                        loadingScreen.style.display = 'none';
+                    }
+                    sessionStorage.setItem('pahomProfileLoaded', 'true');
+                }, 2500);
+            } else {
+                if (loadingScreen) {
+                    loadingScreen.style.display = 'none';
+                }
+                document.querySelector('.profile-container').style.animation = 'none';
+                document.querySelector('.profile-container').style.opacity = '1';
+            }
+
+            function updateProfile() {
+                profileNickname.textContent = nickname || 'Игрок';
+                profileIP.textContent = playerIP || '0.0.0.0';
+                totalClicksSpan.textContent = totalClicks;
+                profileSexpah.textContent = sexpah;
+                totalOverexcitesSpan.textContent = totalOverexcites;
+                
+                if (avatarData) {
+                    profileAvatar.innerHTML = '<img src="' + avatarData + '" alt="аватар" style="width:100%;height:100%;object-fit:cover;">';
+                } else {
+                    profileAvatar.textContent = '👤';
+                }
+            }
+
+            function generateIP() {
+                return Math.floor(Math.random() * 255) + '.' + Math.floor(Math.random() * 255) + '.' + Math.floor(Math.random() * 255) + '.' + Math.floor(Math.random() * 255);
+            }
+
+            function submitNickname() {
+                const newName = nicknameInput.value.trim();
+                
+                if (!/^[a-zA-Zа-яА-Я]{2,15}$/.test(newName)) {
+                    nicknameError.textContent = 'Только латиница и русские буквы, 2-15 символов!';
+                    nicknameError.style.display = 'block';
+                    return;
+                }
+
+                nickname = newName;
+                localStorage.setItem('pahomNickname', nickname);
+                
+                playerIP = generateIP();
+                localStorage.setItem('pahomIP', playerIP);
+
+                nicknameError.style.display = 'none';
+                nicknameModal.classList.remove('show');
+                updateProfile();
+            }
+
+            nicknameSubmit.addEventListener('click', submitNickname);
+            
+            nicknameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') submitNickname();
+            });
+
+            settingsBtn.addEventListener('click', function() {
+                settingsModal.classList.add('show');
+            });
+
+            closeSettings.addEventListener('click', function() {
+                settingsModal.classList.remove('show');
+            });
+
+            nameTab.addEventListener('click', function() {
+                nameTab.classList.add('active');
+                avatarTab.classList.remove('active');
+                namePanel.style.display = 'block';
+                avatarPanel.style.display = 'none';
+            });
+
+            avatarTab.addEventListener('click', function() {
+                avatarTab.classList.add('active');
+                nameTab.classList.remove('active');
+                avatarPanel.style.display = 'block';
+                namePanel.style.display = 'none';
+            });
+
+            confirmNameBtn.addEventListener('click', function() {
+                const newName = newNameInput.value.trim();
+                if (!/^[a-zA-Zа-яА-Я]{2,15}$/.test(newName)) {
+                    settingsError.textContent = 'Только латиница и русские буквы, 2-15 символов!';
+                    settingsError.style.display = 'block';
+                    return;
+                }
+                nickname = newName;
+                localStorage.setItem('pahomNickname', nickname);
+                newNameInput.value = '';
+                settingsError.style.display = 'none';
+                updateProfile();
+                settingsModal.classList.remove('show');
+            });
+
+            newNameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    confirmNameBtn.click();
+                }
+            });
+
+            avatarGrid.querySelectorAll('.avatar-option').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    avatarGrid.querySelectorAll('.avatar-option').forEach(function(b) {
+                        b.classList.remove('selected');
+                    });
+                    btn.classList.add('selected');
+                    avatarData = '';
+                    localStorage.setItem('pahomAvatar', '');
+                    profileAvatar.textContent = btn.getAttribute('data-emoji');
+                });
+            });
+
+            uploadAvatarBtn.addEventListener('click', function() {
+                avatarUpload.click();
+            });
+
+            avatarUpload.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        avatarData = event.target.result;
+                        localStorage.setItem('pahomAvatar', avatarData);
+                        updateProfile();
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            if (!nickname) {
+                nicknameModal.classList.add('show');
+                setTimeout(function() {
+                    nicknameInput.focus();
+                }, 600);
+            } else {
+                updateProfile();
+            }
+        })();
+    </script>
+</body>
+</html>

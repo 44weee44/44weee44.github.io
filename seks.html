@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ГЛАВНАЯ — кликер Пахома</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg: #0a0a0a;
+            --panel: #1a1a1a;
+            --border: #4a4a2a;
+            --text: #c4b08a;
+            --accent: #8a7a5a;
+            --gold: #b8962e;
+            --red: #c0392b;
+        }
+
+        body {
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            touch-action: manipulation;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: var(--panel);
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            opacity: 0;
+            animation: containerAppear 1.5s ease-out 2.5s forwards;
+        }
+
+        @keyframes containerAppear {
+            0% { opacity: 0; transform: scale(0.98); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 15px;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, #2a2a1a, #1a1a10);
+            z-index: 10;
+        }
+
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--text);
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 15px;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border);
+            background: rgba(28, 28, 14, 0.5);
+            z-index: 10;
+        }
+
+        .sexpah, .current-tool {
+            background: transparent;
+            padding: 5px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text);
+            transition: all 0.3s;
+        }
+
+        .current-tool {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+            color: #b0a070;
+        }
+
+        .content-area {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            overflow: hidden;
+            perspective: 1200px;
+        }
+
+        .page {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            backface-visibility: hidden;
+            transform-style: preserve-3d;
+        }
+
+        .page.active {
+            display: block;
+            animation: pageInRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .page.exit-right {
+            display: block;
+            animation: pageOutRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .page.exit-left {
+            display: block;
+            animation: pageOutLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .page.active-left {
+            display: block;
+            animation: pageInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes pageInRight {
+            0% { opacity: 0; transform: translateX(100%); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pageOutRight {
+            0% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(-100%); }
+        }
+
+        @keyframes pageInLeft {
+            0% { opacity: 0; transform: translateX(-100%); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes pageOutLeft {
+            0% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(100%); }
+        }
+
+        .main-area {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            gap: 8px;
+            position: relative;
+            padding: 10px;
+        }
+
+        .love-panel {
+            display: flex;
+            flex: 0 0 50px;
+            flex-shrink: 0;
+        }
+
+        .love-scale-vertical {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 6px;
+            width: 100%;
+            background: transparent;
+        }
+
+        .love-vertical-bg {
+            width: 20px;
+            flex: 1;
+            background: #0f0f00;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .love-vertical-fill {
+            width: 100%;
+            height: 0%;
+            background: linear-gradient(0deg, #8b1a1a, #c0392b);
+            transition: height 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 0 15px #c0392b;
+        }
+
+        .love-vertical-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text);
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            letter-spacing: 1px;
+        }
+
+        .pahom-hitbox {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            border: 2px solid var(--gold);
+            position: absolute;
+            left: calc(50% + 10px);
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 30px rgba(180, 150, 60, 0.3);
+            animation: floatAnimation 5s ease-in-out infinite;
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.5s ease;
+        }
+
+        @keyframes floatAnimation {
+            0%, 100% { transform: translate(-50%, -50%) translateY(0px) scale(1); }
+            50% { transform: translate(-50%, -50%) translateY(-6px) scale(1.01); }
+        }
+
+        .pahom-hitbox:hover {
+            box-shadow: 0 0 50px rgba(180, 150, 60, 0.6), 0 0 0 3px rgba(140, 110, 60, 0.4);
+        }
+
+        .pahom-hitbox:active {
+            transform: translate(-50%, -50%) scale(0.92);
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .pahom-face {
+            font-size: 5rem;
+            pointer-events: none;
+            animation: glowPulse 3s ease-in-out infinite;
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(140, 110, 60, 0.6)); }
+            50% { filter: drop-shadow(0 0 25px rgba(180, 150, 90, 0.9)); }
+        }
+
+        .pahom-hitbox:active .pahom-face {
+            transform: scale(0.88);
+            transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .click-power {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--accent);
+            font-size: 0.85rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .cooldown-indicator {
+            text-align: center;
+            padding: 6px;
+            color: #b0a070;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .notification {
+            background: #6b1a1a;
+            color: #fff;
+            text-align: center;
+            padding: 8px;
+            flex-shrink: 0;
+            animation: pulseGlow 0.7s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { box-shadow: 0 0 15px #c0392b; }
+            to { box-shadow: 0 0 35px #e67e22; }
+        }
+
+        .hidden { display: none !important; }
+
+        .tabs-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 30px 80px;
+            flex-shrink: 0;
+            background: transparent;
+            border-top: none;
+            z-index: 10;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--accent);
+            opacity: 0.6;
+            transition: all 0.3s;
+            padding: 5px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tab-btn.active {
+            opacity: 1;
+            color: var(--text);
+            transform: scale(1.1);
+        }
+
+        .tab-btn svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .tab-btn.home-btn svg {
+            width: 36px;
+            height: 36px;
+        }
+
+        .shop-panel {
+            padding: 10px;
+            overflow-y: auto;
+        }
+
+        .shop-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: transparent;
+            transition: all 0.4s;
+            cursor: pointer;
+            animation: itemIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            opacity: 0;
+        }
+
+        .shop-item:nth-child(1) { animation-delay: 0.05s; }
+        .shop-item:nth-child(2) { animation-delay: 0.1s; }
+        .shop-item:nth-child(3) { animation-delay: 0.15s; }
+        .shop-item:nth-child(4) { animation-delay: 0.2s; }
+        .shop-item:nth-child(5) { animation-delay: 0.25s; }
+        .shop-item:nth-child(6) { animation-delay: 0.3s; }
+        .shop-item:nth-child(7) { animation-delay: 0.35s; }
+
+        @keyframes itemIn {
+            0% { opacity: 0; transform: translateX(-60px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+
+        .shop-item:hover {
+            border-color: #6a6a3a;
+            transform: translateX(4px);
+        }
+
+        .shop-item:active {
+            transform: scale(0.98);
+        }
+
+        .shop-item.selected {
+            border-color: var(--gold);
+            background: rgba(184, 150, 46, 0.1);
+        }
+
+        .shop-item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .shop-item img {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            background: #111;
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text);
+        }
+
+        .item-desc {
+            font-size: 0.75rem;
+            color: #b0a070;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeOut 1.5s ease 3s forwards;
+            pointer-events: none;
+        }
+
+        .loading-emoji {
+            font-size: 7rem;
+            animation: loadingAppear 2s ease-out both, loadingPulse 2s ease-in-out 2s infinite;
+        }
+
+        @keyframes loadingAppear {
+            0% { opacity: 0; transform: scale(0.3); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; visibility: hidden; }
+        }
+
+        @media (max-width: 400px) {
+            .pahom-hitbox { width: 170px; height: 170px; }
+            .pahom-face { font-size: 4rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-emoji">👴</div>
+    </div>
+
+    <div class="game-container">
+        <div class="header">
+            <div class="header-title" id="headerTitle">ГЛАВНАЯ</div>
+        </div>
+
+        <div class="score-board" id="scoreBoard">
+            <div class="sexpah">🔞 <span id="sexpahCount">0</span> секспахомов</div>
+            <div class="current-tool">
+                <span id="currentToolIcon">✋</span> <span id="currentToolName">Рука</span>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div id="homePanel" class="page active">
+                <div class="main-area">
+                    <div class="love-panel">
+                        <div class="love-scale-vertical">
+                            <div class="love-vertical-bg">
+                                <div id="loveVerticalFill" class="love-vertical-fill"></div>
+                            </div>
+                            <span class="love-vertical-label">ЛЮБОВЬ</span>
+                        </div>
+                    </div>
+                    <div id="pahomHitbox" class="pahom-hitbox">
+                        <div class="pahom-face">👴</div>
+                        <div class="click-power" id="clickPowerLabel">+1 за клик</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="shopPanel" class="page hidden">
+                <div class="shop-panel">
+                    <div class="shop-item" data-tool="hand">
+                        <div class="shop-item-info">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E✋%3C/text%3E%3C/svg%3E">
+                            <div class="item-info">
+                                <div class="item-name">Рука</div>
+                                <div class="item-desc">+1 за клик</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shop-item" data-tool="whip">
+                        <div class="shop-item-info">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E🐍%3C/text%3E%3C/svg%3E">
+                            <div class="item-info">
+                                <div class="item-name">Плетка</div>
+                                <div class="item-desc">+2 за клик · 500 секспахомов</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shop-item" data-tool="stick">
+                        <div class="shop-item-info">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E🥢%3C/text%3E%3C/svg%3E">
+                            <div class="item-info">
+                                <div class="item-name">Палка</div>
+                                <div class="item-desc">+3 за клик · 3500 секспахомов</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shop-item" data-tool="shank">
+                        <div class="shop-item-info">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E🔧%3C/text%3E%3C/svg%3E">
+                            <div class="item-info">
+                                <div class="item-name">Черенок</div>
+                                <div class="item-desc">+4 за клик · 25000 секспахомов</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shop-item" data-tool="shovel">
+                        <div class="shop-item-info">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E🪏%3C/text%3E%3C/svg%3E">
+                            <div class="item-info">
+                                <div class="item-name">Лопата</div>
+                                <div class="item-desc">+5 за клик · 55000 секспахомов</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shop-item" data-tool="commissar">
+                        <div class="shop-item-info">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E🎖️%3C/text%3E%3C/svg%3E">
+                            <div class="item-info">
+                                <div class="item-name">Замполит</div>
+                                <div class="item-desc">+6 за клик · 85000 секспахомов</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="shop-item" data-tool="drin">
+                        <div class="shop-item-info">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E🌲%3C/text%3E%3C/svg%3E">
+                            <div class="item-info">
+                                <div class="item-name">Дрын</div>
+                                <div class="item-desc">+10 за клик · 100000 секспахомов</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="cooldownMessage" class="cooldown-indicator">Давануть Пахома😍</div>
+        <div id="excitedNotification" class="notification hidden">🚨 ПАХОМ ПЕРЕВОЗБУДИЛСЯ!</div>
+
+        <div class="tabs-bar">
+            <button id="shopTab" class="tab-btn" title="Магазин">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            </button>
+            <button id="homeTab" class="tab-btn home-btn active" title="Главная">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </button>
+            <a href="prof.html" class="tab-btn" title="Профиль">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const $ = (id) => document.getElementById(id);
+            
+            const sexpahSpan = $('sexpahCount');
+            const loveVerticalFill = $('loveVerticalFill');
+            const pahomHitbox = $('pahomHitbox');
+            const cooldownDiv = $('cooldownMessage');
+            const excitedDiv = $('excitedNotification');
+            const currentToolIconSpan = $('currentToolIcon');
+            const currentToolNameSpan = $('currentToolName');
+            const clickPowerLabel = $('clickPowerLabel');
+            const headerTitle = $('headerTitle');
+            const loadingScreen = $('loadingScreen');
+            
+            const homePanel = $('homePanel');
+            const shopPanel = $('shopPanel');
+            const homeTab = $('homeTab');
+            const shopTab = $('shopTab');
+            
+            const shopItems = document.querySelectorAll('.shop-item');
+
+            let sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0');
+            let love = 0;
+            const MAX_LOVE = 300;
+            let totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0');
+            let totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0');
+            let currentTool = localStorage.getItem('pahomTool') || 'hand';
+
+            const tools = {
+                hand: { name: 'Рука', icon: '✋', clickPower: 1, requirement: 0 },
+                whip: { name: 'Плетка', icon: '🐍', clickPower: 2, requirement: 500 },
+                stick: { name: 'Палка', icon: '🥢', clickPower: 3, requirement: 3500 },
+                shank: { name: 'Черенок', icon: '🔧', clickPower: 4, requirement: 25000 },
+                shovel: { name: 'Лопата', icon: '🪏', clickPower: 5, requirement: 55000 },
+                commissar: { name: 'Замполит', icon: '🎖️', clickPower: 6, requirement: 85000 },
+                drin: { name: 'Дрын', icon: '🌲', clickPower: 10, requirement: 100000 }
+            };
+
+            let isCooldown = false;
+            let cooldownRemaining = 0;
+            let cooldownInterval = null;
+            let lastClickTime = Date.now();
+            let decayInterval = null;
+            let isAnimating = false;
+
+            function saveData() {
+                localStorage.setItem('pahomSexpah', sexpah);
+                localStorage.setItem('pahomClicks', totalClicks);
+                localStorage.setItem('pahomOverexcites', totalOverexcites);
+                localStorage.setItem('pahomTool', currentTool);
+            }
+
+            function updateUI() {
+                sexpahSpan.textContent = sexpah;
+                loveVerticalFill.style.height = Math.min(100, (love / MAX_LOVE) * 100) + '%';
+                excitedDiv.classList.toggle('hidden', love < MAX_LOVE);
+                
+                if (isCooldown) {
+                    cooldownDiv.textContent = '⏳ ' + cooldownRemaining + ' сек';
+                } else if (love >= MAX_LOVE) {
+                    cooldownDiv.textContent = '💔 Переполнена';
+                } else {
+                    cooldownDiv.textContent = 'Давануть Пахома😍';
+                }
+
+                const tool = tools[currentTool];
+                currentToolIconSpan.textContent = tool.icon;
+                currentToolNameSpan.textContent = tool.name;
+                clickPowerLabel.textContent = '+' + tool.clickPower + ' за клик';
+
+                shopItems.forEach(function(item) {
+                    const toolKey = item.getAttribute('data-tool');
+                    if (toolKey === currentTool) {
+                        item.classList.add('selected');
+                    } else {
+                        item.classList.remove('selected');
+                    }
+                });
+
+                saveData();
+            }
+
+            function startCooldown() {
+                if (isCooldown) return;
+                isCooldown = true;
+                cooldownRemaining = 10;
+                if (cooldownInterval) clearInterval(cooldownInterval);
+                cooldownInterval = setInterval(function() {
+                    cooldownRemaining--;
+                    if (cooldownRemaining <= 0) {
+                        clearInterval(cooldownInterval);
+                        cooldownInterval = null;
+                        isCooldown = false;
+                    }
+                    updateUI();
+                }, 1000);
+            }
+
+            function handleClick() {
+                if (isCooldown) return;
+                lastClickTime = Date.now();
+                totalClicks++;
+                sexpah += tools[currentTool].clickPower;
+                love = Math.min(MAX_LOVE, love + 5);
+                if (love >= MAX_LOVE) {
+                    totalOverexcites++;
+                    startCooldown();
+                }
+                updateUI();
+            }
+
+            function startDecayCheck() {
+                if (decayInterval) clearInterval(decayInterval);
+                decayInterval = setInterval(function() {
+                    if (!isCooldown && love > 0 && Date.now() - lastClickTime >= 500) {
+                        love = Math.max(0, love - 5);
+                        updateUI();
+                    }
+                }, 500);
+            }
+
+            function switchTab(tab) {
+                if (isAnimating) return;
+                isAnimating = true;
+
+                const currentPage = tab === 'home' ? shopPanel : homePanel;
+                const targetPage = tab === 'home' ? homePanel : shopPanel;
+
+                if (tab === 'shop') {
+                    currentPage.classList.add('exit-left');
+                    currentPage.classList.remove('active');
+                    
+                    setTimeout(function() {
+                        currentPage.classList.remove('exit-left');
+                        currentPage.classList.add('hidden');
+                        
+                        targetPage.classList.remove('hidden');
+                        targetPage.classList.add('active-left');
+                        
+                        setTimeout(function() {
+                            targetPage.classList.remove('active-left');
+                            targetPage.classList.add('active');
+                            isAnimating = false;
+                        }, 50);
+                    }, 550);
+                } else {
+                    currentPage.classList.add('exit-right');
+                    currentPage.classList.remove('active');
+                    
+                    setTimeout(function() {
+                        currentPage.classList.remove('exit-right');
+                        currentPage.classList.add('hidden');
+                        
+                        targetPage.classList.remove('hidden');
+                        targetPage.classList.add('active');
+                        
+                        isAnimating = false;
+                    }, 550);
+                }
+
+                homeTab.classList.remove('active');
+                shopTab.classList.remove('active');
+
+                if (tab === 'home') {
+                    homeTab.classList.add('active');
+                    headerTitle.textContent = 'ГЛАВНАЯ';
+                    $('scoreBoard').style.display = 'flex';
+                    cooldownDiv.style.display = 'block';
+                } else {
+                    shopTab.classList.add('active');
+                    headerTitle.textContent = 'МАГАЗИН';
+                    $('scoreBoard').style.display = 'flex';
+                    cooldownDiv.style.display = 'none';
+                    updateUI();
+                }
+            }
+
+            function selectTool(toolKey) {
+                if (currentTool !== toolKey && sexpah >= tools[toolKey].requirement) {
+                    currentTool = toolKey;
+                    updateUI();
+                }
+            }
+
+            function init() {
+                pahomHitbox.addEventListener('click', handleClick);
+                pahomHitbox.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    handleClick();
+                }, { passive: false });
+
+                homeTab.addEventListener('click', function() { switchTab('home'); });
+                shopTab.addEventListener('click', function() { switchTab('shop'); });
+                
+                shopItems.forEach(function(item) {
+                    item.addEventListener('click', function() {
+                        selectTool(item.getAttribute('data-tool'));
+                    });
+                });
+
+                startDecayCheck();
+                updateUI();
+
+                if (!sessionStorage.getItem('pahomLoaded')) {
+                    setTimeout(function() {
+                        if (loadingScreen) {
+                            loadingScreen.style.display = 'none';
+                        }
+                        sessionStorage.setItem('pahomLoaded', 'true');
+                    }, 3000);
+                } else {
+                    if (loadingScreen) {
+                        loadingScreen.style.display = 'none';
+                    }
+                    document.querySelector('.game-container').style.animation = 'none';
+                    document.querySelector('.game-container').style.opacity = '1';
+                }
+            }
+
+            init();
+        })();
+    </script>
+</body>
+</html>
