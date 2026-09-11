@@ -5,445 +5,114 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>ПРОФИЛЬ — кликер Пахома</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        :root { --bg:#0a0a0a; --panel:#1a1a1a; --border:#4a4a2a; --text:#c4b08a; --accent:#8a7a5a; --gold:#b8962e; --red:#c0392b; }
+        body { background:var(--bg); background-image:radial-gradient(circle at 30% 20%, #1a1a1a, #050505); min-height:100vh; display:flex; justify-content:center; align-items:center; font-family:'Segoe UI',Arial,sans-serif; margin:0; touch-action:manipulation; overflow:hidden; }
 
-        :root {
-            --bg: #0a0a0a;
-            --panel: #1a1a1a;
-            --border: #4a4a2a;
-            --text: #c4b08a;
-            --accent: #8a7a5a;
-            --gold: #b8962e;
-            --red: #c0392b;
-        }
+        .loading-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#0a0a0a; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:2000; animation:fadeOut 0.8s ease 2.5s forwards; pointer-events:none; }
+        .loading-circle { width:100px; height:100px; border:4px solid var(--border); border-top:4px solid var(--gold); border-radius:50%; animation:spin 1.5s linear infinite; margin-bottom:20px; }
+        @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
+        .loading-text { font-size:1.3rem; font-weight:800; color:var(--text); letter-spacing:2px; text-transform:uppercase; animation:textGlow 1.5s ease-in-out infinite; }
+        @keyframes textGlow { 0%,100% { text-shadow:0 0 5px rgba(184,150,46,0.3); } 50% { text-shadow:0 0 20px rgba(184,150,46,0.8); } }
+        @keyframes fadeOut { from { opacity:1; } to { opacity:0; visibility:hidden; } }
 
-        body {
-            background: var(--bg);
-            background-image: radial-gradient(circle at 30% 20%, #1a1a1a, #050505);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            touch-action: manipulation;
-            overflow: hidden;
-        }
+        .profile-container { background:var(--panel); background-image:linear-gradient(160deg, #222222, #111111); width:100%; height:100vh; display:flex; flex-direction:column; align-items:center; position:relative; opacity:0; animation:profileAppear 0.8s ease-out 2.5s forwards; }
+        @keyframes profileAppear { 0% { opacity:0; transform:translateY(20px); } 100% { opacity:1; transform:translateY(0); } }
 
-        .loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #0a0a0a;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            animation: fadeOut 0.8s ease 2.5s forwards;
-            pointer-events: none;
-        }
+        .header { display:flex; justify-content:space-between; align-items:center; padding:15px; flex-shrink:0; border-bottom:1px solid var(--border); background:linear-gradient(180deg, #2a2a1a, #1a1a10); width:100%; position:relative; }
+        .header-title { font-size:1.3rem; font-weight:800; letter-spacing:3px; color:var(--text); text-transform:uppercase; margin:0 auto; }
+        .settings-btn { position:absolute; right:15px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:var(--text); cursor:pointer; font-size:1.5rem; transition:transform 0.3s; z-index:20; }
+        .settings-btn:hover { transform:translateY(-50%) rotate(45deg); }
 
-        .loading-circle {
-            width: 100px;
-            height: 100px;
-            border: 4px solid var(--border);
-            border-top: 4px solid var(--gold);
-            border-radius: 50%;
-            animation: spin 1.5s linear infinite;
-            margin-bottom: 20px;
-        }
+        .stats-btn { position:absolute; right:55px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:var(--text); cursor:pointer; padding:5px; transition:all 0.3s; z-index:20; display:flex; align-items:center; justify-content:center; }
+        .stats-btn svg { width:24px; height:24px; filter:drop-shadow(0 0 4px rgba(184,150,46,0.4)); }
+        .stats-btn:hover { transform:translateY(-50%) scale(1.15); color:var(--gold); filter:drop-shadow(0 0 10px rgba(184,150,46,0.9)); }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        .profile-content { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:20px; width:100%; max-width:400px; }
+        .profile-avatar { width:110px; height:110px; border-radius:50%; border:3px solid var(--gold); background:#252515; display:flex; align-items:center; justify-content:center; font-size:3.6rem; overflow:hidden; box-shadow:0 8px 20px rgba(0,0,0,0.6); transition:all 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
+        .profile-avatar img { width:100%; height:100%; object-fit:cover; }
+        .profile-nickname { font-size:1.4rem; font-weight:800; color:var(--text); transition:all 0.3s; }
+        .profile-ip { font-size:0.8rem; color:var(--accent); font-family:'Courier New',monospace; letter-spacing:1px; }
 
-        .loading-text {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: var(--text);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            animation: textGlow 1.5s ease-in-out infinite;
-        }
+        .player-level-block { width:100%; display:flex; flex-direction:column; align-items:center; gap:5px; animation:statAppear 0.5s ease-out 0.35s forwards; opacity:0; }
+        .player-level { font-size:1rem; font-weight:800; color:var(--gold); letter-spacing:1px; text-shadow:0 0 8px rgba(184,150,46,0.5); }
+        .exp-bar-bg { width:100%; max-width:260px; height:14px; background:#0f0f00; border-radius:7px; border:1px solid var(--border); overflow:hidden; position:relative; box-shadow:inset 0 2px 4px black; }
+        .exp-bar-fill { height:100%; width:0%; background:linear-gradient(90deg, #b8962e, #ffd76b); border-radius:7px; transition:width 0.8s cubic-bezier(0.25,0.46,0.45,0.94); box-shadow:0 0 10px rgba(184,150,46,0.7); }
+        .exp-text { font-size:0.72rem; color:var(--accent); font-family:'Courier New',monospace; letter-spacing:1px; }
 
-        @keyframes textGlow {
-            0%, 100% { text-shadow: 0 0 5px rgba(184, 150, 46, 0.3); }
-            50% { text-shadow: 0 0 20px rgba(184, 150, 46, 0.8); }
-        }
+        .profile-stats { display:flex; flex-direction:column; gap:6px; width:100%; }
+        .stat-item { text-align:center; color:var(--text); font-weight:600; font-size:0.82rem; animation:statAppear 0.5s ease-out forwards; opacity:0; }
+        .stat-item:nth-child(1) { animation-delay:0.1s; }
+        .stat-item:nth-child(2) { animation-delay:0.2s; }
+        .stat-item:nth-child(3) { animation-delay:0.3s; }
+        @keyframes statAppear { 0% { opacity:0; transform:translateY(10px); } 100% { opacity:1; transform:translateY(0); } }
 
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; visibility: hidden; }
-        }
+        .tabs-bar { display:flex; justify-content:space-around; align-items:center; padding:0 30px 80px; flex-shrink:0; width:100%; position:relative; z-index:10; gap:10px; }
+        .tab-btn { background:transparent; border:none; cursor:pointer; color:var(--accent); opacity:0.6; transition:all 0.3s; padding:5px; text-decoration:none; display:flex; align-items:center; justify-content:center; pointer-events:auto; }
+        .tab-btn.active { opacity:1; color:var(--text); transform:scale(1.1); }
+        .tab-btn svg { width:28px; height:28px; }
+        .tab-btn.home-btn svg { width:36px; height:36px; }
+        .tab-btn.boss-btn svg { width:30px; height:30px; }
+        .tab-btn.boss-btn:hover svg { filter:drop-shadow(0 0 10px rgba(200,60,60,0.9)); transform:scale(1.15); }
+        .tab-btn.boss-btn:hover { color:#c0392b; }
+        .boss-skull-glow { animation:skullGlow 3s ease-in-out infinite; transform-origin:center; }
+        @keyframes skullGlow { 0%,100% { filter:drop-shadow(0 0 3px rgba(200,60,60,0.4)); } 50% { filter:drop-shadow(0 0 9px rgba(200,60,60,0.9)); } }
 
-        .profile-container {
-            background: var(--panel);
-            background-image: linear-gradient(160deg, #222222, #111111);
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            opacity: 0;
-            animation: profileAppear 0.8s ease-out 2.5s forwards;
-        }
+        .settings-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index:3000; }
+        .settings-overlay.show { display:flex; animation:modalFadeIn 0.3s ease; }
+        @keyframes modalFadeIn { from { opacity:0; } to { opacity:1; } }
+        .settings-box { background:#24241a; border-radius:16px; padding:20px; width:90%; max-width:400px; border:2px solid var(--gold); animation:modalSlideIn 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
+        .stats-box { max-height:88vh; display:flex; flex-direction:column; overflow:hidden; }
+        @keyframes modalSlideIn { from { transform:scale(0.8) translateY(20px); opacity:0; } to { transform:scale(1) translateY(0); opacity:1; } }
+        .settings-title { font-size:1.2rem; font-weight:800; color:var(--text); text-align:center; margin-bottom:15px; text-transform:uppercase; letter-spacing:2px; }
+        .settings-balance { text-align:center; font-family:'Courier New',monospace; font-size:0.85rem; color:var(--gold); margin-bottom:12px; font-weight:700; }
+        .settings-tabs { display:flex; gap:10px; margin-bottom:15px; }
+        .settings-tab { flex:1; background:transparent; border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.8rem; transition:all 0.3s; pointer-events:auto; }
+        .settings-tab.active { border-color:var(--gold); background:rgba(184,150,46,0.1); }
 
-        @keyframes profileAppear {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
+        .stats-scroll { flex:1; overflow-y:auto; padding-right:5px; margin:0 -5px 10px -5px; padding-left:5px; scrollbar-width:thin; scrollbar-color:var(--gold) transparent; }
+        .stats-scroll::-webkit-scrollbar { width:5px; }
+        .stats-scroll::-webkit-scrollbar-track { background:transparent; }
+        .stats-scroll::-webkit-scrollbar-thumb { background:var(--gold); border-radius:3px; }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            flex-shrink: 0;
-            border-bottom: 1px solid var(--border);
-            background: linear-gradient(180deg, #2a2a1a, #1a1a10);
-            width: 100%;
-            position: relative;
-        }
+        .stats-block { background:#1a1a10; border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:10px; transition:border-color 0.3s; }
+        .stats-block:hover { border-color:rgba(184,150,46,0.5); }
+        .stats-block-title { font-size:0.9rem; font-weight:800; color:var(--text); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+        .stats-block-title .lvl-badge { font-size:0.7rem; color:var(--gold); background:rgba(184,150,46,0.15); padding:2px 8px; border-radius:10px; border:1px solid var(--gold); }
 
-        .header-title {
-            font-size: 1.3rem;
-            font-weight: 800;
-            letter-spacing: 3px;
-            color: var(--text);
-            text-transform: uppercase;
-            margin: 0 auto;
-        }
+        .level-segments { display:flex; gap:3px; margin-bottom:10px; flex-wrap:nowrap; }
+        .level-segments span { flex:1; height:10px; background:#0f0f00; border:1px solid var(--border); border-radius:2px; transition:all 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
+        .level-segments span.filled { background:linear-gradient(180deg, #ffd76b, #b8962e); border-color:var(--gold); box-shadow:0 0 6px rgba(184,150,46,0.7); }
 
-        .settings-btn {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: transparent;
-            border: none;
-            color: var(--text);
-            cursor: pointer;
-            font-size: 1.5rem;
-            transition: transform 0.3s;
-            z-index: 20;
-        }
+        .stats-effect { font-size:0.78rem; color:#8fd4b0; margin-bottom:5px; font-weight:600; }
+        .stats-cost { font-size:0.78rem; color:var(--accent); margin-bottom:10px; }
+        .stats-cost b { color:var(--gold); }
 
-        .settings-btn:hover {
-            transform: translateY(-50%) rotate(45deg);
-        }
+        .upgrade-btn { width:100%; background:transparent; border:1px solid var(--gold); color:var(--gold); padding:9px; border-radius:8px; cursor:pointer; font-weight:700; font-size:0.85rem; transition:all 0.3s; letter-spacing:1px; text-transform:uppercase; }
+        .upgrade-btn:hover:not(:disabled) { background:rgba(184,150,46,0.2); box-shadow:0 0 15px rgba(184,150,46,0.5); }
+        .upgrade-btn:active:not(:disabled) { transform:scale(0.97); }
+        .upgrade-btn:disabled { opacity:0.4; cursor:not-allowed; border-color:var(--border); color:var(--accent); }
 
-        .profile-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            padding: 20px;
-            width: 100%;
-            max-width: 400px;
-        }
+        .stat-message { font-size:0.75rem; color:#ff5a5a; text-align:center; margin-top:6px; min-height:1em; transition:opacity 0.3s; opacity:0; }
+        .stat-message.show { opacity:1; }
 
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 3px solid var(--gold);
-            background: #252515;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
+        .boss-stat-row { display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text); padding:5px 0; border-bottom:1px solid rgba(74,74,42,0.3); }
+        .boss-stat-row:last-child { border-bottom:none; }
+        .boss-stat-row b { color:var(--gold); font-family:'Courier New',monospace; }
 
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
+        .avatar-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:10px; }
+        .avatar-option { background:transparent; border:1px solid var(--border); border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; cursor:pointer; transition:all 0.3s; pointer-events:auto; }
+        .avatar-option:hover { border-color:var(--gold); transform:scale(1.1); }
+        .avatar-option.selected { border-color:var(--gold); background:rgba(184,150,46,0.2); transform:scale(1.1); }
 
-        .profile-nickname {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--text);
-            transition: all 0.3s;
-        }
+        .upload-btn { width:100%; background:transparent; border:1px solid var(--border); color:var(--text); padding:10px; border-radius:6px; cursor:pointer; font-weight:600; transition:all 0.3s; pointer-events:auto; }
+        .upload-btn:hover { background:rgba(74,74,58,0.5); }
 
-        .profile-ip {
-            font-size: 0.85rem;
-            color: var(--accent);
-            font-family: 'Courier New', monospace;
-            letter-spacing: 1px;
-        }
-
-        .profile-stats {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            width: 100%;
-        }
-
-        .stat-item {
-            text-align: center;
-            color: var(--text);
-            font-weight: 600;
-            font-size: 0.85rem;
-            animation: statAppear 0.5s ease-out forwards;
-            opacity: 0;
-        }
-
-        .stat-item:nth-child(1) { animation-delay: 0.1s; }
-        .stat-item:nth-child(2) { animation-delay: 0.2s; }
-        .stat-item:nth-child(3) { animation-delay: 0.3s; }
-
-        @keyframes statAppear {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-
-        .tabs-bar {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 0 30px 80px;
-            flex-shrink: 0;
-            width: 100%;
-            position: relative;
-            z-index: 10;
-            gap: 10px;
-        }
-
-        .tab-btn {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: var(--accent);
-            opacity: 0.6;
-            transition: all 0.3s;
-            padding: 5px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: auto;
-        }
-
-        .tab-btn.active {
-            opacity: 1;
-            color: var(--text);
-            transform: scale(1.1);
-        }
-
-        .tab-btn svg {
-            width: 28px;
-            height: 28px;
-        }
-
-        .tab-btn.home-btn svg {
-            width: 36px;
-            height: 36px;
-        }
-
-        /* ==== СТИЛИ ДЛЯ ИКОНКИ БОССОВ ==== */
-        .tab-btn.boss-btn svg {
-            width: 30px;
-            height: 30px;
-        }
-
-        .tab-btn.boss-btn:hover svg {
-            filter: drop-shadow(0 0 10px rgba(200, 60, 60, 0.9));
-            transform: scale(1.15);
-        }
-        .tab-btn.boss-btn:hover { color: #c0392b; }
-
-        .boss-skull-glow {
-            animation: skullGlow 3s ease-in-out infinite;
-            transform-origin: center;
-        }
-
-        @keyframes skullGlow {
-            0%, 100% { filter: drop-shadow(0 0 3px rgba(200, 60, 60, 0.4)); }
-            50%      { filter: drop-shadow(0 0 9px rgba(200, 60, 60, 0.9)); }
-        }
-
-        .settings-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 3000;
-        }
-
-        .settings-overlay.show {
-            display: flex;
-            animation: modalFadeIn 0.3s ease;
-        }
-
-        @keyframes modalFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .settings-box {
-            background: #24241a;
-            border-radius: 16px;
-            padding: 20px;
-            width: 90%;
-            max-width: 400px;
-            border: 2px solid var(--gold);
-            animation: modalSlideIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        @keyframes modalSlideIn {
-            from { transform: scale(0.8) translateY(20px); opacity: 0; }
-            to { transform: scale(1) translateY(0); opacity: 1; }
-        }
-
-        .settings-title {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: var(--text);
-            text-align: center;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-        }
-
-        .settings-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .settings-tab {
-            flex: 1;
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.8rem;
-            transition: all 0.3s;
-            pointer-events: auto;
-        }
-
-        .settings-tab.active {
-            border-color: var(--gold);
-            background: rgba(184, 150, 46, 0.1);
-        }
-
-        .avatar-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .avatar-option {
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            pointer-events: auto;
-        }
-
-        .avatar-option:hover {
-            border-color: var(--gold);
-            transform: scale(1.1);
-        }
-
-        .avatar-option.selected {
-            border-color: var(--gold);
-            background: rgba(184, 150, 46, 0.2);
-            transform: scale(1.1);
-        }
-
-        .upload-btn {
-            width: 100%;
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            pointer-events: auto;
-        }
-
-        .upload-btn:hover {
-            background: rgba(74, 74, 58, 0.5);
-        }
-
-        .modal-input {
-            width: 100%;
-            padding: 10px;
-            background: #1a1a10;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-size: 1rem;
-            text-align: center;
-            margin-bottom: 10px;
-            outline: none;
-            transition: all 0.3s;
-        }
-
-        .modal-input:focus {
-            border-color: var(--gold);
-            box-shadow: 0 0 10px rgba(184, 150, 46, 0.3);
-        }
-
-        .modal-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 10px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-            pointer-events: auto;
-        }
-
-        .modal-btn:hover {
-            background: rgba(74, 74, 58, 0.5);
-        }
-
-        .error-msg {
-            color: #e74c3c;
-            font-size: 0.8rem;
-            margin-bottom: 10px;
-            display: none;
-        }
+        .modal-input { width:100%; padding:10px; background:#1a1a10; border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:1rem; text-align:center; margin-bottom:10px; outline:none; transition:all 0.3s; }
+        .modal-input:focus { border-color:var(--gold); box-shadow:0 0 10px rgba(184,150,46,0.3); }
+        .modal-btn { background:transparent; border:1px solid var(--border); color:var(--text); padding:10px 24px; border-radius:8px; cursor:pointer; font-weight:700; font-size:0.9rem; transition:all 0.3s; pointer-events:auto; }
+        .modal-btn:hover { background:rgba(74,74,58,0.5); }
+        .error-msg { color:#e74c3c; font-size:0.8rem; margin-bottom:10px; display:none; }
     </style>
 </head>
 <body>
@@ -455,7 +124,7 @@
     <div id="nicknameModal" class="settings-overlay">
         <div class="settings-box">
             <div class="settings-title">Создание легенды</div>
-            <p style="color: #aaa; font-size: 0.8rem; margin-bottom: 15px; text-align: center;">Только латиница и русские буквы, 2-15 символов</p>
+            <p style="color:#aaa; font-size:0.8rem; margin-bottom:15px; text-align:center;">Только латиница и русские буквы, 2-15 символов</p>
             <input type="text" id="nicknameInput" class="modal-input" maxlength="15" placeholder="Введите ник" autocomplete="off">
             <div class="error-msg" id="nicknameError"></div>
             <button id="nicknameSubmit" class="modal-btn" type="button">Подтвердить</button>
@@ -486,21 +155,89 @@
                     <button class="avatar-option" data-emoji="🎖️">🎖️</button>
                 </div>
                 <button class="upload-btn" id="uploadAvatarBtn">Загрузить из галереи</button>
-                <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+                <input type="file" id="avatarUpload" accept="image/*" style="display:none;">
             </div>
-            <button id="closeSettings" class="modal-btn" style="margin-top: 15px; width:100%;">Закрыть</button>
+            <button id="closeSettings" class="modal-btn" style="margin-top:15px; width:100%;">Закрыть</button>
+        </div>
+    </div>
+
+    <div id="statsModal" class="settings-overlay">
+        <div class="settings-box stats-box">
+            <div class="settings-title">СТАТИСТИКА</div>
+            <div class="settings-balance">💰 <span id="statsBalance">0</span> секспахомов</div>
+            <div class="stats-scroll">
+                <div class="stats-block">
+                    <div class="stats-block-title">
+                        <span>Любовь за клик</span>
+                        <span class="lvl-badge">Ур <span id="loveUpgradeLevel">1</span> / 20</span>
+                    </div>
+                    <div class="level-segments" id="loveSegments"></div>
+                    <div class="stats-effect">💕 Эффект: <b id="loveEffect">+0.0</b> к любви за клик</div>
+                    <div class="stats-cost">Стоимость: <b id="loveCost">100 000</b> секспахомов</div>
+                    <button class="upgrade-btn" id="loveUpgradeBtn">Улучшить</button>
+                    <div class="stat-message" id="loveMessage"></div>
+                </div>
+
+                <div class="stats-block">
+                    <div class="stats-block-title">
+                        <span>Шанс выпадения</span>
+                        <span class="lvl-badge">Ур <span id="lootUpgradeLevel">1</span> / 5</span>
+                    </div>
+                    <div class="level-segments" id="lootSegments"></div>
+                    <div class="stats-effect">🎁 Эффект: <b id="lootEffect">+0%</b> к шансу лута</div>
+                    <div class="stats-cost">Стоимость: <b id="lootCost">500 000</b> секспахомов</div>
+                    <button class="upgrade-btn" id="lootUpgradeBtn">Улучшить</button>
+                    <div class="stat-message" id="lootMessage"></div>
+                </div>
+
+                <div class="stats-block">
+                    <div class="stats-block-title">
+                        <span>Статистика боссов</span>
+                    </div>
+                    <div class="boss-stat-row">
+                        <span>🏆 Побеждено</span>
+                        <b id="bossWins">0</b>
+                    </div>
+                    <div class="boss-stat-row">
+                        <span>💀 Провалено</span>
+                        <b id="bossLosses">0</b>
+                    </div>
+                    <div class="boss-stat-row">
+                        <span>💰 Заработано</span>
+                        <b><span id="bossEarned">0</span> секспахомов</b>
+                    </div>
+                </div>
+            </div>
+            <button id="closeStats" class="modal-btn" style="width:100%;">Закрыть</button>
         </div>
     </div>
 
     <div class="profile-container" id="profileContainer">
         <div class="header">
             <div class="header-title">ПРОФИЛЬ</div>
+            <button class="stats-btn" id="statsBtn" title="Статистика">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="21" x2="21" y2="21"/>
+                    <line x1="7" y1="21" x2="7" y2="12"/>
+                    <line x1="12" y1="21" x2="12" y2="8"/>
+                    <line x1="17" y1="21" x2="17" y2="4"/>
+                </svg>
+            </button>
             <button class="settings-btn" id="settingsBtn">⚙️</button>
         </div>
         <div class="profile-content">
             <div class="profile-avatar" id="profileAvatar">👤</div>
             <div class="profile-nickname" id="profileNickname">Игрок</div>
             <div class="profile-ip" id="profileIP">0.0.0.0</div>
+
+            <div class="player-level-block">
+                <div class="player-level">Уровень <span id="playerLevel">1</span></div>
+                <div class="exp-bar-bg">
+                    <div class="exp-bar-fill" id="expBarFill"></div>
+                </div>
+                <div class="exp-text"><span id="expCurrent">0</span> / <span id="expRequired">1200</span> опыта</div>
+            </div>
+
             <div class="profile-stats">
                 <div class="stat-item">Кликов всего: <span id="totalClicks">0</span></div>
                 <div class="stat-item">Секспахомов: <span id="profileSexpah">0</span></div>
@@ -532,13 +269,11 @@
     <script>
         (function() {
             const $ = (id) => document.getElementById(id);
-            
             const loadingScreen = $('loadingScreen');
             const nicknameModal = $('nicknameModal');
             const nicknameInput = $('nicknameInput');
             const nicknameSubmit = $('nicknameSubmit');
             const nicknameError = $('nicknameError');
-            
             const settingsModal = $('settingsModal');
             const settingsBtn = $('settingsBtn');
             const closeSettings = $('closeSettings');
@@ -552,49 +287,142 @@
             const avatarGrid = $('avatarGrid');
             const uploadAvatarBtn = $('uploadAvatarBtn');
             const avatarUpload = $('avatarUpload');
-            
+            const statsModal = $('statsModal');
+            const statsBtn = $('statsBtn');
+            const closeStats = $('closeStats');
             const profileNickname = $('profileNickname');
             const profileIP = $('profileIP');
             const profileAvatar = $('profileAvatar');
             const totalClicksSpan = $('totalClicks');
             const profileSexpah = $('profileSexpah');
             const totalOverexcitesSpan = $('totalOverexcites');
+            const playerLevelSpan = $('playerLevel');
+            const expCurrentSpan = $('expCurrent');
+            const expRequiredSpan = $('expRequired');
+            const expBarFill = $('expBarFill');
+
+            const MAX_LOVE_UP = 20;
+            const MAX_LOOT_UP = 5;
+            const BASE_EXP = 1200;
+            const EXP_STEP = 600;
 
             let nickname = localStorage.getItem('pahomNickname') || '';
             let playerIP = localStorage.getItem('pahomIP') || '';
             let avatarData = localStorage.getItem('pahomAvatar') || '';
-            
-            const totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0');
-            const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0');
-            const totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0');
 
-            if (!sessionStorage.getItem('pahomProfileLoaded')) {
-                setTimeout(function() {
-                    if (loadingScreen) {
-                        loadingScreen.style.display = 'none';
-                    }
-                    sessionStorage.setItem('pahomProfileLoaded', 'true');
-                }, 2500);
-            } else {
-                if (loadingScreen) {
-                    loadingScreen.style.display = 'none';
-                }
-                document.querySelector('.profile-container').style.animation = 'none';
-                document.querySelector('.profile-container').style.opacity = '1';
-            }
+            function expRequired(level) { return BASE_EXP + (level - 1) * EXP_STEP; }
+            function loveUpgradeCost(targetLevel) { return 100000 + Math.floor((targetLevel - 1) / 3) * 200000; }
+            function lootUpgradeCost(targetLevel) { return 500000 * (targetLevel - 1); }
+            function loveBonus(level) { return (level - 1) * 0.5; }
+            function lootBonusPct(level) { return (level - 1) * 5; }
+            function formatNumber(n) { return Number(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
 
             function updateProfile() {
+                const totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0', 10) || 0;
+                const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
+                const totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0', 10) || 0;
+                const playerExp = parseInt(localStorage.getItem('pahomPlayerExp') || '0', 10) || 0;
+                const playerLevel = parseInt(localStorage.getItem('pahomPlayerLevel') || '1', 10) || 1;
+
                 profileNickname.textContent = nickname || 'Игрок';
                 profileIP.textContent = playerIP || '0.0.0.0';
-                totalClicksSpan.textContent = totalClicks;
-                profileSexpah.textContent = sexpah;
-                totalOverexcitesSpan.textContent = totalOverexcites;
-                
+                totalClicksSpan.textContent = formatNumber(totalClicks);
+                profileSexpah.textContent = formatNumber(sexpah);
+                totalOverexcitesSpan.textContent = formatNumber(totalOverexcites);
+
+                playerLevelSpan.textContent = playerLevel;
+                const req = expRequired(playerLevel);
+                expCurrentSpan.textContent = formatNumber(playerExp);
+                expRequiredSpan.textContent = formatNumber(req);
+                const pct = Math.min(100, (playerExp / req) * 100);
+                expBarFill.style.width = pct + '%';
+
                 if (avatarData) {
                     profileAvatar.innerHTML = '<img src="' + avatarData + '" alt="аватар" style="width:100%;height:100%;object-fit:cover;">';
                 } else {
                     profileAvatar.textContent = '👤';
                 }
+            }
+
+            function renderSegments(containerId, current, max) {
+                const c = document.getElementById(containerId);
+                if (!c) return;
+                if (c.children.length !== max) {
+                    c.innerHTML = '';
+                    for (let i = 0; i < max; i++) c.appendChild(document.createElement('span'));
+                }
+                for (let i = 0; i < max; i++) {
+                    if (i < current) c.children[i].classList.add('filled');
+                    else c.children[i].classList.remove('filled');
+                }
+            }
+
+            function updateStatsPanel() {
+                const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
+                const loveUpgrade = parseInt(localStorage.getItem('pahomUpgradeLove') || '1', 10) || 1;
+                const lootUpgrade = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1;
+
+                let bossStats = { wins: 0, losses: 0, earned: 0 };
+                try {
+                    const raw = JSON.parse(localStorage.getItem('pahomBossStats') || 'null');
+                    if (raw && typeof raw === 'object') bossStats = { wins: raw.wins || 0, losses: raw.losses || 0, earned: raw.earned || 0 };
+                } catch(e) {}
+
+                document.getElementById('statsBalance').textContent = formatNumber(sexpah);
+
+                document.getElementById('loveUpgradeLevel').textContent = loveUpgrade;
+                document.getElementById('loveEffect').textContent = '+' + loveBonus(loveUpgrade).toFixed(1);
+                renderSegments('loveSegments', loveUpgrade, MAX_LOVE_UP);
+                const loveBtn = document.getElementById('loveUpgradeBtn');
+                if (loveUpgrade >= MAX_LOVE_UP) {
+                    document.getElementById('loveCost').textContent = 'МАКС';
+                    loveBtn.disabled = true;
+                    loveBtn.textContent = 'МАКСИМУМ';
+                } else {
+                    const cost = loveUpgradeCost(loveUpgrade + 1);
+                    document.getElementById('loveCost').textContent = formatNumber(cost);
+                    loveBtn.disabled = sexpah < cost;
+                    loveBtn.textContent = sexpah < cost ? 'НЕДОСТАТОЧНО' : 'УЛУЧШИТЬ';
+                }
+
+                document.getElementById('lootUpgradeLevel').textContent = lootUpgrade;
+                document.getElementById('lootEffect').textContent = '+' + lootBonusPct(lootUpgrade) + '%';
+                renderSegments('lootSegments', lootUpgrade, MAX_LOOT_UP);
+                const lootBtn = document.getElementById('lootUpgradeBtn');
+                if (lootUpgrade >= MAX_LOOT_UP) {
+                    document.getElementById('lootCost').textContent = 'МАКС';
+                    lootBtn.disabled = true;
+                    lootBtn.textContent = 'МАКСИМУМ';
+                } else {
+                    const cost = lootUpgradeCost(lootUpgrade + 1);
+                    document.getElementById('lootCost').textContent = formatNumber(cost);
+                    lootBtn.disabled = sexpah < cost;
+                    lootBtn.textContent = sexpah < cost ? 'НЕДОСТАТОЧНО' : 'УЛУЧШИТЬ';
+                }
+
+                document.getElementById('bossWins').textContent = formatNumber(bossStats.wins);
+                document.getElementById('bossLosses').textContent = formatNumber(bossStats.losses);
+                document.getElementById('bossEarned').textContent = formatNumber(bossStats.earned);
+            }
+
+            function flashMessage(elId, text, isError) {
+                const el = document.getElementById(elId);
+                if (!el) return;
+                el.textContent = text;
+                el.style.color = isError ? '#ff5a5a' : '#4cd964';
+                el.classList.add('show');
+                setTimeout(function() { el.classList.remove('show'); }, 2000);
+            }
+
+            if (!sessionStorage.getItem('pahomProfileLoaded')) {
+                setTimeout(function() {
+                    if (loadingScreen) loadingScreen.style.display = 'none';
+                    sessionStorage.setItem('pahomProfileLoaded', 'true');
+                }, 2500);
+            } else {
+                if (loadingScreen) loadingScreen.style.display = 'none';
+                document.querySelector('.profile-container').style.animation = 'none';
+                document.querySelector('.profile-container').style.opacity = '1';
             }
 
             function generateIP() {
@@ -603,36 +431,53 @@
 
             function submitNickname() {
                 const newName = nicknameInput.value.trim();
-                
                 if (!/^[a-zA-Zа-яА-Я]{2,15}$/.test(newName)) {
                     nicknameError.textContent = 'Только латиница и русские буквы, 2-15 символов!';
                     nicknameError.style.display = 'block';
                     return;
                 }
-
                 nickname = newName;
                 localStorage.setItem('pahomNickname', nickname);
-                
                 playerIP = generateIP();
                 localStorage.setItem('pahomIP', playerIP);
-
                 nicknameError.style.display = 'none';
                 nicknameModal.classList.remove('show');
                 updateProfile();
             }
 
             nicknameSubmit.addEventListener('click', submitNickname);
-            
-            nicknameInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') submitNickname();
+            nicknameInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') submitNickname(); });
+            settingsBtn.addEventListener('click', function() { settingsModal.classList.add('show'); });
+            closeSettings.addEventListener('click', function() { settingsModal.classList.remove('show'); });
+            statsBtn.addEventListener('click', function() { updateStatsPanel(); statsModal.classList.add('show'); });
+            closeStats.addEventListener('click', function() { statsModal.classList.remove('show'); });
+
+            document.getElementById('loveUpgradeBtn').addEventListener('click', function() {
+                const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
+                let loveUpgrade = parseInt(localStorage.getItem('pahomUpgradeLove') || '1', 10) || 1;
+                if (loveUpgrade >= MAX_LOVE_UP) { flashMessage('loveMessage', 'Достигнут максимум', true); return; }
+                const cost = loveUpgradeCost(loveUpgrade + 1);
+                if (sexpah < cost) { flashMessage('loveMessage', 'Недостаточно секспахомов', true); return; }
+                localStorage.setItem('pahomSexpah', String(sexpah - cost));
+                loveUpgrade++;
+                localStorage.setItem('pahomUpgradeLove', String(loveUpgrade));
+                flashMessage('loveMessage', 'Улучшено до ур. ' + loveUpgrade, false);
+                updateStatsPanel();
+                updateProfile();
             });
 
-            settingsBtn.addEventListener('click', function() {
-                settingsModal.classList.add('show');
-            });
-
-            closeSettings.addEventListener('click', function() {
-                settingsModal.classList.remove('show');
+            document.getElementById('lootUpgradeBtn').addEventListener('click', function() {
+                const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
+                let lootUpgrade = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1;
+                if (lootUpgrade >= MAX_LOOT_UP) { flashMessage('lootMessage', 'Достигнут максимум', true); return; }
+                const cost = lootUpgradeCost(lootUpgrade + 1);
+                if (sexpah < cost) { flashMessage('lootMessage', 'Недостаточно секспахомов', true); return; }
+                localStorage.setItem('pahomSexpah', String(sexpah - cost));
+                lootUpgrade++;
+                localStorage.setItem('pahomUpgradeLoot', String(lootUpgrade));
+                flashMessage('lootMessage', 'Улучшено до ур. ' + lootUpgrade, false);
+                updateStatsPanel();
+                updateProfile();
             });
 
             nameTab.addEventListener('click', function() {
@@ -664,17 +509,11 @@
                 settingsModal.classList.remove('show');
             });
 
-            newNameInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    confirmNameBtn.click();
-                }
-            });
+            newNameInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') confirmNameBtn.click(); });
 
             avatarGrid.querySelectorAll('.avatar-option').forEach(function(btn) {
                 btn.addEventListener('click', function() {
-                    avatarGrid.querySelectorAll('.avatar-option').forEach(function(b) {
-                        b.classList.remove('selected');
-                    });
+                    avatarGrid.querySelectorAll('.avatar-option').forEach(function(b) { b.classList.remove('selected'); });
                     btn.classList.add('selected');
                     avatarData = '';
                     localStorage.setItem('pahomAvatar', '');
@@ -682,10 +521,7 @@
                 });
             });
 
-            uploadAvatarBtn.addEventListener('click', function() {
-                avatarUpload.click();
-            });
-
+            uploadAvatarBtn.addEventListener('click', function() { avatarUpload.click(); });
             avatarUpload.addEventListener('change', function(e) {
                 const file = e.target.files[0];
                 if (file) {
@@ -701,12 +537,12 @@
 
             if (!nickname) {
                 nicknameModal.classList.add('show');
-                setTimeout(function() {
-                    nicknameInput.focus();
-                }, 600);
+                setTimeout(function() { nicknameInput.focus(); }, 600);
             } else {
                 updateProfile();
             }
+
+            setInterval(updateProfile, 1500);
         })();
     </script>
 </body>
