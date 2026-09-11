@@ -71,6 +71,7 @@
   .boss-list::-webkit-scrollbar-track { background: transparent; }
   .boss-list::-webkit-scrollbar-thumb { background: #4a4a2a; border-radius: 3px; }
 
+  /* ==== ИСПРАВЛЕНО: карточки всегда видимы ==== */
   .boss-card {
     display:flex; align-items:center; gap:12px; padding:10px 12px;
     border:1px solid #4a4a2a; border-radius:8px; background:rgba(30,30,14,0.9);
@@ -78,21 +79,13 @@
     transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
                 border-color 0.35s ease,
                 background 0.35s ease,
-                box-shadow 0.35s ease,
-                opacity 0.35s ease;
-    opacity: 0;
-    transform: translateX(-20px);
-    animation: cardSlide 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    will-change: transform, opacity;
+                box-shadow 0.35s ease;
+    animation: cardSlide 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
-  .boss-card:nth-child(1) { animation-delay: 0.05s; }
-  .boss-card:nth-child(2) { animation-delay: 0.15s; }
-  .boss-card:nth-child(3) { animation-delay: 0.25s; }
-  .boss-card:nth-child(4) { animation-delay: 0.35s; }
 
   @keyframes cardSlide {
-    from { opacity:0; transform: translateX(-20px); }
-    to   { opacity:1; transform: translateX(0); }
+    from { transform: translateX(-15px); }
+    to   { transform: translateX(0); }
   }
 
   .boss-card:hover:not(.locked) {
@@ -313,7 +306,6 @@
     100% { transform: translateX(100%); }
   }
 
-  /* ==== НИЖНЯЯ ПАНЕЛЬ — ВЕРНУЛ КАК БЫЛО (80px) ==== */
   .tabs-bar {
     display: flex;
     justify-content: space-around;
@@ -349,7 +341,6 @@
     50%      { filter: drop-shadow(0 0 12px rgba(200,60,60,1)); }
   }
 
-  /* ==== РЕЗУЛЬТАТ ==== */
   .result-overlay {
     position:fixed; inset:0; background:rgba(0,0,0,0.85);
     display:none; align-items:center; justify-content:center; z-index:2000;
@@ -402,7 +393,6 @@
   .result-btn:hover { background:rgba(184,150,46,0.4); transform: scale(1.05); box-shadow: 0 0 20px rgba(184,150,46,0.5); }
   .result-btn:active { transform: scale(0.96); }
 
-  /* ==== ЭФФЕКТЫ ==== */
   .flying-emoji {
     position:fixed; font-size:2rem; pointer-events:none; z-index:100;
     transform: translate(-50%,-50%);
@@ -422,7 +412,6 @@
     will-change: width, height, opacity;
   }
 
-  /* ==== АДАПТАЦИЯ ==== */
   @media (max-width: 400px) {
     .boss-hitbox { width:170px; height:170px; }
     .arena-boss-wrap { width:170px; height:170px; }
@@ -876,7 +865,8 @@
     requestAnimationFrame(frame);
   }
 
-  function exitToBossList() {
+  // ==== ВЫХОД В СПИСОК: пересобираем карточки ====
+  function showBossList() {
     if (fightInterval) { clearInterval(fightInterval); fightInterval = null; }
     isFightActive = false; currentBoss = null; lastClick = 0; lastSave = 0;
     arena.classList.remove('active');
@@ -889,7 +879,14 @@
     arenaClicks.textContent = '0';
     arenaLove.textContent = '0';
     arenaTimer.textContent = '00:00';
+
+    // Пересобираем карточки, чтобы анимация проиграла чисто и все были видны
+    buildList();
     refreshList();
+  }
+
+  function exitToBossList() {
+    showBossList();
   }
 
   function endFight(boss, win) {
@@ -921,38 +918,16 @@
       if (lootDropped) showNotify(lootDropped.icon, 'ВЫПАЛ ПРЕДМЕТ: ' + lootDropped.name);
 
       setTimeout(function(){
-        currentBoss = null;
-        arena.classList.remove('active');
-        bossList.style.display = '';
-        scoreBoard.style.display = '';
-        tabsBar.classList.remove('hidden');
-        headerTitle.textContent = 'БОССЫ';
-        bossHitbox.classList.remove('hot', 'critical', 'shake', 'blowup');
-        exciteBarFill.style.width = '0%';
-        arenaClicks.textContent = '0';
-        arenaLove.textContent = '0';
-        arenaTimer.textContent = '00:00';
-        refreshList();
+        showBossList();
         showResult(true, boss.reward, lootDropped);
       }, 600);
       return;
     } else {
       st.fight = null; st.cooldownUntil = now + boss.cooldownDuration;
       saveState();
+      showBossList();
       showResult(false, 0, null);
     }
-    currentBoss = null;
-    arena.classList.remove('active');
-    bossList.style.display = '';
-    scoreBoard.style.display = '';
-    tabsBar.classList.remove('hidden');
-    headerTitle.textContent = 'БОССЫ';
-    bossHitbox.classList.remove('hot', 'critical', 'shake', 'blowup');
-    exciteBarFill.style.width = '0%';
-    arenaClicks.textContent = '0';
-    arenaLove.textContent = '0';
-    arenaTimer.textContent = '00:00';
-    refreshList();
   }
 
   function showResult(win, reward, loot) {
