@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<title>БОССЫ — кликер Пахома</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
+  html, body { background:#0a0a0a; width:100%; height:100%; margin:0; font-family:'Segoe UI',Arial,sans-serif; overflow:hidden; }
+  body { display:flex; justify-content:center; align-items:center; touch-action:manipulation; }
+
+  .game-container {
+    background:#1a1a1a;
+    background-image:linear-gradient(rgba(10,10,10,0.85), rgba(10,10,10,0.95)), url('Fon.jpeg');
+    background-size:cover; background-position:center;
+    width:100%; height:100vh; height:100dvh; display:flex; flex-direction:column;
+    position:relative; min-height:0; overflow:hidden;
+    animation: fadeInSoft 0.8s ease-out;
+  }
+  @keyframes fadeInSoft { from { opacity: 0.6; } to { opacity: 1; } }
+
+  .header { display:flex; align-items:center; justify-content:center; padding:10px 15px; flex-shrink:0; border-bottom:1px solid #4a4a2a; background:rgba(42,42,26,0.85); z-index:10; }
+  .header-title { font-size:1.2rem; font-weight:800; letter-spacing:3px; color:#c4b08a; text-transform:uppercase; }
+
+  .score-board { display:flex; justify-content:space-between; align-items:center; padding:8px 15px; flex-shrink:0; border-bottom:1px solid #4a4a2a; background:rgba(28,28,14,0.7); z-index:10; }
+  .sexpah {
+    background:rgba(37,37,21,0.9); padding:5px 15px; border-radius:8px; border:1px solid #4a4a2a;
+    font-size:0.9rem; font-weight:700; color:#c4b08a;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .sexpah.bump { transform:scale(1.08); box-shadow:0 0 20px rgba(184,150,46,0.7); }
+
+  .notify-bar { display:flex; flex-direction:column; gap:6px; padding:0 15px; flex-shrink:0; z-index:100; pointer-events:none; }
+  .notify-bar:empty { padding:0; }
+  .notify-chip {
+    display:flex; align-items:center; gap:8px; padding:8px 14px;
+    background:rgba(184,150,46,0.18); border:1px solid #b8962e; border-radius:20px;
+    font-size:0.85rem; font-weight:700; color:#b8962e; font-family:'Courier New',monospace;
+    align-self:flex-start;
+    box-shadow: 0 0 20px rgba(184,150,46,0.4);
+    animation: chipIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .notify-chip.leaving { animation: chipOut 0.4s ease forwards; }
+  @keyframes chipIn {
+    from { opacity:0; transform: translateY(-20px) scale(0.8); }
+    to   { opacity:1; transform: translateY(0) scale(1); }
+  }
+  @keyframes chipOut {
+    from { opacity:1; transform: translateY(0) scale(1); }
+    to   { opacity:0; transform: translateY(-15px) scale(0.9); }
+  }
+
+  .hidden { display:none !important; }
+
+  .boss-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    padding: 15px 15px 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: #4a4a2a transparent;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .boss-list.fade-out { opacity: 0; transform: translateX(-20px); pointer-events:none; }
+  .boss-list::-webkit-scrollbar { width: 5px; }
+  .boss-list::-webkit-scrollbar-track { background: transparent; }
+  .boss-list::-webkit-scrollbar-thumb { background: #4a4a2a; border-radius: 3px; }
+
+  .boss-card {
+    display:flex; align-items:center; gap:12px; padding:10px 12px;
+    border:1px solid #4a4a2a; border-radius:8px; background:rgba(30,30,14,0.9);
+    cursor:pointer; flex-shrink:0;
+    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                border-color 0.35s ease,
+                background 0.35s ease,
+                box-shadow 0.35s ease,
+                opacity 0.35s ease;
+    opacity: 0;
+    transform: translateX(-20px);
+    animation: cardSlide 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    will-change: transform, opacity;
+  }
+  .boss-card:nth-child(1) { animation-delay: 0.05s; }
+  .boss-card:nth-child(2) { animation-delay: 0.15s; }
+  .boss-card:nth-child(3) { animation-delay: 0.25s; }
+  .boss-card:nth-child(4) { animation-delay: 0.35s; }
+
+  @keyframes cardSlide {
+    from { opacity:0; transform: translateX(-20px); }
+    to   { opacity:1; transform: translateX(0); }
+  }
+
+  .boss-card:hover:not(.locked) {
+    border-color: #b8962e;
+    transform: translateX(4px);
+    background: rgba(45,45,26,0.95);
+    box-shadow: 0 0 20px rgba(184,150,46,0.3);
+  }
+  .boss-card:active:not(.locked) { transform: translateX(4px) scale(0.98); }
+
+  .boss-card.locked { opacity:0.5; }
+  .boss-card.in-progress { border-color:#ff8c3c; box-shadow: 0 0 20px rgba(255,140,60,0.4); }
+
+  .boss-avatar {
+    width:44px; height:44px; border-radius:6px; border:1px solid #b8962e;
+    background:rgba(60,40,20,0.7); display:flex; align-items:center; justify-content:center;
+    font-size:1.5rem; flex-shrink:0;
+    box-shadow: 0 0 12px rgba(184,150,46,0.3);
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease;
+  }
+  .boss-card:hover:not(.locked) .boss-avatar {
+    box-shadow: 0 0 20px rgba(184,150,46,0.7);
+    transform: scale(1.08);
+  }
+
+  .boss-info { flex:1; min-width:0; }
+  .boss-name { font-size:1rem; font-weight:700; color:#c4b08a; margin-bottom:3px; }
+  .boss-meta { display:flex; flex-direction:column; gap:2px; font-size:0.75rem; color:#b0a070; }
+  .boss-reward { color:#b8962e; font-weight:700; }
+  .boss-loot { color:#8fd4b0; font-size:0.7rem; }
+  .boss-timer { font-family:'Courier New',monospace; font-size:0.72rem; color:#ff9b5c; font-weight:700; }
+
+  .boss-status {
+    padding:4px 10px; border-radius:20px; font-size:0.7rem; font-weight:800;
+    letter-spacing:1px; text-transform:uppercase; flex-shrink:0;
+    transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+  .boss-status.ready {
+    background:rgba(60,180,80,0.25); color:#4cd964; border:1px solid #4cd964;
+    animation: readyPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes readyPulse {
+    0%, 100% { box-shadow: 0 0 5px rgba(76,217,100,0.5); }
+    50%      { box-shadow: 0 0 20px rgba(76,217,100,0.9); }
+  }
+  .boss-status.cooldown { background:rgba(180,40,40,0.25); color:#ff5a5a; border:1px solid #ff5a5a; }
+  .boss-status.in-progress {
+    background:rgba(255,140,60,0.3); color:#ff8c3c; border:1px solid #ff8c3c;
+    animation: readyPulse 1.2s ease-in-out infinite;
+  }
+
+  /* ==== АРЕНА ==== */
+  .arena {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    padding-bottom: 80px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+  .arena.active {
+    display:flex;
+    animation: arenaIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  @keyframes arenaIn {
+    from { opacity:0; transform: translateY(30px) scale(0.98); }
+    to   { opacity:1; transform: translateY(0) scale(1); }
+  }
+
+  .arena-top { display:flex; align-items:center; justify-content:space-between; padding:10px 15px; flex-shrink:0; background:rgba(28,14,14,0.85); border-bottom:1px solid #c0392b; gap:10px; }
+  .arena-back {
+    background:transparent; border:1px solid #4a4a2a; color:#c4b08a;
+    width:34px; height:34px; border-radius:50%; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    transition: transform 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+  }
+  .arena-back:hover { background:rgba(180,150,90,0.15); transform: scale(1.1); border-color:#b8962e; }
+  .arena-back:active { transform: scale(0.95); }
+  .arena-back svg { width:16px; height:16px; }
+
+  .arena-boss-name {
+    font-size:1.1rem; font-weight:800; color:#ff8c8c; letter-spacing:2px;
+    flex:1; text-align:center;
+    text-shadow: 0 0 10px rgba(255,60,60,0.7);
+    animation: nameGlow 2.5s ease-in-out infinite;
+  }
+  @keyframes nameGlow {
+    0%, 100% { text-shadow: 0 0 10px rgba(255,60,60,0.7); }
+    50%      { text-shadow: 0 0 22px rgba(255,60,60,1); }
+  }
+
+  .arena-timer {
+    font-family:'Courier New',monospace; font-size:1.2rem; font-weight:800;
+    color:#b8962e; letter-spacing:2px; flex-shrink:0;
+    transition: color 0.3s ease;
+  }
+  .arena-timer.danger { color:#ff3b3b; animation: timerDanger 0.6s ease-in-out infinite; }
+  @keyframes timerDanger {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.08); }
+  }
+
+  .arena-field { flex:1 1 auto; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; padding:10px; }
+  .arena-boss-wrap { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:200px; height:200px; pointer-events:none; }
+
+  .boss-hitbox {
+    width:200px; height:200px; border-radius:50%; display:flex; justify-content:center; align-items:center;
+    cursor:pointer; border:3px solid #c0392b; position:absolute; left:0; top:0;
+    background:rgba(50,20,20,0.8); pointer-events:auto;
+    animation: bossFloat 4s ease-in-out infinite;
+    transition: transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                box-shadow 0.4s ease, border-color 0.3s ease;
+    will-change: transform;
+  }
+  @keyframes bossFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-10px) scale(1.02); }
+  }
+  .boss-hitbox:active { transform: scale(0.92); }
+
+  .boss-hitbox.shake { animation: bossShake 0.25s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+  @keyframes bossShake {
+    0%   { transform: translate(0,0) rotate(0deg); }
+    20%  { transform: translate(-4px, 2px) rotate(-2deg); }
+    40%  { transform: translate(4px, -2px) rotate(2deg); }
+    60%  { transform: translate(-3px, -1px) rotate(-1.5deg); }
+    80%  { transform: translate(3px, 1px) rotate(1.5deg); }
+    100% { transform: translate(0,0) rotate(0deg); }
+  }
+
+  .boss-hitbox.hot {
+    box-shadow: 0 0 60px rgba(255,140,60,0.7), inset 0 0 40px rgba(255,100,40,0.3);
+    border-color:#ff8c3c;
+  }
+  .boss-hitbox.critical {
+    box-shadow: 0 0 80px rgba(255,60,60,0.9), inset 0 0 50px rgba(255,60,60,0.4);
+    border-color:#ff3b3b;
+    animation: critPulse 0.8s ease-in-out infinite;
+  }
+  @keyframes critPulse {
+    0%, 100% { box-shadow: 0 0 60px rgba(255,60,60,0.7), inset 0 0 40px rgba(255,60,60,0.3); }
+    50%      { box-shadow: 0 0 100px rgba(255,60,60,1), inset 0 0 60px rgba(255,60,60,0.5); }
+  }
+
+  .boss-hitbox.blowup {
+    animation: bossBlowup 3.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards;
+  }
+  @keyframes bossBlowup {
+    0%   { transform: scale(1) rotate(0deg); }
+    10%  { transform: scale(1.3) rotate(3deg); }
+    20%  { transform: scale(0.95) rotate(-3deg); }
+    30%  { transform: scale(1.25) rotate(4deg); }
+    40%  { transform: scale(1) rotate(-2deg); }
+    50%  { transform: scale(1.2) rotate(3deg); }
+    60%  { transform: scale(1.02) rotate(-3deg); }
+    70%  { transform: scale(1.15) rotate(2deg); }
+    80%  { transform: scale(1.03) rotate(-1deg); }
+    90%  { transform: scale(1.08) rotate(1deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  .boss-face {
+    font-size:5rem; pointer-events:none;
+    filter: drop-shadow(0 0 20px rgba(255,60,60,0.8));
+    transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: faceGlow 3s ease-in-out infinite;
+  }
+  @keyframes faceGlow {
+    0%, 100% { filter: drop-shadow(0 0 15px rgba(255,60,60,0.6)); }
+    50%      { filter: drop-shadow(0 0 30px rgba(255,60,60,1)); }
+  }
+  .boss-hitbox:active .boss-face { transform: scale(0.85); }
+
+  .boss-click-power {
+    position:absolute; bottom:-30px; left:50%; transform:translateX(-50%);
+    color:#ff9b9b; font-size:0.85rem; font-weight:700; white-space:nowrap;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.9);
+  }
+
+  .arena-stats { display:flex; justify-content:space-between; padding:6px 15px; font-size:0.75rem; color:#b0a070; flex-shrink:0; background:rgba(28,14,14,0.7); }
+  .arena-stats b {
+    color:#ff9b9b;
+    display:inline-block;
+    transition: transform 0.2s ease, color 0.2s ease;
+  }
+  .arena-stats b.bump { transform: scale(1.2); color:#ffcc44; }
+
+  .excite-panel { padding:8px 15px 10px; flex-shrink:0; background:rgba(28,14,14,0.85); border-top:1px solid #4a4a2a; }
+  .excite-label { display:flex; justify-content:space-between; font-size:0.75rem; font-weight:800; color:#ff9b9b; letter-spacing:1px; margin-bottom:5px; text-transform:uppercase; }
+  .excite-label span:last-child { transition: transform 0.25s ease, color 0.25s ease; }
+  .excite-label span:last-child.bump { transform: scale(1.12); color:#ffcc44; }
+
+  .excite-bar-bg {
+    width:100%; height:24px; background:#0f0f00; border-radius:12px;
+    border:1px solid #4a2020; overflow:hidden; position:relative;
+    box-shadow: inset 0 2px 6px black;
+  }
+  .excite-bar-fill {
+    height:100%; width:0%;
+    background:linear-gradient(90deg,#8b1a1a,#ff3b3b,#ff6a3b);
+    border-radius:12px;
+    transition: width 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 0 15px rgba(255,60,60,0.7);
+    position: relative;
+    overflow: hidden;
+  }
+  .excite-bar-fill::after {
+    content:'';
+    position:absolute; inset:0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: translateX(-100%);
+    animation: barShine 2.5s ease-in-out infinite;
+  }
+  @keyframes barShine {
+    0%   { transform: translateX(-100%); }
+    50%  { transform: translateX(100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* ==== НИЖНЯЯ ПАНЕЛЬ — ВЕРНУЛ КАК БЫЛО (80px) ==== */
+  .tabs-bar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 30px 80px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    flex-shrink: 0;
+    z-index: 20;
+    gap: 10px;
+  }
+  .tabs-bar.hidden { display:none; }
+
+  .tab-btn {
+    background:transparent; border:none; cursor:pointer; color:#8a7a5a;
+    opacity:0.6; padding:5px; text-decoration:none;
+    display:flex; align-items:center; justify-content:center;
+    transition: all 0.3s ease;
+  }
+  .tab-btn.active {
+    opacity:1; color:#c4b08a; transform: scale(1.1);
+    filter: drop-shadow(0 0 8px rgba(180,150,90,0.6));
+  }
+  .tab-btn svg { width:28px; height:28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
+  .tab-btn.home-btn svg { width:36px; height:36px; }
+  .tab-btn.boss-btn svg { width:30px; height:30px; }
+
+  .boss-skull-glow {
+    animation: skullGlow 3s ease-in-out infinite;
+    transform-origin: center;
+  }
+  @keyframes skullGlow {
+    0%, 100% { filter: drop-shadow(0 0 3px rgba(200,60,60,0.4)); }
+    50%      { filter: drop-shadow(0 0 12px rgba(200,60,60,1)); }
+  }
+
+  /* ==== РЕЗУЛЬТАТ ==== */
+  .result-overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,0.85);
+    display:none; align-items:center; justify-content:center; z-index:2000;
+    backdrop-filter: blur(6px);
+  }
+  .result-overlay.show { display:flex; animation: overlayIn 0.4s ease; }
+  @keyframes overlayIn { from { opacity:0; } to { opacity:1; } }
+
+  .result-box {
+    background:#2d2d1a; border:2px solid #b8962e; border-radius:20px;
+    padding:30px 40px; text-align:center; max-width:360px; width:90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+    animation: boxIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes boxIn {
+    from { opacity:0; transform: scale(0.7); }
+    to   { opacity:1; transform: scale(1); }
+  }
+
+  .result-title { font-size:1.8rem; font-weight:900; letter-spacing:3px; margin-bottom:15px; text-transform:uppercase; }
+  .result-title.win { color:#4cd964; text-shadow: 0 0 20px rgba(76,217,100,0.8); }
+  .result-title.lose { color:#ff3b3b; text-shadow: 0 0 20px rgba(255,59,59,0.8); }
+
+  .result-text { color:#c4b08a; font-size:1rem; margin-bottom:15px; }
+  .result-reward {
+    font-size:1.5rem; font-weight:800; color:#b8962e; margin-bottom:10px;
+    text-shadow: 0 0 15px rgba(184,150,46,0.8);
+    animation: rewardPulse 1.2s ease-in-out infinite;
+  }
+  @keyframes rewardPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.06); }
+  }
+  .result-loot {
+    font-size:1rem; font-weight:700; color:#8fd4b0;
+    margin-bottom:20px; padding:10px;
+    background:rgba(143,212,176,0.1); border:1px solid #8fd4b0; border-radius:10px;
+    animation: lootIn 0.6s 0.3s both cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes lootIn {
+    from { opacity:0; transform: scale(0.6); }
+    to   { opacity:1; transform: scale(1); }
+  }
+  .result-btn {
+    background:rgba(184,150,46,0.2); border:2px solid #b8962e; color:#c4b08a;
+    padding:12px 30px; border-radius:12px; cursor:pointer;
+    font-weight:800; font-size:1rem; letter-spacing:2px; text-transform:uppercase;
+    transition: all 0.3s ease;
+  }
+  .result-btn:hover { background:rgba(184,150,46,0.4); transform: scale(1.05); box-shadow: 0 0 20px rgba(184,150,46,0.5); }
+  .result-btn:active { transform: scale(0.96); }
+
+  /* ==== ЭФФЕКТЫ ==== */
+  .flying-emoji {
+    position:fixed; font-size:2rem; pointer-events:none; z-index:100;
+    transform: translate(-50%,-50%);
+    will-change: transform, opacity;
+  }
+  .float-text {
+    position:fixed; pointer-events:none; font-weight:900; color:#b8962e;
+    font-size:1.3rem; z-index:500; white-space:nowrap;
+    transform: translate(-50%,-50%);
+    text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(184,150,46,0.7);
+    will-change: transform, opacity;
+  }
+  .click-ripple {
+    position:fixed; border-radius:50%; border:2px solid #b8962e;
+    pointer-events:none; z-index:90;
+    transform: translate(-50%,-50%);
+    will-change: width, height, opacity;
+  }
+
+  /* ==== АДАПТАЦИЯ ==== */
+  @media (max-width: 400px) {
+    .boss-hitbox { width:170px; height:170px; }
+    .arena-boss-wrap { width:170px; height:170px; }
+    .boss-face { font-size:4rem; }
+    .tabs-bar { padding-left: 15px; padding-right: 15px; }
+  }
+  @media (max-height: 700px) {
+    .tabs-bar { padding-bottom: 40px; padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
+    .arena { padding-bottom: 40px; padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px)); }
+  }
+  @media (max-height: 600px) {
+    .boss-hitbox { width:150px; height:150px; }
+    .arena-boss-wrap { width:150px; height:150px; }
+    .boss-face { font-size:3.5rem; }
+    .tabs-bar { padding-bottom: 15px; padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px)); }
+    .arena { padding-bottom: 15px; padding-bottom: calc(15px + env(safe-area-inset-bottom, 0px)); }
+    .excite-panel { padding: 5px 12px 6px; }
+    .excite-bar-bg { height: 18px; }
+    .arena-stats { padding: 4px 12px; font-size: 0.7rem; }
+  }
+</style>
+</head>
+<body>
+<div class="game-container" id="gameContainer">
+  <div class="header"><div class="header-title" id="headerTitle">БОССЫ</div></div>
+
+  <div class="score-board" id="scoreBoard">
+    <div class="sexpah">🔞 <span id="sexpahCount">0</span> секспахомов</div>
+  </div>
+
+  <div class="notify-bar" id="notifyBar"></div>
+
+  <div class="boss-list" id="bossList"></div>
+
+  <div class="arena" id="arena">
+    <div class="arena-top">
+      <button class="arena-back" id="arenaBack" title="К списку">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="arena-boss-name" id="arenaBossName">МИЛЛИРУТ</div>
+      <div class="arena-timer" id="arenaTimer">05:00</div>
+    </div>
+    <div class="arena-field">
+      <div class="arena-boss-wrap">
+        <div class="boss-hitbox" id="bossHitbox">
+          <div class="boss-face" id="bossFace">👨‍🦲</div>
+          <div class="boss-click-power" id="bossClickPower">+3</div>
+        </div>
+      </div>
+    </div>
+    <div class="arena-stats">
+      <span>Кликов: <b id="arenaClicks">0</b></span>
+      <span>Любовь: <b id="arenaLove">0</b></span>
+    </div>
+    <div class="excite-panel">
+      <div class="excite-label"><span>ПЕРЕВОЗБУЖДЕНИЕ</span><span id="exciteValue">0 / 2000</span></div>
+      <div class="excite-bar-bg"><div class="excite-bar-fill" id="exciteBarFill"></div></div>
+    </div>
+  </div>
+
+  <div class="tabs-bar" id="tabsBar">
+    <a class="tab-btn boss-btn active" title="Боссы" href="boss.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="boss-skull-glow">
+        <path d="M12 2C7.6 2 4 5.6 4 10c0 2.4 1 4.5 2.7 5.9V19c0 .6.4 1 1 1h1.3v-2h1.4v2h1.2v-2h1.4v2H14v-2h1.4v2H16.7c.6 0 1-.4 1-1v-3.1C19.4 14.5 20 12.4 20 10c0-4.4-3.6-8-8-8z"/>
+        <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+        <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+        <path d="M12 13.5l-1.2 2.5h2.4z" fill="currentColor"/>
+      </svg>
+    </a>
+    <a href="seks.html" class="tab-btn" title="Магазин">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    </a>
+    <a href="seks.html" class="tab-btn home-btn" title="Главная">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </a>
+    <a href="prof.html" class="tab-btn" title="Профиль">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </a>
+  </div>
+</div>
+
+<div class="result-overlay" id="resultOverlay">
+  <div class="result-box">
+    <div class="result-title" id="resultTitle">ПОБЕДА!</div>
+    <div class="result-text" id="resultText"></div>
+    <div class="result-reward" id="resultReward">+50 000</div>
+    <div class="result-loot hidden" id="resultLoot"></div>
+    <button class="result-btn" id="resultBtn">К СПИСКУ</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+  function $(id) { return document.getElementById(id); }
+  var sexpahCount=$('sexpahCount'), sexpahBox=document.querySelector('.sexpah');
+  var headerTitle=$('headerTitle'), scoreBoard=$('scoreBoard');
+  var bossList=$('bossList'), notifyBar=$('notifyBar'), arena=$('arena');
+  var arenaBossName=$('arenaBossName'), arenaTimer=$('arenaTimer'), arenaClicks=$('arenaClicks'), arenaLove=$('arenaLove');
+  var bossHitbox=$('bossHitbox'), bossFace=$('bossFace'), bossClickPower=$('bossClickPower');
+  var exciteBarFill=$('exciteBarFill'), exciteValue=$('exciteValue');
+  var resultOverlay=$('resultOverlay'), resultTitle=$('resultTitle'), resultText=$('resultText');
+  var resultReward=$('resultReward'), resultLoot=$('resultLoot'), resultBtn=$('resultBtn');
+  var arenaBack=$('arenaBack'), tabsBar=$('tabsBar');
+
+  var sexpah = 0;
+  try { sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0; } catch(e) {}
+  var bossInventory = {};
+  try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) { bossInventory = {}; }
+
+  var BOSSES = [
+    { id:'millirut', name:'Миллирут', face:'👨‍🦲', reward:50000, exciteMax:2000, clickPower:3, fightDuration:5*60*1000, cooldownDuration:30*60*1000, loot:{id:'ladder',name:'Пиздец дорогая лестница',icon:'🪜',chance:25} },
+    { id:'galyamov', name:'Галямов', face:'🧑‍🦲', reward:500000, exciteMax:5000, clickPower:3, fightDuration:10*60*1000, cooldownDuration:60*60*1000, loot:{id:'medphone',name:'Телефон медика',icon:'📱',chance:20} },
+    { id:'gorin', name:'Горин', face:'👨‍🦲', reward:1000000, exciteMax:10000, clickPower:3, fightDuration:15*60*1000, cooldownDuration:90*60*1000, loot:{id:'dern',name:'Дёрн',icon:'🌿',chance:15} }
+  ];
+  var LOOT_MAX=200, STATE_KEY='pahomBossState', STATE_VERSION=5;
+  var bossState = {};
+
+  function getSt(id) {
+    if (!bossState || typeof bossState !== 'object') bossState = {};
+    if (!bossState[id] || typeof bossState[id] !== 'object') bossState[id] = { fight:null, cooldownUntil:0 };
+    var st = bossState[id];
+    if (!('fight' in st)) st.fight = null;
+    if (typeof st.cooldownUntil !== 'number' || isNaN(st.cooldownUntil)) st.cooldownUntil = 0;
+    return st;
+  }
+  function defaultState() { var s = { __v: STATE_VERSION }; for (var i=0;i<BOSSES.length;i++) s[BOSSES[i].id] = { fight:null, cooldownUntil:0 }; return s; }
+  function loadState() {
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch(e) { raw = null; }
+    if (!raw || typeof raw !== 'object') { bossState = defaultState(); saveState(); return; }
+    bossState = raw; bossState.__v = STATE_VERSION;
+    var now = Date.now();
+    for (var i=0;i<BOSSES.length;i++) {
+      var b = BOSSES[i], st = getSt(b.id);
+      if (st.fight && st.fight.endAt && st.fight.endAt <= now) { st.cooldownUntil = st.fight.endAt + b.cooldownDuration; st.fight = null; }
+      if (st.cooldownUntil > 0 && st.cooldownUntil <= now) st.cooldownUntil = 0;
+    }
+    saveState();
+  }
+  function saveState() { try { localStorage.setItem(STATE_KEY, JSON.stringify(bossState)); } catch(e) {} }
+
+  var currentBoss=null, fightInterval=null, tickerInterval=null, isFightActive=false, lastClick=0, lastSave=0, cardRefs={};
+
+  function fmt(n) {
+    if (n>=1000000000){var v=n/1000000000;return (v<10?v.toFixed(1):Math.floor(v))+'B';}
+    if (n>=1000000){var v2=n/1000000;return (v2<10?v2.toFixed(1):Math.floor(v2))+'M';}
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+  function fmtTime(ms) {
+    var t = Math.max(0, Math.floor(ms/1000));
+    var h = Math.floor(t/3600), m = Math.floor((t%3600)/60), s = t%60;
+    function p(x){return (x<10?'0':'')+x;}
+    if (h>0) return p(h)+':'+p(m)+':'+p(s);
+    return p(m)+':'+p(s);
+  }
+  function updateScore() { if (sexpahCount) sexpahCount.textContent = fmt(sexpah); }
+  function bumpEl(el) {
+    if (!el) return;
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+    setTimeout(function(){ el.classList.remove('bump'); }, 300);
+  }
+  function showNotify(icon, text) {
+    if (!notifyBar) return;
+    var chip = document.createElement('div');
+    chip.className = 'notify-chip';
+    chip.textContent = icon + ' ' + text;
+    notifyBar.appendChild(chip);
+    setTimeout(function(){
+      chip.classList.add('leaving');
+      setTimeout(function(){ if (chip.parentNode) chip.parentNode.removeChild(chip); }, 400);
+    }, 4000);
+  }
+
+  function buildList() {
+    bossList.innerHTML = ''; cardRefs = {};
+    for (var i=0;i<BOSSES.length;i++) {
+      (function(boss){
+        var card = document.createElement('div');
+        card.className = 'boss-card';
+        card.innerHTML = '<div class="boss-avatar">'+boss.face+'</div>' +
+          '<div class="boss-info"><div class="boss-name">'+boss.name+'</div>' +
+          '<div class="boss-meta">' +
+            '<span class="boss-reward">💰 '+fmt(boss.reward)+' секспахомов</span>' +
+            '<span>🎯 Перевозбуждение: '+fmt(boss.exciteMax)+'</span>' +
+            '<span>⏳ КД: '+fmtTime(boss.cooldownDuration)+'</span>' +
+            '<span class="boss-loot">🎁 '+boss.loot.icon+' '+boss.loot.name+' ('+boss.loot.chance+'%)</span>' +
+            '<span class="boss-timer">—</span>' +
+          '</div></div>' +
+          '<div class="boss-status">—</div>';
+        card.addEventListener('click', function(){ onCard(boss); });
+        bossList.appendChild(card);
+        cardRefs[boss.id] = { card:card, timer:card.querySelector('.boss-timer'), status:card.querySelector('.boss-status') };
+      })(BOSSES[i]);
+    }
+  }
+
+  function refreshList() {
+    var now = Date.now();
+    var otherInProgress = false;
+    for (var i=0;i<BOSSES.length;i++) { if (getSt(BOSSES[i].id).fight) { otherInProgress = true; break; } }
+    for (var j=0;j<BOSSES.length;j++) {
+      var boss = BOSSES[j], ref = cardRefs[boss.id];
+      if (!ref) continue;
+      var st = getSt(boss.id);
+      ref.card.classList.remove('locked', 'in-progress');
+      if (st.fight) {
+        ref.card.classList.add('in-progress');
+        ref.status.className = 'boss-status in-progress';
+        ref.status.textContent = 'В БОЮ';
+        var pct = Math.floor((st.fight.excite/boss.exciteMax)*100);
+        ref.timer.textContent = 'Прогресс ' + pct + '% · ' + fmtTime(st.fight.endAt - now);
+      } else if (otherInProgress) {
+        ref.card.classList.add('locked');
+        ref.status.className = 'boss-status cooldown';
+        ref.status.textContent = 'ЗАНЯТО';
+        ref.timer.textContent = 'Другой босс в бою';
+      } else if (st.cooldownUntil > now) {
+        ref.card.classList.add('locked');
+        ref.status.className = 'boss-status cooldown';
+        ref.status.textContent = 'КД';
+        ref.timer.textContent = 'Через ' + fmtTime(st.cooldownUntil - now);
+      } else {
+        ref.status.className = 'boss-status ready';
+        ref.status.textContent = 'ГОТОВ';
+        ref.timer.textContent = 'Можно атаковать!';
+      }
+    }
+  }
+
+  function onCard(boss) {
+    var st = getSt(boss.id), now = Date.now();
+    var otherInProgress = false;
+    for (var i=0;i<BOSSES.length;i++) { if (BOSSES[i].id !== boss.id && getSt(BOSSES[i].id).fight) { otherInProgress = true; break; } }
+    if (st.fight) { enterFight(boss); return; }
+    if (otherInProgress) return;
+    if (st.cooldownUntil > now) return;
+
+    bossList.classList.add('fade-out');
+    setTimeout(function(){
+      bossList.classList.remove('fade-out');
+      enterFight(boss);
+    }, 260);
+  }
+
+  function enterFight(boss) {
+    var now = Date.now(), st = getSt(boss.id);
+    for (var i=0;i<BOSSES.length;i++) { if (BOSSES[i].id !== boss.id && getSt(BOSSES[i].id).fight) return; }
+    if (st.cooldownUntil > now) return;
+    if (st.fight && st.fight.endAt && st.fight.endAt <= now) st.fight = null;
+    if (!st.fight) { st.fight = { endAt: now + boss.fightDuration, clicks:0, damage:0, excite:0, startedAt: now }; saveState(); }
+
+    currentBoss = boss; isFightActive = true; lastClick = 0; lastSave = 0;
+    bossList.style.display = 'none';
+    scoreBoard.style.display = 'none';
+    tabsBar.classList.add('hidden');
+    arena.classList.add('active');
+    headerTitle.textContent = boss.name.toUpperCase();
+
+    arenaBossName.textContent = boss.name.toUpperCase();
+    bossFace.textContent = boss.face;
+    bossClickPower.textContent = '+' + boss.clickPower;
+
+    var f = st.fight;
+    arenaClicks.textContent = String(f.clicks);
+    arenaLove.textContent = String(f.damage);
+    exciteValue.textContent = fmt(f.excite) + ' / ' + fmt(boss.exciteMax);
+    updateBar(); updateHitbox(); updateTimer();
+    if (fightInterval) clearInterval(fightInterval);
+    fightInterval = setInterval(updateTimer, 250);
+  }
+
+  function updateBar() {
+    if (!currentBoss) return;
+    var st = getSt(currentBoss.id);
+    if (!st.fight) return;
+    var pct = Math.min(100, (st.fight.excite/currentBoss.exciteMax)*100);
+    exciteBarFill.style.width = pct + '%';
+  }
+  function updateHitbox() {
+    if (!currentBoss) return;
+    var st = getSt(currentBoss.id);
+    if (!st.fight) return;
+    var pct = st.fight.excite/currentBoss.exciteMax;
+    bossHitbox.classList.remove('hot', 'critical');
+    if (pct >= 0.85) bossHitbox.classList.add('critical');
+    else if (pct >= 0.5) bossHitbox.classList.add('hot');
+  }
+  function updateTimer() {
+    if (!isFightActive || !currentBoss) return;
+    var now = Date.now(), st = getSt(currentBoss.id);
+    if (!st.fight) return;
+    var remain = st.fight.endAt - now;
+    if (remain <= 0) { endFight(currentBoss, false); return; }
+    arenaTimer.textContent = fmtTime(remain);
+    arenaTimer.classList.toggle('danger', remain < 60000);
+  }
+
+  function hitBoss() {
+    if (!isFightActive || !currentBoss) return;
+    var now = Date.now();
+    if (now - lastClick < 55) return;
+    lastClick = now;
+
+    var st = getSt(currentBoss.id);
+    if (!st.fight) return;
+    if (st.fight.endAt <= now) { endFight(currentBoss, false); return; }
+
+    var power = currentBoss.clickPower;
+    st.fight.clicks++; st.fight.damage += power; st.fight.excite += power;
+    if (st.fight.excite >= currentBoss.exciteMax) st.fight.excite = currentBoss.exciteMax;
+
+    if (now - lastSave > 300) { lastSave = now; saveState(); }
+
+    arenaClicks.textContent = String(st.fight.clicks);
+    arenaLove.textContent = String(st.fight.damage);
+    bumpEl(arenaClicks);
+    bumpEl(arenaLove);
+
+    exciteValue.textContent = fmt(st.fight.excite) + ' / ' + fmt(currentBoss.exciteMax);
+    bumpEl(exciteValue);
+
+    updateBar(); updateHitbox();
+
+    var rect = bossHitbox.getBoundingClientRect();
+    var cx = rect.left + rect.width/2 + (Math.random()-0.5)*rect.width*0.6;
+    var cy = rect.top + rect.height/2 + (Math.random()-0.5)*rect.height*0.6;
+    spawnFloat(cx, cy, '+' + power);
+    spawnRipple(cx, cy);
+
+    var pct = st.fight.excite / currentBoss.exciteMax;
+    if (pct > 0.85) {
+      bossHitbox.classList.remove('shake');
+      void bossHitbox.offsetWidth;
+      bossHitbox.classList.add('shake');
+      setTimeout(function(){ bossHitbox.classList.remove('shake'); }, 260);
+    }
+
+    if (st.fight.excite >= currentBoss.exciteMax) { saveState(); endFight(currentBoss, true); }
+  }
+
+  function spawnFloat(x,y,text) {
+    var el = document.createElement('div');
+    el.className = 'float-text';
+    el.textContent = text;
+    el.style.left = x+'px'; el.style.top = y+'px';
+    el.style.fontSize = (1.2 + Math.random()*0.3) + 'rem';
+    el.style.marginLeft = ((Math.random()-0.5)*40) + 'px';
+    document.body.appendChild(el);
+    var start = performance.now();
+    var duration = 1000;
+    var driftY = -100 - Math.random()*40;
+    function frame(t){
+      var e = Math.min((t-start)/duration, 1);
+      var easeOut = 1 - Math.pow(1-e, 3);
+      var opacity = e < 0.15 ? e/0.15 : 1 - ((e-0.15)/0.85);
+      var scale = e < 0.2 ? 0.6 + (e/0.2)*0.7 : 1.3 - ((e-0.2)/0.8)*0.3;
+      el.style.opacity = String(Math.max(0, opacity));
+      el.style.transform = 'translate(-50%, ' + (driftY*easeOut) + 'px) scale(' + scale + ')';
+      if (e<1) requestAnimationFrame(frame);
+      else if (el.parentNode) el.parentNode.removeChild(el);
+    }
+    requestAnimationFrame(frame);
+  }
+  function spawnRipple(x,y) {
+    var r = document.createElement('div');
+    r.className = 'click-ripple';
+    r.style.left = x+'px'; r.style.top = y+'px';
+    r.style.width = '20px'; r.style.height = '20px';
+    document.body.appendChild(r);
+    var start = performance.now();
+    var dur = 600;
+    function frame(t){
+      var e = Math.min((t-start)/dur, 1);
+      var ease = 1 - Math.pow(1-e, 3);
+      var s = 20+ease*100;
+      r.style.width = s+'px'; r.style.height = s+'px';
+      r.style.opacity = String(0.9*(1-e));
+      if (e<1) requestAnimationFrame(frame);
+      else if (r.parentNode) r.parentNode.removeChild(r);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function triggerVictoryBlowup() {
+    var rect = bossHitbox.getBoundingClientRect();
+    var cx = rect.left + rect.width/2;
+    var cy = rect.top + rect.height/2;
+    var radius = rect.width/2;
+
+    bossHitbox.classList.remove('shake');
+    bossHitbox.classList.add('blowup');
+
+    var screenH = window.innerHeight;
+    var count = 22;
+    for (var i = 0; i < count; i++) {
+      var emoji = document.createElement('div');
+      emoji.className = 'flying-emoji';
+      emoji.textContent = '🔞';
+      emoji.style.left = '0';
+      emoji.style.top = '0';
+      emoji.style.opacity = '0';
+
+      var angle = (Math.PI*2/count)*i + (Math.random()*0.4 - 0.2);
+      var startX = cx + Math.cos(angle)*radius;
+      var startY = cy + Math.sin(angle)*radius;
+      var burstDist = 100 + Math.random()*80;
+      var burstX = Math.cos(angle)*burstDist;
+      var burstY = Math.sin(angle)*burstDist;
+      var fallY = (screenH - startY) + 100;
+      var rotation = Math.random()*720 - 360;
+      var delay = Math.random()*120;
+
+      document.body.appendChild(emoji);
+      animateBossEmoji(emoji, startX, startY, burstX, burstY, fallY, rotation, delay);
+    }
+  }
+
+  function animateBossEmoji(emoji, startX, startY, burstX, burstY, fallY, rotation, delay) {
+    var duration = 2800;
+    var startTime = performance.now() + delay;
+    function frame(currentTime) {
+      var elapsed = currentTime - startTime;
+      if (elapsed < 0) { requestAnimationFrame(frame); return; }
+      var t = Math.min(elapsed/duration, 1);
+      var x, y, scale, opacity, rotate;
+      if (t < 0.35) {
+        var p = t / 0.35;
+        var ease = 1 - Math.pow(1-p, 3);
+        x = burstX * ease;
+        y = burstY * ease;
+        scale = 0.6 + 0.6*ease;
+        opacity = ease*0.9 + 0.1;
+        rotate = rotation*ease*0.6;
+      } else {
+        var p2 = (t - 0.35) / 0.65;
+        var e = p2 < 0.5 ? 2*p2*p2 : 1 - Math.pow(-2*p2 + 2, 2)/2;
+        x = burstX + burstX*0.15*e;
+        y = burstY + fallY*e;
+        scale = 1.2 - 0.9*e;
+        opacity = 1 - e;
+        rotate = rotation*0.6 + rotation*0.4*e;
+      }
+      emoji.style.transform = 'translate(' + (startX+x) + 'px, ' + (startY+y) + 'px) translate(-50%,-50%) scale(' + scale + ') rotate(' + rotate + 'deg)';
+      emoji.style.opacity = opacity;
+      if (t < 1) requestAnimationFrame(frame);
+      else if (emoji.parentNode) emoji.parentNode.removeChild(emoji);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function exitToBossList() {
+    if (fightInterval) { clearInterval(fightInterval); fightInterval = null; }
+    isFightActive = false; currentBoss = null; lastClick = 0; lastSave = 0;
+    arena.classList.remove('active');
+    bossList.style.display = '';
+    scoreBoard.style.display = '';
+    tabsBar.classList.remove('hidden');
+    headerTitle.textContent = 'БОССЫ';
+    bossHitbox.classList.remove('hot', 'critical', 'shake', 'blowup');
+    exciteBarFill.style.width = '0%';
+    arenaClicks.textContent = '0';
+    arenaLove.textContent = '0';
+    arenaTimer.textContent = '00:00';
+    refreshList();
+  }
+
+  function endFight(boss, win) {
+    if (!boss) return;
+    var now = Date.now(), st = getSt(boss.id);
+    if (!st.fight) return;
+    isFightActive = false;
+    if (fightInterval) { clearInterval(fightInterval); fightInterval = null; }
+    var lootDropped = null;
+    if (win) {
+      sexpah += boss.reward;
+      try { localStorage.setItem('pahomSexpah', String(sexpah)); } catch(e) {}
+      updateScore();
+      bumpEl(sexpahBox);
+
+      if (Math.random()*100 < boss.loot.chance) {
+        var lid = boss.loot.id;
+        if (!bossInventory[lid]) bossInventory[lid] = 0;
+        if (bossInventory[lid] < LOOT_MAX) {
+          bossInventory[lid]++;
+          lootDropped = boss.loot;
+          try { localStorage.setItem('pahomBossInventory', JSON.stringify(bossInventory)); } catch(e) {}
+        }
+      }
+      st.fight = null; st.cooldownUntil = now + boss.cooldownDuration;
+      saveState();
+
+      triggerVictoryBlowup();
+      if (lootDropped) showNotify(lootDropped.icon, 'ВЫПАЛ ПРЕДМЕТ: ' + lootDropped.name);
+
+      setTimeout(function(){
+        currentBoss = null;
+        arena.classList.remove('active');
+        bossList.style.display = '';
+        scoreBoard.style.display = '';
+        tabsBar.classList.remove('hidden');
+        headerTitle.textContent = 'БОССЫ';
+        bossHitbox.classList.remove('hot', 'critical', 'shake', 'blowup');
+        exciteBarFill.style.width = '0%';
+        arenaClicks.textContent = '0';
+        arenaLove.textContent = '0';
+        arenaTimer.textContent = '00:00';
+        refreshList();
+        showResult(true, boss.reward, lootDropped);
+      }, 600);
+      return;
+    } else {
+      st.fight = null; st.cooldownUntil = now + boss.cooldownDuration;
+      saveState();
+      showResult(false, 0, null);
+    }
+    currentBoss = null;
+    arena.classList.remove('active');
+    bossList.style.display = '';
+    scoreBoard.style.display = '';
+    tabsBar.classList.remove('hidden');
+    headerTitle.textContent = 'БОССЫ';
+    bossHitbox.classList.remove('hot', 'critical', 'shake', 'blowup');
+    exciteBarFill.style.width = '0%';
+    arenaClicks.textContent = '0';
+    arenaLove.textContent = '0';
+    arenaTimer.textContent = '00:00';
+    refreshList();
+  }
+
+  function showResult(win, reward, loot) {
+    resultTitle.textContent = win ? 'ПОБЕДА!' : 'ПОРАЖЕНИЕ';
+    resultTitle.className = 'result-title ' + (win ? 'win' : 'lose');
+    if (win) {
+      resultText.textContent = 'Ты завалил босса!';
+      resultReward.textContent = '+' + fmt(reward) + ' секспахомов';
+      resultReward.style.display = 'block';
+      if (loot) { resultLoot.innerHTML = '🎁 '+loot.icon+' <b>'+loot.name+'</b>'; resultLoot.classList.remove('hidden'); }
+      else resultLoot.classList.add('hidden');
+    } else {
+      resultText.textContent = 'Не успел — босс сбежал.';
+      resultReward.style.display = 'none';
+      resultLoot.classList.add('hidden');
+    }
+    resultOverlay.classList.add('show');
+  }
+  function closeResult() { resultOverlay.classList.remove('show'); refreshList(); }
+
+  function startTicker() {
+    if (tickerInterval) clearInterval(tickerInterval);
+    tickerInterval = setInterval(function() {
+      if (bossList.style.display !== 'none') refreshList();
+      if (isFightActive) saveState();
+    }, 1000);
+  }
+
+  function autoEnter() {
+    var now = Date.now(), activeBoss = null;
+    for (var i=0;i<BOSSES.length;i++) {
+      var st = getSt(BOSSES[i].id);
+      if (st.fight && st.fight.endAt && st.fight.endAt > now) {
+        if (!st.fight.clicks && !st.fight.excite) { st.fight = null; saveState(); continue; }
+        activeBoss = BOSSES[i]; break;
+      }
+    }
+    if (activeBoss) enterFight(activeBoss);
+  }
+
+  function init() {
+    updateScore(); loadState(); buildList(); refreshList();
+    bossHitbox.addEventListener('click', hitBoss);
+    bossHitbox.addEventListener('touchstart', function(e){ e.preventDefault(); hitBoss(); }, { passive:false });
+    arenaBack.addEventListener('click', exitToBossList);
+    resultBtn.addEventListener('click', closeResult);
+    window.addEventListener('beforeunload', function(){ if (isFightActive) saveState(); });
+    document.addEventListener('visibilitychange', function(){ if (document.hidden && isFightActive) saveState(); });
+    startTicker(); autoEnter();
+  }
+
+  try { init(); } catch(e) {
+    bossList.innerHTML = '<div style="color:#ff3b3b;padding:20px;font-family:monospace;">ОШИБКА: ' + e.message + '</div>';
+  }
+})();
+</script>
+</body>
+</html>

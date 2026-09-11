@@ -5,13 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>ГЛАВНАЯ — кликер Пахома</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
 
         :root {
             --bg: #0a0a0a;
@@ -38,7 +32,7 @@
         .game-container {
             background-color: #1a1a1a;
             background-image: 
-                linear-gradient(rgba(10, 10, 10, 0.82), rgba(10, 10, 10, 0.92)),
+                linear-gradient(rgba(10,10,10,0.82), rgba(10,10,10,0.92)),
                 url('Fon.jpeg');
             background-size: cover;
             background-position: center;
@@ -110,6 +104,37 @@
             color: #b0a070;
         }
 
+        .buffs-top {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 6px 15px;
+            flex-shrink: 0;
+            background: rgba(28, 28, 14, 0.4);
+            backdrop-filter: blur(4px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .buffs-top.hidden { display: none; }
+
+        .buff-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(184, 150, 46, 0.15);
+            border: 1px solid var(--gold);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--gold);
+            font-family: 'Courier New', monospace;
+        }
+
+        .buff-chip .buff-icon { font-size: 1rem; }
+        .buff-chip .buff-timer { letter-spacing: 1px; }
+
         .content-area {
             flex: 1;
             min-height: 0;
@@ -133,17 +158,14 @@
             display: block;
             animation: pageInRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
-
         .page.exit-right {
             display: block;
             animation: pageOutRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
-
         .page.exit-left {
             display: block;
             animation: pageOutLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
-
         .page.active-left {
             display: block;
             animation: pageInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
@@ -153,17 +175,14 @@
             0% { opacity: 0; transform: translateX(100%); }
             100% { opacity: 1; transform: translateX(0); }
         }
-
         @keyframes pageOutRight {
             0% { opacity: 1; transform: translateX(0); }
             100% { opacity: 0; transform: translateX(-100%); }
         }
-
         @keyframes pageInLeft {
             0% { opacity: 0; transform: translateX(-100%); }
             100% { opacity: 1; transform: translateX(0); }
         }
-
         @keyframes pageOutLeft {
             0% { opacity: 1; transform: translateX(0); }
             100% { opacity: 0; transform: translateX(100%); }
@@ -247,7 +266,7 @@
             left: 0;
             top: 0;
             box-shadow: 0 0 30px rgba(180, 150, 60, 0.3);
-            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.5s ease;
+            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.5s ease, border-color 0.4s;
             will-change: transform;
             pointer-events: auto;
             z-index: 15;
@@ -255,13 +274,11 @@
             backdrop-filter: blur(3px);
         }
 
-        .pahom-hitbox.float {
-            animation: floatAnimation 6s ease-in-out infinite;
-        }
+        .pahom-hitbox.float { animation: floatAnimation 6s ease-in-out infinite; }
 
         @keyframes floatAnimation {
             0%, 100% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(-8px) scale(1.02); }
+            50%      { transform: translateY(-8px) scale(1.02); }
         }
 
         .pahom-hitbox:hover {
@@ -317,7 +334,7 @@
 
         @keyframes glowPulse {
             0%, 100% { filter: drop-shadow(0 0 10px rgba(140, 110, 60, 0.6)); }
-            50% { filter: drop-shadow(0 0 25px rgba(180, 150, 90, 0.9)); }
+            50%      { filter: drop-shadow(0 0 25px rgba(180, 150, 90, 0.9)); }
         }
 
         .pahom-hitbox:active .pahom-face {
@@ -358,7 +375,7 @@
 
         @keyframes pulseGlow {
             from { box-shadow: 0 0 15px #c0392b; }
-            to { box-shadow: 0 0 35px #e67e22; }
+            to   { box-shadow: 0 0 35px #e67e22; }
         }
 
         .flying-emoji {
@@ -381,6 +398,7 @@
             background: transparent;
             border-top: none;
             z-index: 20;
+            gap: 10px;
         }
 
         .tab-btn {
@@ -410,162 +428,30 @@
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
         }
 
-        .tab-btn.home-btn svg {
-            width: 36px;
-            height: 36px;
+        .tab-btn.home-btn svg { width: 36px; height: 36px; }
+        .tab-btn.boss-btn svg { width: 30px; height: 30px; }
+
+        .tab-btn.boss-btn:hover svg {
+            filter: drop-shadow(0 0 10px rgba(200, 60, 60, 0.9));
+            transform: scale(1.15);
+        }
+        .tab-btn.boss-btn:hover { color: #c0392b; }
+
+        .boss-skull-glow {
+            animation: skullGlow 3s ease-in-out infinite;
+            transform-origin: center;
         }
 
-        .shop-panel {
-            padding: 10px;
-            overflow-y: auto;
-            height: 100%;
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
+        @keyframes skullGlow {
+            0%, 100% { filter: drop-shadow(0 0 3px rgba(200, 60, 60, 0.4)); }
+            50%      { filter: drop-shadow(0 0 9px rgba(200, 60, 60, 0.9)); }
         }
 
-        .shop-panel::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .shop-panel::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .shop-panel::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 3px;
-        }
-
-        .shop-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 10px 12px;
-            margin-bottom: 8px;
-            background: rgba(30, 30, 14, 0.6);
-            backdrop-filter: blur(4px);
-            transition: all 0.4s;
-            cursor: pointer;
-            animation: itemIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-            opacity: 0;
-        }
-
-        .shop-item:nth-child(1) { animation-delay: 0.05s; }
-        .shop-item:nth-child(2) { animation-delay: 0.1s; }
-        .shop-item:nth-child(3) { animation-delay: 0.15s; }
-        .shop-item:nth-child(4) { animation-delay: 0.2s; }
-        .shop-item:nth-child(5) { animation-delay: 0.25s; }
-        .shop-item:nth-child(6) { animation-delay: 0.3s; }
-        .shop-item:nth-child(7) { animation-delay: 0.35s; }
-
-        @keyframes itemIn {
-            0% { opacity: 0; transform: translateX(-60px); }
-            100% { opacity: 1; transform: translateX(0); }
-        }
-
-        .shop-item:hover {
-            border-color: #6a6a3a;
-            transform: translateX(4px);
-            background: rgba(45, 45, 26, 0.7);
-        }
-
-        .shop-item:active {
-            transform: scale(0.98);
-        }
-
-        .shop-item.selected {
-            border-color: var(--gold);
-            background: rgba(184, 150, 46, 0.2);
-        }
-
-        .shop-item-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-        }
-
-        .shop-item img {
-            width: 40px;
-            height: 40px;
-            border-radius: 6px;
-            background: #111;
-        }
-
-        .item-info {
-            flex: 1;
-        }
-
-        .item-name {
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--text);
-        }
-
-        .item-desc {
-            font-size: 0.75rem;
-            color: #b0a070;
-        }
-
-        .inventory-panel {
-            padding: 10px;
-            overflow-y: auto;
-            height: 100%;
-        }
-
-        .inventory-title {
-            color: var(--text);
-            font-size: 0.9rem;
-            font-weight: 800;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 15px;
-            text-align: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 8px;
-        }
-
-        .inventory-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            border: 1px solid var(--gold);
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 8px;
-            background: rgba(184, 150, 46, 0.15);
-            backdrop-filter: blur(4px);
-        }
-
-        .inventory-item-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-        }
-
-        .inventory-item-name {
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--gold);
-        }
-
-        .inventory-timer {
-            font-size: 0.85rem;
-            color: var(--text);
-            font-family: 'Courier New', monospace;
-            letter-spacing: 1px;
-        }
-
-        .inventory-empty {
-            text-align: center;
-            color: var(--accent);
-            font-size: 0.9rem;
-            padding: 20px;
+        /* ==== ИСПРАВЛЕНО: анимация иконки боссов без задержки ==== */
+        .tab-btn.boss-btn { animation: bossIconAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+        @keyframes bossIconAppear {
+            0%   { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 0.6; transform: scale(1); }
         }
 
         .shop-tabs {
@@ -594,6 +480,175 @@
             background: rgba(184, 150, 46, 0.25);
         }
 
+        .shop-content-area {
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            overflow: hidden;
+            perspective: 1200px;
+        }
+
+        .shop-page {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            backface-visibility: hidden;
+            transform-style: preserve-3d;
+        }
+
+        .shop-page.active {
+            display: block;
+            animation: pageInRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        .shop-page.exit-left {
+            display: block;
+            animation: pageOutLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        .shop-page.exit-right {
+            display: block;
+            animation: pageOutRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        .shop-page.enter-left {
+            display: block;
+            animation: pageInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .shop-panel {
+            padding: 10px;
+            overflow-y: auto;
+            height: 100%;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+
+        .shop-panel::-webkit-scrollbar { width: 6px; }
+        .shop-panel::-webkit-scrollbar-track { background: transparent; }
+        .shop-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .shop-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            background: rgba(30, 30, 14, 0.6);
+            backdrop-filter: blur(4px);
+            transition: all 0.4s;
+            cursor: pointer;
+        }
+
+        .shop-item:hover {
+            border-color: #6a6a3a;
+            transform: translateX(4px);
+            background: rgba(45, 45, 26, 0.7);
+        }
+
+        .shop-item:active { transform: scale(0.98); }
+
+        .shop-item.selected {
+            border-color: var(--gold);
+            background: rgba(184, 150, 46, 0.2);
+        }
+
+        .shop-item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .item-info { flex: 1; }
+        .item-name { font-weight: 700; font-size: 1rem; color: var(--text); }
+        .item-desc { font-size: 0.75rem; color: #b0a070; }
+
+        .inventory-panel {
+            padding: 10px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .inventory-title {
+            color: var(--text);
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .inventory-section { margin-bottom: 20px; }
+
+        .inventory-section-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--gold);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            padding-left: 5px;
+            opacity: 0.8;
+        }
+
+        .inventory-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            border: 1px solid var(--gold);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: rgba(184, 150, 46, 0.15);
+            backdrop-filter: blur(4px);
+        }
+
+        .inventory-item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .inventory-item-icon {
+            font-size: 1.8rem;
+            filter: drop-shadow(0 0 8px rgba(184, 150, 46, 0.5));
+        }
+
+        .inventory-item-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--gold);
+        }
+
+        .inventory-item-count {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+
+        .inventory-item-count.max {
+            color: #ff8c3c;
+            text-shadow: 0 0 10px rgba(255, 140, 60, 0.7);
+        }
+
+        .inventory-empty {
+            text-align: center;
+            color: var(--accent);
+            font-size: 0.9rem;
+            padding: 20px;
+        }
+
         .loading-screen {
             position: fixed;
             top: 0;
@@ -618,21 +673,115 @@
             0% { opacity: 0; transform: scale(0.3); }
             100% { opacity: 1; transform: scale(1); }
         }
-
         @keyframes loadingPulse {
             0%, 100% { transform: scale(1); opacity: 0.9; }
-            50% { transform: scale(1.05); opacity: 1; }
+            50%      { transform: scale(1.05); opacity: 1; }
         }
-
         @keyframes fadeOut {
             from { opacity: 1; }
-            to { opacity: 0; visibility: hidden; }
+            to   { opacity: 0; visibility: hidden; }
+        }
+
+        .float-text {
+            position: fixed;
+            pointer-events: none;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: var(--gold);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(184,150,46,0.6);
+            z-index: 200;
+            white-space: nowrap;
+            transform: translate(-50%, -50%);
+        }
+
+        .combo-counter {
+            position: fixed;
+            top: 160px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.6);
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--gold);
+            text-shadow: 0 3px 6px rgba(0,0,0,0.9), 0 0 20px rgba(184,150,46,0.8);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 150;
+            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), color 0.3s;
+            letter-spacing: 2px;
+        }
+        .combo-counter.show { opacity: 1; transform: translateX(-50%) scale(1); }
+        .combo-counter.hot {
+            color: #ff6a3b;
+            text-shadow: 0 3px 6px rgba(0,0,0,0.9), 0 0 28px rgba(255,106,59,0.9);
+        }
+        .combo-counter.pulse { animation: comboPulse 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        @keyframes comboPulse {
+            0%   { transform: translateX(-50%) scale(1); }
+            40%  { transform: translateX(-50%) scale(1.28); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+
+        .combo-bar {
+            position: fixed;
+            top: 0; left: 0;
+            height: 4px; width: 0%;
+            background: linear-gradient(90deg, #8b1a1a, var(--gold));
+            box-shadow: 0 0 12px rgba(184,150,46,0.8);
+            z-index: 300;
+            transition: width 0.12s linear, opacity 0.3s;
+            opacity: 0;
+        }
+        .combo-bar.show { opacity: 1; }
+
+        .click-ripple {
+            position: fixed;
+            border-radius: 50%;
+            border: 2px solid var(--gold);
+            pointer-events: none;
+            z-index: 90;
+            transform: translate(-50%, -50%);
+            opacity: 0.9;
+        }
+
+        .combo-bonus {
+            position: fixed;
+            top: 210px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-10px);
+            font-size: 1rem;
+            font-weight: 800;
+            color: #ff8c3c;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 14px rgba(255,140,60,0.7);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 150;
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        .combo-bonus.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        .pahom-hitbox.combo-hot {
+            box-shadow: 0 0 60px rgba(255,140,60,0.7), 0 0 0 4px rgba(255,140,60,0.3);
+            border-color: #ff8c3c;
+        }
+        .pahom-hitbox.combo-max {
+            box-shadow: 0 0 80px rgba(255,60,60,0.9), 0 0 0 6px rgba(255,60,60,0.4);
+            border-color: #ff3b3b;
+            animation: maxComboPulse 0.8s ease-in-out infinite;
+        }
+        @keyframes maxComboPulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.04); }
         }
 
         @media (max-width: 400px) {
             .pahom-hitbox { width: 170px; height: 170px; }
             .pahom-wrap { width: 170px; height: 170px; }
             .pahom-face { font-size: 4rem; }
+            .combo-counter { font-size: 1.8rem; }
+            .combo-bonus { font-size: 0.9rem; top: 200px; }
+            .tabs-bar { padding: 0 15px 80px; }
         }
     </style>
 </head>
@@ -652,6 +801,8 @@
                 <span id="currentToolIcon">✋</span> <span id="currentToolName">Рука</span>
             </div>
         </div>
+
+        <div class="buffs-top hidden" id="buffsTop"></div>
 
         <div class="content-area">
             <div id="homePanel" class="page active">
@@ -680,86 +831,18 @@
                         <button id="shopBuffsTab" class="shop-tab">Баффы</button>
                         <button id="shopInventoryTab" class="shop-tab">Инвентарь</button>
                     </div>
-                    <div id="shopItemsContent" class="shop-panel">
-                        <div class="shop-item" data-tool="hand">
-                            <div class="shop-item-info">
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E✋%3C/text%3E%3C/svg%3E">
-                                <div class="item-info">
-                                    <div class="item-name">Рука</div>
-                                    <div class="item-desc">+1 за клик</div>
-                                </div>
-                            </div>
+                    <div class="shop-content-area">
+                        <div id="shopItemsContent" class="shop-page active">
+                            <div class="shop-panel"></div>
                         </div>
-                        <div class="shop-item" data-tool="whip">
-                            <div class="shop-item-info">
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E🐍%3C/text%3E%3C/svg%3E">
-                                <div class="item-info">
-                                    <div class="item-name">Плетка</div>
-                                    <div class="item-desc">+2 за клик · 500 секспахомов</div>
-                                </div>
-                            </div>
+                        <div id="shopBuffsContent" class="shop-page">
+                            <div class="shop-panel"></div>
                         </div>
-                        <div class="shop-item" data-tool="stick">
-                            <div class="shop-item-info">
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E🥢%3C/text%3E%3C/svg%3E">
-                                <div class="item-info">
-                                    <div class="item-name">Палка</div>
-                                    <div class="item-desc">+3 за клик · 3500 секспахомов</div>
-                                </div>
+                        <div id="shopInventoryContent" class="shop-page">
+                            <div class="inventory-panel">
+                                <div class="inventory-title">Инвентарь</div>
+                                <div id="inventoryList"></div>
                             </div>
-                        </div>
-                        <div class="shop-item" data-tool="shank">
-                            <div class="shop-item-info">
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E🔧%3C/text%3E%3C/svg%3E">
-                                <div class="item-info">
-                                    <div class="item-name">Черенок</div>
-                                    <div class="item-desc">+4 за клик · 25000 секспахомов</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="shop-item" data-tool="shovel">
-                            <div class="shop-item-info">
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E🪏%3C/text%3E%3C/svg%3E">
-                                <div class="item-info">
-                                    <div class="item-name">Лопата</div>
-                                    <div class="item-desc">+5 за клик · 55000 секспахомов</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="shop-item" data-tool="commissar">
-                            <div class="shop-item-info">
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E🎖️%3C/text%3E%3C/svg%3E">
-                                <div class="item-info">
-                                    <div class="item-name">Замполит</div>
-                                    <div class="item-desc">+6 за клик · 85000 секспахомов</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="shop-item" data-tool="drin">
-                            <div class="shop-item-info">
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E🌲%3C/text%3E%3C/svg%3E">
-                                <div class="item-info">
-                                    <div class="item-name">Дрын</div>
-                                    <div class="item-desc">+10 за клик · 100000 секспахомов</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="shopBuffsContent" class="shop-panel hidden">
-                        <div class="shop-item" data-buff="viagra">
-                            <div class="shop-item-info">
-                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232a2a1a'/%3E%3Ctext x='50' y='60' font-size='50' text-anchor='middle' fill='%23c4b08a'%3E💊%3C/text%3E%3C/svg%3E">
-                                <div class="item-info">
-                                    <div class="item-name">Виагра</div>
-                                    <div class="item-desc">Пахом возбуждается медленнее · 5000 секспахомов · 5 мин</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="shopInventoryContent" class="inventory-panel hidden">
-                        <div class="inventory-title">Инвентарь</div>
-                        <div id="inventoryList">
-                            <div class="inventory-empty">Пусто</div>
                         </div>
                     </div>
                 </div>
@@ -770,6 +853,14 @@
         <div id="excitedNotification" class="notification hidden">🚨 ПАХОМ ПЕРЕВОЗБУДИЛСЯ!</div>
 
         <div class="tabs-bar">
+            <a href="boss.html" class="tab-btn boss-btn" title="Боссы">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="boss-skull-glow">
+                    <path d="M12 2C7.6 2 4 5.6 4 10c0 2.4 1 4.5 2.7 5.9V19c0 .6.4 1 1 1h1.3v-2h1.4v2h1.2v-2h1.4v2H14v-2h1.4v2H16.7c.6 0 1-.4 1-1v-3.1C19.4 14.5 20 12.4 20 10c0-4.4-3.6-8-8-8z"/>
+                    <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+                    <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+                    <path d="M12 13.5l-1.2 2.5h2.4z" fill="currentColor"/>
+                </svg>
+            </a>
             <button id="shopTab" class="tab-btn" title="Магазин">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
             </button>
@@ -782,10 +873,14 @@
         </div>
     </div>
 
+    <div class="combo-bar" id="comboBar"></div>
+    <div class="combo-counter" id="comboCounter">x1</div>
+    <div class="combo-bonus" id="comboBonus">БОНУС КОМБО: +1</div>
+
     <script>
         (function() {
             const $ = (id) => document.getElementById(id);
-            
+
             const sexpahSpan = $('sexpahCount');
             const loveVerticalFill = $('loveVerticalFill');
             const pahomHitbox = $('pahomHitbox');
@@ -796,12 +891,16 @@
             const clickPowerLabel = $('clickPowerLabel');
             const headerTitle = $('headerTitle');
             const loadingScreen = $('loadingScreen');
-            
+            const comboCounter = $('comboCounter');
+            const comboBar = $('comboBar');
+            const comboBonus = $('comboBonus');
+            const buffsTop = $('buffsTop');
+
             const homePanel = $('homePanel');
             const shopPanel = $('shopPanel');
             const homeTab = $('homeTab');
             const shopTab = $('shopTab');
-            
+
             const shopItemsTab = $('shopItemsTab');
             const shopBuffsTab = $('shopBuffsTab');
             const shopInventoryTab = $('shopInventoryTab');
@@ -809,9 +908,6 @@
             const shopBuffsContent = $('shopBuffsContent');
             const shopInventoryContent = $('shopInventoryContent');
             const inventoryList = $('inventoryList');
-            
-            const shopItems = document.querySelectorAll('.shop-item[data-tool]');
-            const buffItems = document.querySelectorAll('.shop-item[data-buff]');
 
             let sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0');
             let love = 0;
@@ -820,6 +916,9 @@
             let totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0');
             let currentTool = localStorage.getItem('pahomTool') || 'hand';
             let activeBuffs = JSON.parse(localStorage.getItem('pahomBuffs') || '{}');
+            let bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}');
+
+            const LOOT_MAX = 200;
 
             const tools = {
                 hand: { name: 'Рука', icon: '✋', clickPower: 1, requirement: 0 },
@@ -835,13 +934,51 @@
                 viagra: { name: 'Виагра', icon: '💊', price: 5000, duration: 5 * 60 * 1000 }
             };
 
+            const LOOT_META = {
+                ladder:   { name: 'Пиздец дорогая лестница', icon: '🪜' },
+                medphone: { name: 'Телефон медика', icon: '📱' },
+                dern:     { name: 'Дёрн', icon: '🌿' }
+            };
+
             let isCooldown = false;
             let cooldownRemaining = 0;
             let cooldownInterval = null;
             let lastClickTime = Date.now();
             let decayInterval = null;
             let buffInterval = null;
+            let tickerInterval = null;
             let isAnimating = false;
+            let currentShopTab = 'items';
+            let isShopTabAnimating = false;
+
+            let combo = 0;
+            let comboTimer = null;
+            const COMBO_TIMEOUT = 1500;
+            const COMBO_MAX = 20;
+
+            let lastHandledClick = 0;
+
+            const invRefs = {};
+            let shopRendered = false;
+
+            function formatSexpah(n) {
+                if (n >= 1000000000) {
+                    const v = n / 1000000000;
+                    return (v < 10 ? v.toFixed(1) : Math.floor(v)) + 'B';
+                }
+                if (n >= 1000000) {
+                    const v = n / 1000000;
+                    return (v < 10 ? v.toFixed(1) : Math.floor(v)) + 'M';
+                }
+                return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            }
+
+            function formatTime(ms) {
+                const totalSec = Math.floor(ms / 1000);
+                const min = Math.floor(totalSec / 60);
+                const sec = totalSec % 60;
+                return (min < 10 ? '0' : '') + min + ':' + (sec < 10 ? '0' : '') + sec;
+            }
 
             function saveData() {
                 localStorage.setItem('pahomSexpah', sexpah);
@@ -855,148 +992,171 @@
                 return activeBuffs.viagra && activeBuffs.viagra > Date.now();
             }
 
-            function getClickPower() {
-                return tools[currentTool].clickPower;
+            function getBaseClickPower() { return tools[currentTool].clickPower; }
+
+            function getComboBonus() {
+                if (combo >= 20) return 4;
+                if (combo >= 15) return 3;
+                if (combo >= 10) return 2;
+                if (combo >= 5) return 1;
+                return 0;
             }
 
-            function getLoveAdd() {
-                if (isViagraActive()) {
-                    return 2;
-                }
-                return 5;
-            }
+            function getClickPower() { return getBaseClickPower() + getComboBonus(); }
 
-            function formatTime(ms) {
-                const totalSec = Math.floor(ms / 1000);
-                const min = Math.floor(totalSec / 60);
-                const sec = totalSec % 60;
-                return (min < 10 ? '0' : '') + min + ':' + (sec < 10 ? '0' : '') + sec;
-            }
+            function getLoveAdd() { return isViagraActive() ? 2 : 5; }
 
-            function updateInventory() {
+            function ensureBuffsTop() {
                 const now = Date.now();
-                let hasBuff = false;
+                const hasViagra = activeBuffs.viagra && activeBuffs.viagra > now;
+
+                if (!hasViagra) {
+                    buffsTop.classList.add('hidden');
+                    if (buffsTop.innerHTML !== '') buffsTop.innerHTML = '';
+                    return;
+                }
+
+                buffsTop.classList.remove('hidden');
+
+                let chip = buffsTop.querySelector('.buff-chip');
+                if (!chip) {
+                    buffsTop.innerHTML = '';
+                    chip = document.createElement('div');
+                    chip.className = 'buff-chip';
+                    chip.innerHTML = '<span class="buff-icon">💊</span><span class="buff-timer">--:--</span>';
+                    buffsTop.appendChild(chip);
+                }
+                chip.querySelector('.buff-timer').textContent = formatTime(activeBuffs.viagra - now);
+            }
+
+            function renderShopOnce() {
+                if (shopRendered) return;
+                shopRendered = true;
+
+                const itemsPanel = shopItemsContent.querySelector('.shop-panel');
+                itemsPanel.innerHTML = '';
+                Object.keys(tools).forEach(key => {
+                    const tool = tools[key];
+                    const item = document.createElement('div');
+                    item.className = 'shop-item';
+                    item.dataset.tool = key;
+                    item.innerHTML =
+                        '<div class="shop-item-info">' +
+                            '<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:#111;border-radius:6px;">' + tool.icon + '</div>' +
+                            '<div class="item-info">' +
+                                '<div class="item-name">' + tool.name + '</div>' +
+                                '<div class="item-desc">+' + tool.clickPower + ' за клик' + (tool.requirement > 0 ? ' · ' + formatSexpah(tool.requirement) + ' секспахомов' : '') + '</div>' +
+                            '</div>' +
+                        '</div>';
+                    item.addEventListener('click', () => selectTool(key));
+                    itemsPanel.appendChild(item);
+                });
+
+                const buffsPanel = shopBuffsContent.querySelector('.shop-panel');
+                buffsPanel.innerHTML = '';
+                Object.keys(buffs).forEach(key => {
+                    const buff = buffs[key];
+                    const item = document.createElement('div');
+                    item.className = 'shop-item';
+                    item.innerHTML =
+                        '<div class="shop-item-info">' +
+                            '<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:#111;border-radius:6px;">' + buff.icon + '</div>' +
+                            '<div class="item-info">' +
+                                '<div class="item-name">' + buff.name + '</div>' +
+                                '<div class="item-desc">Пахом возбуждается медленнее · ' + formatSexpah(buff.price) + ' секспахомов · 5 мин</div>' +
+                            '</div>' +
+                        '</div>';
+                    item.addEventListener('click', () => buyBuff(key));
+                    buffsPanel.appendChild(item);
+                });
+
                 inventoryList.innerHTML = '';
-                
-                if (activeBuffs.viagra && activeBuffs.viagra > now) {
-                    hasBuff = true;
-                    const remaining = activeBuffs.viagra - now;
-                    const div = document.createElement('div');
-                    div.className = 'inventory-item';
-                    div.innerHTML = '<div class="inventory-item-info">' +
-                        '<span style="font-size:1.5rem;">💊</span>' +
-                        '<div class="inventory-item-name">Виагра</div>' +
+                const section = document.createElement('div');
+                section.className = 'inventory-section';
+                section.innerHTML = '<div class="inventory-section-title">Трофеи с боссов</div>';
+                inventoryList.appendChild(section);
+
+                const empty = document.createElement('div');
+                empty.className = 'inventory-empty';
+                empty.textContent = 'Пусто';
+                section.appendChild(empty);
+                invRefs.empty = empty;
+
+                Object.keys(LOOT_META).forEach(id => {
+                    const meta = LOOT_META[id];
+                    const row = document.createElement('div');
+                    row.className = 'inventory-item';
+                    row.style.display = 'none';
+                    row.innerHTML =
+                        '<div class="inventory-item-info">' +
+                            '<span class="inventory-item-icon">' + meta.icon + '</span>' +
+                            '<div class="inventory-item-name">' + meta.name + '</div>' +
                         '</div>' +
-                        '<div class="inventory-timer">' + formatTime(remaining) + '</div>';
-                    inventoryList.appendChild(div);
-                } else if (activeBuffs.viagra && activeBuffs.viagra <= now) {
-                    delete activeBuffs.viagra;
-                    saveData();
-                }
-                
-                if (!hasBuff) {
-                    inventoryList.innerHTML = '<div class="inventory-empty">Пусто</div>';
+                        '<div class="inventory-item-count">0 / ' + LOOT_MAX + '</div>';
+                    section.appendChild(row);
+                    invRefs[id] = {
+                        row: row,
+                        count: row.querySelector('.inventory-item-count')
+                    };
+                });
+
+                shopItemsContent.querySelectorAll('.shop-item').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.tool === currentTool);
+                });
+            }
+
+            function refreshInventoryValues() {
+                let any = false;
+                Object.keys(LOOT_META).forEach(id => {
+                    const ref = invRefs[id];
+                    if (!ref) return;
+                    const c = bossInventory[id] || 0;
+                    if (c > 0) {
+                        ref.row.style.display = 'flex';
+                        ref.count.textContent = c + ' / ' + LOOT_MAX;
+                        ref.count.classList.toggle('max', c >= LOOT_MAX);
+                        any = true;
+                    } else {
+                        ref.row.style.display = 'none';
+                    }
+                });
+                if (invRefs.empty) {
+                    invRefs.empty.style.display = any ? 'none' : 'block';
                 }
             }
 
-            function animateEmoji(emoji, startX, startY, burstX, burstY, fallY, rotation, delay) {
-                const duration = 2500;
-                const startTime = performance.now() + delay;
-                
-                function frame(currentTime) {
-                    const elapsed = currentTime - startTime;
-                    
-                    if (elapsed < 0) {
-                        requestAnimationFrame(frame);
-                        return;
-                    }
-                    
-                    const t = Math.min(elapsed / duration, 1);
-                    
-                    let x, y, scale, opacity, rotate;
-                    
-                    if (t < 0.35) {
-                        const p = t / 0.35;
-                        const easeOut = 1 - Math.pow(1 - p, 3);
-                        x = burstX * easeOut;
-                        y = burstY * easeOut;
-                        scale = 0.6 + 0.6 * easeOut;
-                        opacity = easeOut * 0.9 + 0.1;
-                        rotate = rotation * easeOut * 0.6;
-                    } else {
-                        const p = (t - 0.35) / 0.65;
-                        const easeInOut = p < 0.5 
-                            ? 2 * p * p 
-                            : 1 - Math.pow(-2 * p + 2, 2) / 2;
-                        
-                        x = burstX + burstX * 0.15 * easeInOut;
-                        y = burstY + fallY * easeInOut;
-                        scale = 1.2 - 0.9 * easeInOut;
-                        opacity = 1 - easeInOut;
-                        rotate = rotation * 0.6 + rotation * 0.4 * easeInOut;
-                    }
-                    
-                    emoji.style.transform = 'translate(' + (startX + x) + 'px, ' + (startY + y) + 'px) translate(-50%, -50%) scale(' + scale + ') rotate(' + rotate + 'deg)';
-                    emoji.style.opacity = opacity;
-                    
-                    if (t < 1) {
-                        requestAnimationFrame(frame);
-                    } else {
-                        emoji.remove();
-                    }
+            function selectTool(toolKey) {
+                if (currentTool !== toolKey && sexpah >= tools[toolKey].requirement) {
+                    currentTool = toolKey;
+                    shopItemsContent.querySelectorAll('.shop-item').forEach(el => {
+                        el.classList.toggle('selected', el.dataset.tool === currentTool);
+                    });
+                    updateUI();
                 }
-                
-                requestAnimationFrame(frame);
             }
 
-            function triggerBlowup() {
-                const rect = pahomHitbox.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-                const radius = rect.width / 2;
-                const screenHeight = window.innerHeight;
-                
-                pahomHitbox.classList.remove('float', 'shake');
-                pahomHitbox.classList.add('blowup');
-                
-                const count = 18;
-                for (let i = 0; i < count; i++) {
-                    const emoji = document.createElement('div');
-                    emoji.className = 'flying-emoji';
-                    emoji.textContent = '🔞';
-                    emoji.style.left = '0';
-                    emoji.style.top = '0';
-                    emoji.style.opacity = '0';
-                    
-                    const angle = (Math.PI * 2 / count) * i + (Math.random() * 0.4 - 0.2);
-                    const startX = centerX + Math.cos(angle) * radius;
-                    const startY = centerY + Math.sin(angle) * radius;
-                    
-                    const burstDistance = 70 + Math.random() * 50;
-                    const burstX = Math.cos(angle) * burstDistance;
-                    const burstY = Math.sin(angle) * burstDistance;
-                    
-                    const fallY = (screenHeight - startY) + 100;
-                    
-                    const rotation = (Math.random() * 540 - 270);
-                    const delay = Math.random() * 100;
-                    
-                    document.body.appendChild(emoji);
-                    
-                    animateEmoji(emoji, startX, startY, burstX, burstY, fallY, rotation, delay);
+            function buyBuff(buffKey) {
+                const buff = buffs[buffKey];
+                if (!buff) return;
+                if (sexpah < buff.price) return;
+
+                const now = Date.now();
+                if (activeBuffs[buffKey] && activeBuffs[buffKey] > now) {
+                    activeBuffs[buffKey] = activeBuffs[buffKey] + buff.duration;
+                } else {
+                    activeBuffs[buffKey] = now + buff.duration;
                 }
-                
-                setTimeout(function() {
-                    pahomHitbox.classList.remove('blowup');
-                    pahomHitbox.classList.add('float');
-                }, 4500);
+
+                sexpah -= buff.price;
+                updateUI();
+                ensureBuffsTop();
             }
 
             function updateUI() {
-                sexpahSpan.textContent = sexpah;
+                sexpahSpan.textContent = formatSexpah(sexpah);
                 loveVerticalFill.style.height = Math.min(100, (love / MAX_LOVE) * 100) + '%';
                 excitedDiv.classList.toggle('hidden', love < MAX_LOVE);
-                
+
                 if (isCooldown) {
                     cooldownDiv.textContent = '⏳ ' + cooldownRemaining + ' сек';
                 } else if (love >= MAX_LOVE) {
@@ -1010,16 +1170,14 @@
                 currentToolNameSpan.textContent = tool.name;
                 clickPowerLabel.textContent = '+' + getClickPower() + ' за клик';
 
-                shopItems.forEach(function(item) {
-                    const toolKey = item.getAttribute('data-tool');
-                    if (toolKey === currentTool) {
-                        item.classList.add('selected');
-                    } else {
-                        item.classList.remove('selected');
-                    }
-                });
+                const bonus = getComboBonus();
+                if (bonus > 0 && combo > 0) {
+                    comboBonus.textContent = 'БОНУС КОМБО: +' + bonus + ' за клик';
+                    comboBonus.classList.add('show');
+                } else {
+                    comboBonus.classList.remove('show');
+                }
 
-                updateInventory();
                 saveData();
             }
 
@@ -1027,9 +1185,9 @@
                 if (isCooldown) return;
                 isCooldown = true;
                 cooldownRemaining = 10;
-                
+
                 triggerBlowup();
-                
+
                 if (cooldownInterval) clearInterval(cooldownInterval);
                 cooldownInterval = setInterval(function() {
                     cooldownRemaining--;
@@ -1042,27 +1200,197 @@
                 }, 1000);
             }
 
+            function animateEmoji(emoji, startX, startY, burstX, burstY, fallY, rotation, delay) {
+                const duration = 2500;
+                const startTime = performance.now() + delay;
+
+                function frame(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    if (elapsed < 0) { requestAnimationFrame(frame); return; }
+                    const t = Math.min(elapsed / duration, 1);
+
+                    let x, y, scale, opacity, rotate;
+                    if (t < 0.35) {
+                        const p = t / 0.35;
+                        const easeOut = 1 - Math.pow(1 - p, 3);
+                        x = burstX * easeOut;
+                        y = burstY * easeOut;
+                        scale = 0.6 + 0.6 * easeOut;
+                        opacity = easeOut * 0.9 + 0.1;
+                        rotate = rotation * easeOut * 0.6;
+                    } else {
+                        const p = (t - 0.35) / 0.65;
+                        const e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+                        x = burstX + burstX * 0.15 * e;
+                        y = burstY + fallY * e;
+                        scale = 1.2 - 0.9 * e;
+                        opacity = 1 - e;
+                        rotate = rotation * 0.6 + rotation * 0.4 * e;
+                    }
+
+                    emoji.style.transform = 'translate(' + (startX + x) + 'px, ' + (startY + y) + 'px) translate(-50%, -50%) scale(' + scale + ') rotate(' + rotate + 'deg)';
+                    emoji.style.opacity = opacity;
+
+                    if (t < 1) requestAnimationFrame(frame);
+                    else emoji.remove();
+                }
+                requestAnimationFrame(frame);
+            }
+
+            function triggerBlowup() {
+                const rect = pahomHitbox.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2;
+                const cy = rect.top + rect.height / 2;
+                const radius = rect.width / 2;
+                const screenHeight = window.innerHeight;
+
+                pahomHitbox.classList.remove('float', 'shake');
+                pahomHitbox.classList.add('blowup');
+
+                const count = 18;
+                for (let i = 0; i < count; i++) {
+                    const emoji = document.createElement('div');
+                    emoji.className = 'flying-emoji';
+                    emoji.textContent = '🔞';
+                    emoji.style.left = '0';
+                    emoji.style.top = '0';
+                    emoji.style.opacity = '0';
+
+                    const angle = (Math.PI * 2 / count) * i + (Math.random() * 0.4 - 0.2);
+                    const startX = cx + Math.cos(angle) * radius;
+                    const startY = cy + Math.sin(angle) * radius;
+                    const burstDist = 70 + Math.random() * 50;
+                    const burstX = Math.cos(angle) * burstDist;
+                    const burstY = Math.sin(angle) * burstDist;
+                    const fallY = (screenHeight - startY) + 100;
+                    const rotation = (Math.random() * 540 - 270);
+                    const delay = Math.random() * 100;
+
+                    document.body.appendChild(emoji);
+                    animateEmoji(emoji, startX, startY, burstX, burstY, fallY, rotation, delay);
+                }
+
+                setTimeout(function() {
+                    pahomHitbox.classList.remove('blowup');
+                    pahomHitbox.classList.add('float');
+                }, 4500);
+            }
+
+            function spawnFloatText(x, y, text) {
+                const el = document.createElement('div');
+                el.className = 'float-text';
+                el.textContent = text;
+                el.style.left = x + 'px';
+                el.style.top = y + 'px';
+                el.style.marginLeft = ((Math.random() - 0.5) * 70) + 'px';
+                const size = (1 + Math.min(combo, COMBO_MAX) * 0.07);
+                el.style.fontSize = size + 'rem';
+                document.body.appendChild(el);
+
+                const startTime = performance.now();
+                const duration = 1100;
+                const driftY = -110 - Math.random() * 40;
+
+                function frame(now) {
+                    const t = Math.min((now - startTime) / duration, 1);
+                    const easeOut = 1 - Math.pow(1 - t, 3);
+                    const opacity = t < 0.15 ? t / 0.15 : 1 - ((t - 0.15) / 0.85);
+                    const scale = t < 0.2 ? 0.6 + (t / 0.2) * 0.7 : 1.3 - ((t - 0.2) / 0.8) * 0.3;
+                    el.style.opacity = Math.max(0, opacity);
+                    el.style.transform = 'translate(-50%, ' + (driftY * easeOut) + 'px) scale(' + scale + ')';
+                    if (t < 1) requestAnimationFrame(frame);
+                    else el.remove();
+                }
+                requestAnimationFrame(frame);
+            }
+
+            function spawnRipple(x, y) {
+                const r = document.createElement('div');
+                r.className = 'click-ripple';
+                r.style.left = x + 'px';
+                r.style.top = y + 'px';
+                r.style.width = '20px';
+                r.style.height = '20px';
+                document.body.appendChild(r);
+
+                const start = performance.now();
+                const dur = 600;
+                function frame(now) {
+                    const t = Math.min((now - start) / dur, 1);
+                    const ease = 1 - Math.pow(1 - t, 3);
+                    const size = 20 + ease * 90;
+                    r.style.width = size + 'px';
+                    r.style.height = size + 'px';
+                    r.style.opacity = String(0.9 * (1 - t));
+                    if (t < 1) requestAnimationFrame(frame);
+                    else r.remove();
+                }
+                requestAnimationFrame(frame);
+            }
+
+            function bumpCombo() {
+                combo++;
+                clearTimeout(comboTimer);
+                comboTimer = setTimeout(function() {
+                    combo = 0;
+                    comboCounter.classList.remove('show', 'hot');
+                    comboBar.classList.remove('show');
+                    comboBar.style.width = '0%';
+                    comboBonus.classList.remove('show');
+                    pahomHitbox.classList.remove('combo-hot', 'combo-max');
+                    updateUI();
+                }, COMBO_TIMEOUT);
+
+                const shown = Math.min(combo, COMBO_MAX);
+                comboCounter.textContent = 'x' + shown;
+                comboCounter.classList.add('show');
+                comboCounter.classList.toggle('hot', combo >= 10);
+                comboCounter.classList.remove('pulse');
+                void comboCounter.offsetWidth;
+                comboCounter.classList.add('pulse');
+
+                comboBar.classList.add('show');
+                comboBar.style.width = Math.min((combo / COMBO_MAX) * 100, 100) + '%';
+
+                pahomHitbox.classList.toggle('combo-hot', combo >= 10 && combo < COMBO_MAX);
+                pahomHitbox.classList.toggle('combo-max', combo >= COMBO_MAX);
+            }
+
             function handleClick() {
                 if (isCooldown) return;
-                lastClickTime = Date.now();
+
+                const minInterval = 60;
+                const now = Date.now();
+                if (now - lastHandledClick < minInterval) return;
+                lastHandledClick = now;
+
+                lastClickTime = now;
                 totalClicks++;
-                sexpah += getClickPower();
+                bumpCombo();
+
+                const gained = getClickPower();
+                sexpah += gained;
                 love = Math.min(MAX_LOVE, love + getLoveAdd());
-                
-                if (love > 270) {
+
+                const rect = pahomHitbox.getBoundingClientRect();
+                const cx = rect.left + rect.width / 2 + (Math.random() - 0.5) * rect.width * 0.7;
+                const cy = rect.top + rect.height / 2 + (Math.random() - 0.5) * rect.height * 0.7;
+
+                spawnRipple(cx, cy);
+                spawnFloatText(cx, cy, '+' + gained);
+
+                if (love > 270 && !isCooldown) {
                     pahomHitbox.classList.remove('shake');
                     void pahomHitbox.offsetWidth;
                     pahomHitbox.classList.add('shake');
-                    
-                    setTimeout(function() {
-                        pahomHitbox.classList.remove('shake');
-                    }, 250);
+                    setTimeout(function() { pahomHitbox.classList.remove('shake'); }, 250);
                 }
-                
+
                 if (love >= MAX_LOVE) {
                     totalOverexcites++;
                     startCooldown();
                 }
+
                 updateUI();
             }
 
@@ -1079,28 +1407,15 @@
             function startBuffCheck() {
                 if (buffInterval) clearInterval(buffInterval);
                 buffInterval = setInterval(function() {
-                    if (activeBuffs.viagra && activeBuffs.viagra <= Date.now()) {
+                    const now = Date.now();
+                    let changed = false;
+                    if (activeBuffs.viagra && activeBuffs.viagra <= now) {
                         delete activeBuffs.viagra;
-                        saveData();
+                        changed = true;
                     }
-                    updateInventory();
+                    ensureBuffsTop();
+                    if (changed) saveData();
                 }, 1000);
-            }
-
-            function buyBuff(buffKey) {
-                const buff = buffs[buffKey];
-                if (!buff) return;
-                if (sexpah < buff.price) return;
-                
-                const now = Date.now();
-                if (activeBuffs[buffKey] && activeBuffs[buffKey] > now) {
-                    activeBuffs[buffKey] = activeBuffs[buffKey] + buff.duration;
-                } else {
-                    activeBuffs[buffKey] = now + buff.duration;
-                }
-                
-                sexpah -= buff.price;
-                updateUI();
             }
 
             function switchTab(tab) {
@@ -1113,14 +1428,11 @@
                 if (tab === 'shop') {
                     currentPage.classList.add('exit-left');
                     currentPage.classList.remove('active');
-                    
                     setTimeout(function() {
                         currentPage.classList.remove('exit-left');
                         currentPage.classList.add('hidden');
-                        
                         targetPage.classList.remove('hidden');
                         targetPage.classList.add('active-left');
-                        
                         setTimeout(function() {
                             targetPage.classList.remove('active-left');
                             targetPage.classList.add('active');
@@ -1130,14 +1442,11 @@
                 } else {
                     currentPage.classList.add('exit-right');
                     currentPage.classList.remove('active');
-                    
                     setTimeout(function() {
                         currentPage.classList.remove('exit-right');
                         currentPage.classList.add('hidden');
-                        
                         targetPage.classList.remove('hidden');
                         targetPage.classList.add('active');
-                        
                         isAnimating = false;
                     }, 550);
                 }
@@ -1155,36 +1464,75 @@
                     headerTitle.textContent = 'МАГАЗИН';
                     $('scoreBoard').style.display = 'flex';
                     cooldownDiv.style.display = 'none';
-                    updateUI();
+                    renderShopOnce();
+                    refreshInventoryValues();
+                    shopItemsContent.querySelectorAll('.shop-item').forEach(el => {
+                        el.classList.toggle('selected', el.dataset.tool === currentTool);
+                    });
                 }
             }
 
             function switchShopTab(tab) {
-                shopItemsTab.classList.remove('active');
-                shopBuffsTab.classList.remove('active');
-                shopInventoryTab.classList.remove('active');
-                shopItemsContent.classList.add('hidden');
-                shopBuffsContent.classList.add('hidden');
-                shopInventoryContent.classList.add('hidden');
+                if (isShopTabAnimating || tab === currentShopTab) return;
+                isShopTabAnimating = true;
 
-                if (tab === 'items') {
-                    shopItemsTab.classList.add('active');
-                    shopItemsContent.classList.remove('hidden');
-                } else if (tab === 'buffs') {
-                    shopBuffsTab.classList.add('active');
-                    shopBuffsContent.classList.remove('hidden');
-                } else if (tab === 'inventory') {
-                    shopInventoryTab.classList.add('active');
-                    shopInventoryContent.classList.remove('hidden');
-                    updateInventory();
+                const tabsMap = {
+                    items: shopItemsContent,
+                    buffs: shopBuffsContent,
+                    inventory: shopInventoryContent
+                };
+                const buttonsMap = {
+                    items: shopItemsTab,
+                    buffs: shopBuffsTab,
+                    inventory: shopInventoryTab
+                };
+
+                const order = ['items', 'buffs', 'inventory'];
+                const fromIndex = order.indexOf(currentShopTab);
+                const toIndex = order.indexOf(tab);
+                const movingRight = toIndex > fromIndex;
+
+                const fromPage = tabsMap[currentShopTab];
+                const toPage = tabsMap[tab];
+
+                buttonsMap[currentShopTab].classList.remove('active');
+                buttonsMap[tab].classList.add('active');
+
+                fromPage.classList.remove('active', 'active-left', 'exit-left', 'exit-right');
+                toPage.classList.remove('active', 'active-left', 'exit-left', 'exit-right');
+
+                if (movingRight) {
+                    fromPage.classList.add('exit-left');
+                    toPage.classList.add('active');
+                } else {
+                    fromPage.classList.add('exit-right');
+                    toPage.classList.add('active-left');
+                }
+
+                setTimeout(function() {
+                    fromPage.classList.remove('exit-left', 'exit-right');
+                    toPage.classList.remove('active', 'active-left');
+                    toPage.classList.add('active');
+                    isShopTabAnimating = false;
+                }, 620);
+
+                currentShopTab = tab;
+
+                if (tab === 'inventory') {
+                    bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}');
+                    refreshInventoryValues();
                 }
             }
 
-            function selectTool(toolKey) {
-                if (currentTool !== toolKey && sexpah >= tools[toolKey].requirement) {
-                    currentTool = toolKey;
-                    updateUI();
-                }
+            function startTicker() {
+                if (tickerInterval) clearInterval(tickerInterval);
+                tickerInterval = setInterval(() => {
+                    ensureBuffsTop();
+                    if (currentShopTab === 'inventory' && !shopPanel.classList.contains('hidden')) {
+                        bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}');
+                        refreshInventoryValues();
+                    }
+                }, 1000);
             }
 
             function init() {
@@ -1196,38 +1544,25 @@
 
                 homeTab.addEventListener('click', function() { switchTab('home'); });
                 shopTab.addEventListener('click', function() { switchTab('shop'); });
-                
+
                 shopItemsTab.addEventListener('click', function() { switchShopTab('items'); });
                 shopBuffsTab.addEventListener('click', function() { switchShopTab('buffs'); });
                 shopInventoryTab.addEventListener('click', function() { switchShopTab('inventory'); });
-                
-                shopItems.forEach(function(item) {
-                    item.addEventListener('click', function() {
-                        selectTool(item.getAttribute('data-tool'));
-                    });
-                });
-
-                buffItems.forEach(function(item) {
-                    item.addEventListener('click', function() {
-                        buyBuff(item.getAttribute('data-buff'));
-                    });
-                });
 
                 startDecayCheck();
                 startBuffCheck();
+                startTicker();
+                renderShopOnce();
+                ensureBuffsTop();
                 updateUI();
 
                 if (!sessionStorage.getItem('pahomLoaded')) {
                     setTimeout(function() {
-                        if (loadingScreen) {
-                            loadingScreen.style.display = 'none';
-                        }
+                        if (loadingScreen) loadingScreen.style.display = 'none';
                         sessionStorage.setItem('pahomLoaded', 'true');
                     }, 3000);
                 } else {
-                    if (loadingScreen) {
-                        loadingScreen.style.display = 'none';
-                    }
+                    if (loadingScreen) loadingScreen.style.display = 'none';
                     document.querySelector('.game-container').style.animation = 'none';
                     document.querySelector('.game-container').style.opacity = '1';
                 }

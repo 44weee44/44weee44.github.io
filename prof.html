@@ -224,6 +224,7 @@
             width: 100%;
             position: relative;
             z-index: 10;
+            gap: 10px;
         }
 
         .tab-btn {
@@ -255,6 +256,28 @@
         .tab-btn.home-btn svg {
             width: 36px;
             height: 36px;
+        }
+
+        /* ==== СТИЛИ ДЛЯ ИКОНКИ БОССОВ ==== */
+        .tab-btn.boss-btn svg {
+            width: 30px;
+            height: 30px;
+        }
+
+        .tab-btn.boss-btn:hover svg {
+            filter: drop-shadow(0 0 10px rgba(200, 60, 60, 0.9));
+            transform: scale(1.15);
+        }
+        .tab-btn.boss-btn:hover { color: #c0392b; }
+
+        .boss-skull-glow {
+            animation: skullGlow 3s ease-in-out infinite;
+            transform-origin: center;
+        }
+
+        @keyframes skullGlow {
+            0%, 100% { filter: drop-shadow(0 0 3px rgba(200, 60, 60, 0.4)); }
+            50%      { filter: drop-shadow(0 0 9px rgba(200, 60, 60, 0.9)); }
         }
 
         .settings-overlay {
@@ -486,6 +509,14 @@
         </div>
 
         <div class="tabs-bar">
+            <a href="boss.html" class="tab-btn boss-btn" title="Боссы">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="boss-skull-glow">
+                    <path d="M12 2C7.6 2 4 5.6 4 10c0 2.4 1 4.5 2.7 5.9V19c0 .6.4 1 1 1h1.3v-2h1.4v2h1.2v-2h1.4v2H14v-2h1.4v2H16.7c.6 0 1-.4 1-1v-3.1C19.4 14.5 20 12.4 20 10c0-4.4-3.6-8-8-8z"/>
+                    <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+                    <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+                    <path d="M12 13.5l-1.2 2.5h2.4z" fill="currentColor"/>
+                </svg>
+            </a>
             <a href="seks.html" class="tab-btn" title="Магазин">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
             </a>
