@@ -29,6 +29,7 @@
   .notify-bar:empty { padding:0; }
   .notify-chip { display:flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(184,150,46,0.18); border:1px solid #b8962e; border-radius:20px; font-size:0.85rem; font-weight:700; color:#b8962e; font-family:'Courier New',monospace; align-self:flex-start; box-shadow:0 0 20px rgba(184,150,46,0.4); animation:chipIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
   .notify-chip.leaving { animation:chipOut 0.4s ease forwards; }
+  .notify-chip .notify-icon img { width:1.2rem; height:1.2rem; object-fit:contain; border-radius:3px; vertical-align:middle; }
   @keyframes chipIn { from { opacity:0; transform:translateY(-20px) scale(0.8); } to { opacity:1; transform:translateY(0) scale(1); } }
   @keyframes chipOut { from { opacity:1; transform:translateY(0) scale(1); } to { opacity:0; transform:translateY(-15px) scale(0.9); } }
 
@@ -47,14 +48,17 @@
   .boss-card.locked { opacity:0.5; }
   .boss-card.in-progress { border-color:#ff8c3c; box-shadow:0 0 20px rgba(255,140,60,0.4); }
 
-  .boss-avatar { width:44px; height:44px; border-radius:6px; border:1px solid #b8962e; background:rgba(60,40,20,0.7); display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0; box-shadow:0 0 12px rgba(184,150,46,0.3); transition:transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.4s ease; }
+  .boss-avatar { width:44px; height:44px; border-radius:6px; border:1px solid #b8962e; background:rgba(60,40,20,0.7); display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0; box-shadow:0 0 12px rgba(184,150,46,0.3); transition:transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.4s ease; overflow:hidden; }
+  .boss-avatar img { width:100%; height:100%; object-fit:contain; border-radius:5px; }
   .boss-card:hover:not(.locked) .boss-avatar { box-shadow:0 0 20px rgba(184,150,46,0.7); transform:scale(1.08); }
 
   .boss-info { flex:1; min-width:0; }
   .boss-name { font-size:1rem; font-weight:700; color:#c4b08a; margin-bottom:3px; }
   .boss-meta { display:flex; flex-direction:column; gap:2px; font-size:0.75rem; color:#b0a070; }
   .boss-reward { color:#b8962e; font-weight:700; }
-  .boss-loot { color:#8fd4b0; font-size:0.7rem; }
+  .boss-loot { color:#8fd4b0; font-size:0.7rem; display:flex; flex-direction:column; gap:2px; }
+  .boss-loot .loot-line { display:flex; align-items:center; gap:4px; }
+  .boss-loot img { width:0.95rem; height:0.95rem; object-fit:contain; border-radius:2px; vertical-align:middle; }
   .boss-timer { font-family:'Courier New',monospace; font-size:0.72rem; color:#ff9b5c; font-weight:700; }
   .boss-status { padding:4px 10px; border-radius:20px; font-size:0.7rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; flex-shrink:0; transition:background 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
   .boss-status.ready { background:rgba(60,180,80,0.25); color:#4cd964; border:1px solid #4cd964; animation:readyPulse 1.5s ease-in-out infinite; }
@@ -82,7 +86,7 @@
   .arena-field { flex:1 1 auto; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; padding:10px; }
   .arena-boss-wrap { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:200px; height:200px; pointer-events:none; }
 
-  .boss-hitbox { width:200px; height:200px; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; border:3px solid #c0392b; position:absolute; left:0; top:0; background:rgba(50,20,20,0.8); pointer-events:auto; animation:bossFloat 4s ease-in-out infinite; transition:transform 0.15s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.4s ease, border-color 0.3s ease; will-change:transform; }
+  .boss-hitbox { width:200px; height:200px; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; border:3px solid #c0392b; position:absolute; left:0; top:0; background:rgba(50,20,20,0.8); pointer-events:auto; animation:bossFloat 4s ease-in-out infinite; transition:transform 0.15s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.4s ease, border-color 0.3s ease; will-change:transform; overflow:hidden; }
   @keyframes bossFloat { 0%,100% { transform:translateY(0) scale(1); } 50% { transform:translateY(-10px) scale(1.02); } }
   .boss-hitbox:active { transform:scale(0.92); }
   .boss-hitbox.shake { animation:bossShake 0.25s cubic-bezier(0.36,0.07,0.19,0.97); }
@@ -93,8 +97,9 @@
   .boss-hitbox.blowup { animation:bossBlowup 3.5s cubic-bezier(0.45,0.05,0.55,0.95) forwards; }
   @keyframes bossBlowup { 0% { transform:scale(1) rotate(0deg); } 10% { transform:scale(1.3) rotate(3deg); } 20% { transform:scale(0.95) rotate(-3deg); } 30% { transform:scale(1.25) rotate(4deg); } 40% { transform:scale(1) rotate(-2deg); } 50% { transform:scale(1.2) rotate(3deg); } 60% { transform:scale(1.02) rotate(-3deg); } 70% { transform:scale(1.15) rotate(2deg); } 80% { transform:scale(1.03) rotate(-1deg); } 90% { transform:scale(1.08) rotate(1deg); } 100% { transform:scale(1) rotate(0deg); } }
 
-  .boss-face { font-size:5rem; pointer-events:none; filter:drop-shadow(0 0 20px rgba(255,60,60,0.8)); transition:transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94); animation:faceGlow 3s ease-in-out infinite; }
+  .boss-face { font-size:5rem; pointer-events:none; filter:drop-shadow(0 0 20px rgba(255,60,60,0.8)); transition:transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94); animation:faceGlow 3s ease-in-out infinite; display:flex; justify-content:center; align-items:center; width:100%; height:100%; }
   @keyframes faceGlow { 0%,100% { filter:drop-shadow(0 0 15px rgba(255,60,60,0.6)); } 50% { filter:drop-shadow(0 0 30px rgba(255,60,60,1)); } }
+  .boss-face img { width:11rem; height:11rem; object-fit:contain; border-radius:50%; }
   .boss-hitbox:active .boss-face { transform:scale(0.85); }
 
   .boss-click-power { position:absolute; bottom:-30px; left:50%; transform:translateX(-50%); color:#ff9b9b; font-size:0.85rem; font-weight:700; white-space:nowrap; text-shadow:0 2px 4px rgba(0,0,0,0.9); }
@@ -134,7 +139,9 @@
   .result-text { color:#c4b08a; font-size:1rem; margin-bottom:15px; }
   .result-reward { font-size:1.5rem; font-weight:800; color:#b8962e; margin-bottom:10px; text-shadow:0 0 15px rgba(184,150,46,0.8); animation:rewardPulse 1.2s ease-in-out infinite; }
   @keyframes rewardPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.06); } }
-  .result-loot { font-size:1rem; font-weight:700; color:#8fd4b0; margin-bottom:20px; padding:10px; background:rgba(143,212,176,0.1); border:1px solid #8fd4b0; border-radius:10px; animation:lootIn 0.6s 0.3s both cubic-bezier(0.34,1.56,0.64,1); }
+  .result-loot { font-size:0.95rem; font-weight:700; color:#8fd4b0; margin-bottom:20px; padding:10px; background:rgba(143,212,176,0.1); border:1px solid #8fd4b0; border-radius:10px; line-height:1.7; animation:lootIn 0.6s 0.3s both cubic-bezier(0.34,1.56,0.64,1); }
+  .result-loot .loot-row { display:flex; align-items:center; justify-content:center; gap:6px; }
+  .result-loot img { width:1.4rem; height:1.4rem; object-fit:contain; border-radius:4px; }
   @keyframes lootIn { from { opacity:0; transform:scale(0.6); } to { opacity:1; transform:scale(1); } }
   .result-btn { background:rgba(184,150,46,0.2); border:2px solid #b8962e; color:#c4b08a; padding:12px 30px; border-radius:12px; cursor:pointer; font-weight:800; font-size:1rem; letter-spacing:2px; text-transform:uppercase; transition:all 0.3s ease; }
   .result-btn:hover { background:rgba(184,150,46,0.4); transform:scale(1.05); box-shadow:0 0 20px rgba(184,150,46,0.5); }
@@ -144,9 +151,9 @@
   .float-text { position:fixed; pointer-events:none; font-weight:900; color:#b8962e; font-size:1.3rem; z-index:500; white-space:nowrap; transform:translate(-50%,-50%); text-shadow:0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(184,150,46,0.7); will-change:transform, opacity; }
   .click-ripple { position:fixed; border-radius:50%; border:2px solid #b8962e; pointer-events:none; z-index:90; transform:translate(-50%,-50%); will-change:width, height, opacity; }
 
-  @media (max-width:400px) { .boss-hitbox { width:170px; height:170px; } .arena-boss-wrap { width:170px; height:170px; } .boss-face { font-size:4rem; } .tabs-bar { padding-left:15px; padding-right:15px; } }
+  @media (max-width:400px) { .boss-hitbox { width:170px; height:170px; } .arena-boss-wrap { width:170px; height:170px; } .boss-face { font-size:4rem; } .boss-face img { width:9rem; height:9rem; } .tabs-bar { padding-left:15px; padding-right:15px; } }
   @media (max-height:700px) { .tabs-bar { padding-bottom:40px; padding-bottom:calc(40px + env(safe-area-inset-bottom, 0px)); } .arena { padding-bottom:40px; padding-bottom:calc(40px + env(safe-area-inset-bottom, 0px)); } }
-  @media (max-height:600px) { .boss-hitbox { width:150px; height:150px; } .arena-boss-wrap { width:150px; height:150px; } .boss-face { font-size:3.5rem; } .tabs-bar { padding-bottom:15px; padding-bottom:calc(15px + env(safe-area-inset-bottom, 0px)); } .arena { padding-bottom:15px; padding-bottom:calc(15px + env(safe-area-inset-bottom, 0px)); } .excite-panel { padding:5px 12px 6px; } .excite-bar-bg { height:18px; } .arena-stats { padding:4px 12px; font-size:0.7rem; } }
+  @media (max-height:600px) { .boss-hitbox { width:150px; height:150px; } .arena-boss-wrap { width:150px; height:150px; } .boss-face { font-size:3.5rem; } .boss-face img { width:8rem; height:8rem; } .tabs-bar { padding-bottom:15px; padding-bottom:calc(15px + env(safe-area-inset-bottom, 0px)); } .arena { padding-bottom:15px; padding-bottom:calc(15px + env(safe-area-inset-bottom, 0px)); } .excite-panel { padding:5px 12px 6px; } .excite-bar-bg { height:18px; } .arena-stats { padding:4px 12px; font-size:0.7rem; } }
 </style>
 </head>
 <body>
@@ -237,10 +244,35 @@
   try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) { bossInventory = {}; }
 
   var BOSSES = [
-    { id:'millirut', name:'Миллирут', face:'👨‍🦲', reward:50000, exciteMax:2000, clickPower:3, fightDuration:5*60*1000, cooldownDuration:30*60*1000, loot:{id:'ladder',name:'Пиздец дорогая лестница',icon:'🪜',chance:25} },
-    { id:'galyamov', name:'Галямов', face:'🧑‍🦲', reward:500000, exciteMax:5000, clickPower:3, fightDuration:10*60*1000, cooldownDuration:60*60*1000, loot:{id:'medphone',name:'Телефон медика',icon:'📱',chance:20} },
-    { id:'gorin', name:'Горин', face:'👨‍🦲', reward:1000000, exciteMax:10000, clickPower:3, fightDuration:15*60*1000, cooldownDuration:90*60*1000, loot:{id:'dern',name:'Дёрн',icon:'🌿',chance:15} }
+    { id:'dodonov', name:'Додонов', face:'👶',
+      reward:25000, exciteMax:1500, clickPower:3,
+      fightDuration:5*60*1000, cooldownDuration:15*60*1000,
+      loot:[{id:'sextoy',name:'Секс игрушка',icon:'🍆',image:'Penis.png',chance:20}] },
+
+    { id:'seimur', name:'Сеймур', face:'🦧', image:'Seimur.png',
+      reward:25000, exciteMax:1500, clickPower:3,
+      fightDuration:5*60*1000, cooldownDuration:15*60*1000,
+      loot:[
+        {id:'rotten',name:'Гнилой зубик',icon:'🦷',chance:20},
+        {id:'tapik',name:'Тапик',icon:'🩴',chance:5}
+      ] },
+
+    { id:'millirut', name:'Миллирут', face:'👨‍🦲',
+      reward:50000, exciteMax:2000, clickPower:3,
+      fightDuration:5*60*1000, cooldownDuration:60*60*1000,
+      loot:[{id:'ladder',name:'Пиздец дорогая лестница',icon:'🪜',chance:25}] },
+
+    { id:'galyamov', name:'Галямов', face:'🧑‍🦲',
+      reward:500000, exciteMax:5000, clickPower:3,
+      fightDuration:10*60*1000, cooldownDuration:120*60*1000,
+      loot:[{id:'medphone',name:'Телефон медика',icon:'📱',chance:20}] },
+
+    { id:'gorin', name:'Горин', face:'👨‍🦲',
+      reward:1000000, exciteMax:10000, clickPower:3,
+      fightDuration:15*60*1000, cooldownDuration:180*60*1000,
+      loot:[{id:'dern',name:'Дёрн',icon:'🌿',chance:15}] }
   ];
+
   var LOOT_MAX=200, STATE_KEY='pahomBossState', STATE_VERSION=5;
   var bossState = {};
 
@@ -284,16 +316,24 @@
   }
   function updateScore() { if (sexpahCount) sexpahCount.textContent = fmt(sexpah); }
   function bumpEl(el) { if (!el) return; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); setTimeout(function(){ el.classList.remove('bump'); }, 300); }
-  function showNotify(icon, text) {
+  function showNotify(iconHTML, text, delay) {
     if (!notifyBar) return;
-    var chip = document.createElement('div');
-    chip.className = 'notify-chip';
-    chip.textContent = icon + ' ' + text;
-    notifyBar.appendChild(chip);
-    setTimeout(function(){ chip.classList.add('leaving'); setTimeout(function(){ if (chip.parentNode) chip.parentNode.removeChild(chip); }, 400); }, 4000);
+    setTimeout(function() {
+      var chip = document.createElement('div');
+      chip.className = 'notify-chip';
+      chip.innerHTML = '<span class="notify-icon">' + iconHTML + '</span><span>' + text + '</span>';
+      notifyBar.appendChild(chip);
+      setTimeout(function(){ chip.classList.add('leaving'); setTimeout(function(){ if (chip.parentNode) chip.parentNode.removeChild(chip); }, 400); }, 4000);
+    }, delay || 0);
   }
 
-  // ==== Общие функции прокачек ====
+  function lootIconHTML(lootItem, size) {
+    if (lootItem.image) {
+      return '<img src="' + lootItem.image + '" alt="' + lootItem.name + '"' + (size ? ' style="width:'+size+';height:'+size+';object-fit:contain;vertical-align:middle;"' : '') + '>';
+    }
+    return lootItem.icon;
+  }
+
   function getLoveBonus() {
     var lv = parseInt(localStorage.getItem('pahomUpgradeLove') || '1', 10) || 1;
     return (lv - 1) * 0.5;
@@ -312,7 +352,6 @@
     try { localStorage.setItem('pahomPlayerExp', String(exp)); } catch(e) {}
     try { localStorage.setItem('pahomPlayerLevel', String(lv)); } catch(e) {}
   }
-
   function addBossStat(field, amount) {
     var st = {};
     try { st = JSON.parse(localStorage.getItem('pahomBossStats') || '{}') || {}; } catch(e) { st = {}; }
@@ -326,13 +365,24 @@
       (function(boss){
         var card = document.createElement('div');
         card.className = 'boss-card';
-        card.innerHTML = '<div class="boss-avatar">'+boss.face+'</div>' +
+
+        var avatarHTML = boss.image
+          ? '<img src="' + boss.image + '" alt="' + boss.name + '">'
+          : boss.face;
+
+        var lootArr = Array.isArray(boss.loot) ? boss.loot : [boss.loot];
+        var lootLinesHTML = lootArr.map(function(l){
+          return '<span class="loot-line">🎁 ' + lootIconHTML(l) + ' ' + l.name + ' (' + l.chance + '%)</span>';
+        }).join('');
+        var lootBlockHTML = '<span class="boss-loot">' + lootLinesHTML + '</span>';
+
+        card.innerHTML = '<div class="boss-avatar">'+avatarHTML+'</div>' +
           '<div class="boss-info"><div class="boss-name">'+boss.name+'</div>' +
           '<div class="boss-meta">' +
             '<span class="boss-reward">💰 '+fmt(boss.reward)+' секспахомов</span>' +
             '<span>🎯 Перевозбуждение: '+fmt(boss.exciteMax)+'</span>' +
             '<span>⏳ КД: '+fmtTime(boss.cooldownDuration)+'</span>' +
-            '<span class="boss-loot">🎁 '+boss.loot.icon+' '+boss.loot.name+' ('+boss.loot.chance+'%)</span>' +
+            lootBlockHTML +
             '<span class="boss-timer">—</span>' +
           '</div></div>' +
           '<div class="boss-status">—</div>';
@@ -403,8 +453,16 @@
     headerTitle.textContent = boss.name.toUpperCase();
 
     arenaBossName.textContent = boss.name.toUpperCase();
-    bossFace.textContent = boss.face;
-    // показываем базовую силу + прокачка любви
+
+    if (boss.image) {
+      bossFace.innerHTML = '<img src="' + boss.image + '" alt="' + boss.name + '">';
+      bossFace.style.fontSize = '0';
+    } else {
+      bossFace.innerHTML = '';
+      bossFace.textContent = boss.face;
+      bossFace.style.fontSize = '';
+    }
+
     var basePower = boss.clickPower;
     var loveBonus = getLoveBonus();
     var totalPower = basePower + loveBonus;
@@ -455,7 +513,6 @@
     if (!st.fight) return;
     if (st.fight.endAt <= now) { endFight(currentBoss, false); return; }
 
-    // ==== ПАТЧ: сила клика = базовая + прокачка любви ====
     var basePower = currentBoss.clickPower;
     var loveBonus = getLoveBonus();
     var power = basePower + loveBonus;
@@ -621,7 +678,7 @@
     if (!st.fight) return;
     isFightActive = false;
     if (fightInterval) { clearInterval(fightInterval); fightInterval = null; }
-    var lootDropped = null;
+    var droppedItems = [];
 
     if (win) {
       sexpah += boss.reward;
@@ -629,57 +686,67 @@
       updateScore();
       bumpEl(sexpahBox);
 
-      // ==== ПАТЧ: статистика боссов ====
       addBossStat('wins', 1);
       addBossStat('earned', boss.reward);
-
-      // ==== ПАТЧ: опыт за победу над боссом ====
       addPlayerExp(500);
 
-      // ==== ПАТЧ: лут с учётом прокачки ====
       var lootUpLevel = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1;
       var lootBonusPct = (lootUpLevel - 1) * 5;
-      var effectiveChance = boss.loot.chance + lootBonusPct;
 
-      if (Math.random()*100 < effectiveChance) {
-        var lid = boss.loot.id;
-        if (!bossInventory[lid]) bossInventory[lid] = 0;
-        if (bossInventory[lid] < LOOT_MAX) {
-          bossInventory[lid]++;
-          lootDropped = boss.loot;
-          try { localStorage.setItem('pahomBossInventory', JSON.stringify(bossInventory)); } catch(e) {}
+      var lootArr = Array.isArray(boss.loot) ? boss.loot : [boss.loot];
+      lootArr.forEach(function(lootItem) {
+        var effectiveChance = lootItem.chance + lootBonusPct;
+        if (Math.random()*100 < effectiveChance) {
+          var lid = lootItem.id;
+          if (!bossInventory[lid]) bossInventory[lid] = 0;
+          if (bossInventory[lid] < LOOT_MAX) {
+            bossInventory[lid]++;
+            droppedItems.push(lootItem);
+          }
         }
+      });
+      if (droppedItems.length) {
+        try { localStorage.setItem('pahomBossInventory', JSON.stringify(bossInventory)); } catch(e) {}
       }
+
       st.fight = null; st.cooldownUntil = now + boss.cooldownDuration;
       saveState();
 
       triggerVictoryBlowup();
-      if (lootDropped) showNotify(lootDropped.icon, 'ВЫПАЛ ПРЕДМЕТ: ' + lootDropped.name);
+      droppedItems.forEach(function(item, i) {
+        showNotify(lootIconHTML(item), 'ВЫПАЛ ПРЕДМЕТ: ' + item.name, i * 300);
+      });
 
       setTimeout(function(){
         showBossList();
-        showResult(true, boss.reward, lootDropped);
+        showResult(true, boss.reward, droppedItems);
       }, 600);
       return;
     } else {
       st.fight = null; st.cooldownUntil = now + boss.cooldownDuration;
       saveState();
-      // ==== ПАТЧ: статистика поражений ====
       addBossStat('losses', 1);
       showBossList();
       showResult(false, 0, null);
     }
   }
 
-  function showResult(win, reward, loot) {
+  function showResult(win, reward, lootArr) {
     resultTitle.textContent = win ? 'ПОБЕДА!' : 'ПОРАЖЕНИЕ';
     resultTitle.className = 'result-title ' + (win ? 'win' : 'lose');
     if (win) {
       resultText.textContent = 'Ты завалил босса!';
       resultReward.textContent = '+' + fmt(reward) + ' секспахомов';
       resultReward.style.display = 'block';
-      if (loot) { resultLoot.innerHTML = '🎁 '+loot.icon+' <b>'+loot.name+'</b>'; resultLoot.classList.remove('hidden'); }
-      else resultLoot.classList.add('hidden');
+      if (lootArr && lootArr.length) {
+        var html = lootArr.map(function(l) {
+          return '<div class="loot-row">🎁 ' + lootIconHTML(l, '1.4rem') + ' <b>' + l.name + '</b></div>';
+        }).join('');
+        resultLoot.innerHTML = html;
+        resultLoot.classList.remove('hidden');
+      } else {
+        resultLoot.classList.add('hidden');
+      }
     } else {
       resultText.textContent = 'Не успел — босс сбежал.';
       resultReward.style.display = 'none';
