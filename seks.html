@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>ГЛАВНАЯ — кликер Пахома</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
 
@@ -587,7 +588,6 @@
             padding-bottom: 8px;
         }
 
-        /* ==== КНОПКА ВЕРСТАК ==== */
         .kraft-btn {
             display: flex;
             align-items: center;
@@ -625,13 +625,8 @@
             transform: translateY(-2px);
         }
 
-        .kraft-btn:hover::before {
-            left: 100%;
-        }
-
-        .kraft-btn:active {
-            transform: translateY(0) scale(0.98);
-        }
+        .kraft-btn:hover::before { left: 100%; }
+        .kraft-btn:active { transform: translateY(0) scale(0.98); }
 
         .kraft-btn-icon {
             font-size: 1.6rem;
@@ -639,17 +634,12 @@
             flex-shrink: 0;
         }
 
-        .kraft-btn-text {
-            flex: 1;
-            color: var(--gold);
-        }
-
+        .kraft-btn-text { flex: 1; color: var(--gold); }
         .kraft-btn-arrow {
             font-size: 1.2rem;
             opacity: 0.7;
             transition: transform 0.3s ease;
         }
-
         .kraft-btn:hover .kraft-btn-arrow {
             transform: translateX(4px);
             opacity: 1;
@@ -1083,7 +1073,6 @@
                 localStorage.setItem('pahomBuffs', JSON.stringify(activeBuffs));
             }
 
-            // Подтягиваем актуальное значение sexpah из localStorage (для оффлайн-дохода)
             function syncSexpahFromStorage() {
                 var v = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
                 if (v !== sexpah) sexpah = v;
@@ -1748,8 +1737,25 @@
                 ensureBuffsTop();
                 updateUI();
 
-                // Открытие вкладки «Инвентарь» при переходе из kraft.html#inventory
                 openInventoryFromHash();
+
+                // === TELEGRAM SYNC ===
+                if (window.tgSyncReady) {
+                    window.tgSyncLoad(function(loaded) {
+                        if (loaded) {
+                            sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
+                            totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0', 10) || 0;
+                            totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0', 10) || 0;
+                            currentTool = localStorage.getItem('pahomTool') || 'hand';
+                            activeBuffs = JSON.parse(localStorage.getItem('pahomBuffs') || '{}');
+                            bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}');
+                            updateUI();
+                            ensureBuffsTop();
+                            if (typeof renderShopOnce === 'function') renderShopOnce();
+                            if (typeof refreshInventoryValues === 'function') refreshInventoryValues();
+                        }
+                    });
+                }
 
                 if (!sessionStorage.getItem('pahomLoaded')) {
                     setTimeout(function() {
@@ -1767,5 +1773,6 @@
         })();
     </script>
     <script src="income.js"></script>
+    <script src="telegram-sync.js"></script>
 </body>
 </html>

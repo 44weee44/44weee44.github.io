@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>ВЕРСТАК — кликер Пахома</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
 
@@ -93,7 +94,6 @@
     text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(150,100,200,0.4);
   }
 
-  /* ==== КНОПКА НАЗАД ==== */
   .back-btn {
     position: absolute;
     left: 15px;
@@ -128,13 +128,8 @@
     color: #ffffff;
   }
 
-  .back-btn:hover svg {
-    transform: translateX(-3px);
-  }
-
-  .back-btn:active {
-    transform: translateY(-50%) scale(0.95);
-  }
+  .back-btn:hover svg { transform: translateX(-3px); }
+  .back-btn:active { transform: translateY(-50%) scale(0.95); }
 
   .score-board {
     display: flex;
@@ -325,9 +320,7 @@
     transform: translateY(-2px);
   }
 
-  .claim-btn:active:not(:disabled) {
-    transform: translateY(0) scale(0.98);
-  }
+  .claim-btn:active:not(:disabled) { transform: translateY(0) scale(0.98); }
 
   .claim-btn:disabled {
     cursor: not-allowed;
@@ -757,7 +750,6 @@
     }
   ];
 
-  // ==== ПЛАВНЫЙ ПЕРЕХОД НАЗАД ====
   backBtn.addEventListener('click', function(e) {
     e.preventDefault();
     gameContainer.classList.add('exit');
@@ -1104,11 +1096,24 @@
         renderMyList();
       }
     });
+
+    // === TELEGRAM SYNC ===
+    if (window.tgSyncReady) {
+      window.tgSyncLoad(function(loaded) {
+        if (loaded) {
+          updateSexpahUI();
+          updateIncomeBadge();
+          renderCraftList();
+          renderMyList();
+        }
+      });
+    }
   }
 
   init();
 })();
 </script>
 <script src="income.js"></script>
+<script src="telegram-sync.js"></script>
 </body>
 </html>

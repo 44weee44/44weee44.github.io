@@ -4,118 +4,717 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>ПРОФИЛЬ — кликер Пахома</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         :root { --bg:#0a0a0a; --panel:#1a1a1a; --border:#4a4a2a; --text:#c4b08a; --accent:#8a7a5a; --gold:#b8962e; --red:#c0392b; }
-        body { background:var(--bg); background-image:radial-gradient(circle at 30% 20%, #1a1a1a, #050505); min-height:100vh; display:flex; justify-content:center; align-items:center; font-family:'Segoe UI',Arial,sans-serif; margin:0; touch-action:manipulation; overflow:hidden; }
 
-        .loading-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:#0a0a0a; display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:2000; animation:fadeOut 0.8s ease 2.5s forwards; pointer-events:none; }
-        .loading-circle { width:100px; height:100px; border:4px solid var(--border); border-top:4px solid var(--gold); border-radius:50%; animation:spin 1.5s linear infinite; margin-bottom:20px; }
-        @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
-        .loading-text { font-size:1.3rem; font-weight:800; color:var(--text); letter-spacing:2px; text-transform:uppercase; animation:textGlow 1.5s ease-in-out infinite; }
-        @keyframes textGlow { 0%,100% { text-shadow:0 0 5px rgba(184,150,46,0.3); } 50% { text-shadow:0 0 20px rgba(184,150,46,0.8); } }
-        @keyframes fadeOut { from { opacity:1; } to { opacity:0; visibility:hidden; } }
+        body {
+            background: var(--bg);
+            background-image: radial-gradient(circle at 30% 20%, #1a1a1a, #050505);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            touch-action: manipulation;
+            overflow: hidden;
+        }
 
-        .profile-container { background:var(--panel); background-image:linear-gradient(160deg, #222222, #111111); width:100%; height:100vh; display:flex; flex-direction:column; align-items:center; position:relative; opacity:0; animation:profileAppear 0.8s ease-out 2.5s forwards; }
-        @keyframes profileAppear { 0% { opacity:0; transform:translateY(20px); } 100% { opacity:1; transform:translateY(0); } }
+        .loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0a0a0a;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 2000;
+            animation: fadeOut 0.8s ease 2.5s forwards;
+            pointer-events: none;
+        }
+        .loading-circle {
+            width: 100px; height: 100px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text {
+            font-size: 1.3rem; font-weight: 800;
+            color: var(--text); letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: textGlow 1.5s ease-in-out infinite;
+        }
+        @keyframes textGlow {
+            0%,100% { text-shadow: 0 0 5px rgba(184,150,46,0.3); }
+            50% { text-shadow: 0 0 20px rgba(184,150,46,0.8); }
+        }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
 
-        .header { display:flex; justify-content:space-between; align-items:center; padding:15px; flex-shrink:0; border-bottom:1px solid var(--border); background:linear-gradient(180deg, #2a2a1a, #1a1a10); width:100%; position:relative; }
-        .header-title { font-size:1.3rem; font-weight:800; letter-spacing:3px; color:var(--text); text-transform:uppercase; margin:0 auto; }
-        .settings-btn { position:absolute; right:15px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:var(--text); cursor:pointer; font-size:1.5rem; transition:transform 0.3s; z-index:20; }
-        .settings-btn:hover { transform:translateY(-50%) rotate(45deg); }
+        .profile-container {
+            background: var(--panel);
+            background-image: linear-gradient(160deg, #222222, #111111);
+            width: 100%; height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center;
+            position: relative;
+            opacity: 0;
+            animation: profileAppear 0.8s ease-out 2.5s forwards;
+            overflow: hidden;
+        }
+        @keyframes profileAppear {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
 
-        .stats-btn { position:absolute; right:55px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:var(--text); cursor:pointer; padding:5px; transition:all 0.3s; z-index:20; display:flex; align-items:center; justify-content:center; }
-        .stats-btn svg { width:24px; height:24px; filter:drop-shadow(0 0 4px rgba(184,150,46,0.4)); }
-        .stats-btn:hover { transform:translateY(-50%) scale(1.15); color:var(--gold); filter:drop-shadow(0 0 10px rgba(184,150,46,0.9)); }
+        /* ==== ШАПКА ==== */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, #2a2a1a, #1a1a10);
+            width: 100%;
+            position: relative;
+            z-index: 10;
+        }
+        .header-title {
+            font-size: 1.3rem; font-weight: 800;
+            letter-spacing: 3px; color: var(--text);
+            text-transform: uppercase;
+            margin: 0 auto;
+            text-shadow: 0 0 12px rgba(184,150,46,0.4);
+        }
+        .settings-btn {
+            position: absolute; right: 15px; top: 50%;
+            transform: translateY(-50%);
+            background: transparent; border: none;
+            color: var(--text); cursor: pointer;
+            font-size: 1.5rem;
+            transition: transform 0.3s;
+            z-index: 20;
+        }
+        .settings-btn:hover { transform: translateY(-50%) rotate(45deg); }
 
-        .profile-content { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:20px; width:100%; max-width:400px; }
-        .profile-avatar { width:110px; height:110px; border-radius:50%; border:3px solid var(--gold); background:#252515; display:flex; align-items:center; justify-content:center; font-size:3.6rem; overflow:hidden; box-shadow:0 8px 20px rgba(0,0,0,0.6); transition:all 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
-        .profile-avatar img { width:100%; height:100%; object-fit:cover; }
-        .profile-nickname { font-size:1.4rem; font-weight:800; color:var(--text); transition:all 0.3s; }
-        .profile-ip { font-size:0.8rem; color:var(--accent); font-family:'Courier New',monospace; letter-spacing:1px; }
+        .stats-btn {
+            position: absolute; right: 55px; top: 50%;
+            transform: translateY(-50%);
+            background: transparent; border: none;
+            color: var(--text); cursor: pointer;
+            padding: 5px;
+            transition: all 0.3s;
+            z-index: 20;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .stats-btn svg {
+            width: 24px; height: 24px;
+            filter: drop-shadow(0 0 4px rgba(184,150,46,0.4));
+        }
+        .stats-btn:hover {
+            transform: translateY(-50%) scale(1.15);
+            color: var(--gold);
+            filter: drop-shadow(0 0 10px rgba(184,150,46,0.9));
+        }
 
-        .player-level-block { width:100%; display:flex; flex-direction:column; align-items:center; gap:5px; animation:statAppear 0.5s ease-out 0.35s forwards; opacity:0; }
-        .player-level { font-size:1rem; font-weight:800; color:var(--gold); letter-spacing:1px; text-shadow:0 0 8px rgba(184,150,46,0.5); }
-        .exp-bar-bg { width:100%; max-width:260px; height:14px; background:#0f0f00; border-radius:7px; border:1px solid var(--border); overflow:hidden; position:relative; box-shadow:inset 0 2px 4px black; }
-        .exp-bar-fill { height:100%; width:0%; background:linear-gradient(90deg, #b8962e, #ffd76b); border-radius:7px; transition:width 0.8s cubic-bezier(0.25,0.46,0.45,0.94); box-shadow:0 0 10px rgba(184,150,46,0.7); }
-        .exp-text { font-size:0.72rem; color:var(--accent); font-family:'Courier New',monospace; letter-spacing:1px; }
+        /* ==== КОНТЕНТ ==== */
+        .profile-content {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 20px 10px;
+            width: 100%;
+            max-width: 440px;
+            margin: 0 auto;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border) transparent;
+        }
+        .profile-content::-webkit-scrollbar { width: 5px; }
+        .profile-content::-webkit-scrollbar-track { background: transparent; }
+        .profile-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-        .profile-stats { display:flex; flex-direction:column; gap:6px; width:100%; }
-        .stat-item { text-align:center; color:var(--text); font-weight:600; font-size:0.82rem; animation:statAppear 0.5s ease-out forwards; opacity:0; }
-        .stat-item:nth-child(1) { animation-delay:0.1s; }
-        .stat-item:nth-child(2) { animation-delay:0.2s; }
-        .stat-item:nth-child(3) { animation-delay:0.3s; }
-        @keyframes statAppear { 0% { opacity:0; transform:translateY(10px); } 100% { opacity:1; transform:translateY(0); } }
+        /* ==== АВАТАР ==== */
+        .profile-avatar-wrap {
+            position: relative;
+            margin-bottom: 10px;
+            animation: avatarAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s backwards;
+        }
+        @keyframes avatarAppear {
+            0% { opacity: 0; transform: scale(0.6); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .profile-avatar {
+            width: 110px; height: 110px;
+            border-radius: 50%;
+            border: 3px solid var(--gold);
+            background: linear-gradient(135deg, #252515, #1a1a10);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3.6rem;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 30px rgba(184,150,46,0.35);
+            transition: all 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+        }
+        .profile-avatar img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+        .profile-avatar:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 50px rgba(184,150,46,0.6);
+            transform: scale(1.03);
+        }
 
-        .tabs-bar { display:flex; justify-content:space-around; align-items:center; padding:0 30px 80px; flex-shrink:0; width:100%; position:relative; z-index:10; gap:10px; }
-        .tab-btn { background:transparent; border:none; cursor:pointer; color:var(--accent); opacity:0.6; transition:all 0.3s; padding:5px; text-decoration:none; display:flex; align-items:center; justify-content:center; pointer-events:auto; }
-        .tab-btn.active { opacity:1; color:var(--text); transform:scale(1.1); }
-        .tab-btn svg { width:28px; height:28px; }
-        .tab-btn.home-btn svg { width:36px; height:36px; }
-        .tab-btn.boss-btn svg { width:30px; height:30px; }
-        .tab-btn.boss-btn:hover svg { filter:drop-shadow(0 0 10px rgba(200,60,60,0.9)); transform:scale(1.15); }
-        .tab-btn.boss-btn:hover { color:#c0392b; }
-        .boss-skull-glow { animation:skullGlow 3s ease-in-out infinite; transform-origin:center; }
-        @keyframes skullGlow { 0%,100% { filter:drop-shadow(0 0 3px rgba(200,60,60,0.4)); } 50% { filter:drop-shadow(0 0 9px rgba(200,60,60,0.9)); } }
+        .profile-nickname {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: 1px;
+            text-shadow: 0 0 14px rgba(184,150,46,0.5);
+            margin-bottom: 4px;
+            text-align: center;
+            word-break: break-all;
+        }
+        .profile-ip {
+            font-size: 0.78rem;
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            margin-bottom: 14px;
+        }
 
-        .settings-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index:3000; }
-        .settings-overlay.show { display:flex; animation:modalFadeIn 0.3s ease; }
-        @keyframes modalFadeIn { from { opacity:0; } to { opacity:1; } }
-        .settings-box { background:#24241a; border-radius:16px; padding:20px; width:90%; max-width:400px; border:2px solid var(--gold); animation:modalSlideIn 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
-        .stats-box { max-height:88vh; display:flex; flex-direction:column; overflow:hidden; }
-        @keyframes modalSlideIn { from { transform:scale(0.8) translateY(20px); opacity:0; } to { transform:scale(1) translateY(0); opacity:1; } }
-        .settings-title { font-size:1.2rem; font-weight:800; color:var(--text); text-align:center; margin-bottom:15px; text-transform:uppercase; letter-spacing:2px; }
-        .settings-balance { text-align:center; font-family:'Courier New',monospace; font-size:0.85rem; color:var(--gold); margin-bottom:12px; font-weight:700; }
-        .settings-tabs { display:flex; gap:10px; margin-bottom:15px; }
-        .settings-tab { flex:1; background:transparent; border:1px solid var(--border); color:var(--text); padding:8px; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.8rem; transition:all 0.3s; pointer-events:auto; }
-        .settings-tab.active { border-color:var(--gold); background:rgba(184,150,46,0.1); }
+        /* ==== БЛОК ВЫСЛУГИ ==== */
+        .player-level-block {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 14px;
+            background: linear-gradient(135deg, rgba(184,150,46,0.1), rgba(139,105,20,0.05));
+            border: 1px solid rgba(184,150,46,0.35);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            animation: statAppear 0.5s ease-out 0.3s backwards;
+            box-shadow: 0 0 20px rgba(184,150,46,0.1);
+        }
+        .player-level {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--gold);
+            letter-spacing: 1.2px;
+            text-shadow: 0 0 10px rgba(184,150,46,0.6);
+        }
+        .exp-bar-bg {
+            width: 100%;
+            max-width: 280px;
+            height: 14px;
+            background: #0f0f00;
+            border-radius: 7px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 4px black;
+        }
+        .exp-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #b8962e, #ffd76b);
+            border-radius: 7px;
+            transition: width 0.8s cubic-bezier(0.25,0.46,0.45,0.94);
+            box-shadow: 0 0 12px rgba(184,150,46,0.9);
+            position: relative;
+            overflow: hidden;
+        }
+        .exp-bar-fill::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: translateX(-100%);
+            animation: barShine 2.5s ease-in-out infinite;
+        }
+        @keyframes barShine {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+            100% { transform: translateX(100%); }
+        }
+        .exp-text {
+            font-size: 0.72rem;
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
 
-        .stats-scroll { flex:1; overflow-y:auto; padding-right:5px; margin:0 -5px 10px -5px; padding-left:5px; scrollbar-width:thin; scrollbar-color:var(--gold) transparent; }
-        .stats-scroll::-webkit-scrollbar { width:5px; }
-        .stats-scroll::-webkit-scrollbar-track { background:transparent; }
-        .stats-scroll::-webkit-scrollbar-thumb { background:var(--gold); border-radius:3px; }
+        /* ==== БОЕВАЯ СЛАВА (боссы) ==== */
+        .battle-glory-title {
+            width: 100%;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--gold);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            padding-left: 4px;
+            opacity: 0.85;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            animation: statAppear 0.5s ease-out 0.4s backwards;
+        }
+        .battle-glory-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--gold), transparent);
+            opacity: 0.4;
+        }
 
-        .stats-block { background:#1a1a10; border:1px solid var(--border); border-radius:10px; padding:12px; margin-bottom:10px; transition:border-color 0.3s; }
-        .stats-block:hover { border-color:rgba(184,150,46,0.5); }
-        .stats-block-title { font-size:0.9rem; font-weight:800; color:var(--text); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
-        .stats-block-title .lvl-badge { font-size:0.7rem; color:var(--gold); background:rgba(184,150,46,0.15); padding:2px 8px; border-radius:10px; border:1px solid var(--gold); }
+        .battle-grid {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 14px;
+        }
 
-        .level-segments { display:flex; gap:3px; margin-bottom:10px; flex-wrap:nowrap; }
-        .level-segments span { flex:1; height:10px; background:#0f0f00; border:1px solid var(--border); border-radius:2px; transition:all 0.5s cubic-bezier(0.25,0.46,0.45,0.94); }
-        .level-segments span.filled { background:linear-gradient(180deg, #ffd76b, #b8962e); border-color:var(--gold); box-shadow:0 0 6px rgba(184,150,46,0.7); }
+        .battle-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 6px;
+            border-radius: 10px;
+            background: linear-gradient(160deg, rgba(30,30,14,0.9), rgba(20,20,10,0.9));
+            border: 1px solid var(--border);
+            transition: all 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+            animation: statAppear 0.5s ease-out backwards;
+            position: relative;
+            overflow: hidden;
+        }
+        .battle-card:nth-child(1) { animation-delay: 0.45s; }
+        .battle-card:nth-child(2) { animation-delay: 0.55s; }
+        .battle-card:nth-child(3) { animation-delay: 0.65s; }
 
-        .stats-effect { font-size:0.78rem; color:#8fd4b0; margin-bottom:5px; font-weight:600; }
-        .stats-cost { font-size:0.78rem; color:var(--accent); margin-bottom:10px; }
-        .stats-cost b { color:var(--gold); }
+        .battle-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--gold);
+            box-shadow: 0 6px 20px rgba(184,150,46,0.3);
+        }
 
-        .upgrade-btn { width:100%; background:transparent; border:1px solid var(--gold); color:var(--gold); padding:9px; border-radius:8px; cursor:pointer; font-weight:700; font-size:0.85rem; transition:all 0.3s; letter-spacing:1px; text-transform:uppercase; }
-        .upgrade-btn:hover:not(:disabled) { background:rgba(184,150,46,0.2); box-shadow:0 0 15px rgba(184,150,46,0.5); }
-        .upgrade-btn:active:not(:disabled) { transform:scale(0.97); }
-        .upgrade-btn:disabled { opacity:0.4; cursor:not-allowed; border-color:var(--border); color:var(--accent); }
+        .battle-card.wins {
+            background: linear-gradient(160deg, rgba(60,180,80,0.15), rgba(30,60,30,0.15));
+            border-color: rgba(76,217,100,0.4);
+        }
+        .battle-card.wins:hover { border-color: #4cd964; box-shadow: 0 6px 20px rgba(76,217,100,0.4); }
 
-        .stat-message { font-size:0.75rem; color:#ff5a5a; text-align:center; margin-top:6px; min-height:1em; transition:opacity 0.3s; opacity:0; }
-        .stat-message.show { opacity:1; }
+        .battle-card.losses {
+            background: linear-gradient(160deg, rgba(180,40,40,0.15), rgba(60,20,20,0.15));
+            border-color: rgba(255,90,90,0.4);
+        }
+        .battle-card.losses:hover { border-color: #ff5a5a; box-shadow: 0 6px 20px rgba(255,90,90,0.4); }
 
-        .boss-stat-row { display:flex; justify-content:space-between; font-size:0.85rem; color:var(--text); padding:5px 0; border-bottom:1px solid rgba(74,74,42,0.3); }
-        .boss-stat-row:last-child { border-bottom:none; }
-        .boss-stat-row b { color:var(--gold); font-family:'Courier New',monospace; }
+        .battle-card.earned {
+            background: linear-gradient(160deg, rgba(184,150,46,0.15), rgba(60,50,10,0.15));
+            border-color: rgba(184,150,46,0.45);
+        }
+        .battle-card.earned:hover { border-color: var(--gold); box-shadow: 0 6px 20px rgba(184,150,46,0.5); }
 
-        .avatar-grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:10px; }
-        .avatar-option { background:transparent; border:1px solid var(--border); border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; cursor:pointer; transition:all 0.3s; pointer-events:auto; }
-        .avatar-option:hover { border-color:var(--gold); transform:scale(1.1); }
-        .avatar-option.selected { border-color:var(--gold); background:rgba(184,150,46,0.2); transform:scale(1.1); }
+        .battle-icon {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+            filter: drop-shadow(0 0 6px rgba(255,255,255,0.2));
+        }
+        .battle-card.wins .battle-icon { filter: drop-shadow(0 0 8px rgba(76,217,100,0.7)); }
+        .battle-card.losses .battle-icon { filter: drop-shadow(0 0 8px rgba(255,90,90,0.7)); }
+        .battle-card.earned .battle-icon { filter: drop-shadow(0 0 8px rgba(184,150,46,0.7)); }
 
-        .upload-btn { width:100%; background:transparent; border:1px solid var(--border); color:var(--text); padding:10px; border-radius:6px; cursor:pointer; font-weight:600; transition:all 0.3s; pointer-events:auto; }
-        .upload-btn:hover { background:rgba(74,74,58,0.5); }
+        .battle-value {
+            font-size: 1rem;
+            font-weight: 900;
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+            text-align: center;
+            word-break: break-all;
+            line-height: 1.1;
+        }
+        .battle-card.wins .battle-value { color: #4cd964; text-shadow: 0 0 8px rgba(76,217,100,0.5); }
+        .battle-card.losses .battle-value { color: #ff5a5a; text-shadow: 0 0 8px rgba(255,90,90,0.5); }
+        .battle-card.earned .battle-value { color: var(--gold); text-shadow: 0 0 8px rgba(184,150,46,0.5); }
 
-        .modal-input { width:100%; padding:10px; background:#1a1a10; border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:1rem; text-align:center; margin-bottom:10px; outline:none; transition:all 0.3s; }
-        .modal-input:focus { border-color:var(--gold); box-shadow:0 0 10px rgba(184,150,46,0.3); }
-        .modal-btn { background:transparent; border:1px solid var(--border); color:var(--text); padding:10px 24px; border-radius:8px; cursor:pointer; font-weight:700; font-size:0.9rem; transition:all 0.3s; pointer-events:auto; }
-        .modal-btn:hover { background:rgba(74,74,58,0.5); }
-        .error-msg { color:#e74c3c; font-size:0.8rem; margin-bottom:10px; display:none; }
+        .battle-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: #b0a070;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        /* ==== ОСНОВНЫЕ СТАТЫ ==== */
+        .profile-stats {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: rgba(30,30,14,0.6);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            animation: statAppear 0.5s ease-out backwards;
+        }
+        .stat-item:nth-child(1) { animation-delay: 0.7s; }
+        .stat-item:nth-child(2) { animation-delay: 0.8s; }
+        .stat-item:nth-child(3) { animation-delay: 0.9s; }
+
+        .stat-item:hover {
+            border-color: rgba(184,150,46,0.5);
+            background: rgba(45,45,26,0.7);
+            transform: translateX(3px);
+        }
+
+        .stat-item-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #b0a070;
+        }
+        .stat-item-label .icon {
+            font-size: 1rem;
+            filter: drop-shadow(0 0 4px rgba(184,150,46,0.4));
+        }
+        .stat-item-value {
+            font-family: 'Courier New', monospace;
+            font-weight: 800;
+            color: var(--gold);
+            font-size: 0.95rem;
+        }
+
+        @keyframes statAppear {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==== НИЖНЯЯ ПАНЕЛЬ ==== */
+        .tabs-bar {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 30px 80px;
+            flex-shrink: 0;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+            gap: 10px;
+            background: linear-gradient(0deg, rgba(10,10,10,0.9), transparent);
+            margin-top: auto;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--accent);
+            opacity: 0.6;
+            transition: all 0.3s;
+            padding: 5px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+        }
+        .tab-btn.active {
+            opacity: 1;
+            color: var(--text);
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 8px rgba(180,150,90,0.6));
+        }
+        .tab-btn svg {
+            width: 28px;
+            height: 28px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+        }
+        .tab-btn.home-btn svg { width: 36px; height: 36px; }
+        .tab-btn.boss-btn svg { width: 30px; height: 30px; }
+        .tab-btn.boss-btn:hover svg {
+            filter: drop-shadow(0 0 10px rgba(200,60,60,0.9));
+            transform: scale(1.15);
+        }
+        .tab-btn.boss-btn:hover { color: #c0392b; }
+        .boss-skull-glow {
+            animation: skullGlow 3s ease-in-out infinite;
+            transform-origin: center;
+        }
+        @keyframes skullGlow {
+            0%,100% { filter: drop-shadow(0 0 3px rgba(200,60,60,0.4)); }
+            50% { filter: drop-shadow(0 0 9px rgba(200,60,60,0.9)); }
+        }
+
+        /* ==== МОДАЛКИ ==== */
+        .settings-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            backdrop-filter: blur(6px);
+        }
+        .settings-overlay.show { display: flex; animation: modalFadeIn 0.3s ease; }
+        @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .settings-box {
+            background: #24241a;
+            border-radius: 16px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            border: 2px solid var(--gold);
+            animation: modalSlideIn 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 40px rgba(184,150,46,0.2);
+        }
+        .stats-box { max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
+        @keyframes modalSlideIn {
+            from { transform: scale(0.8) translateY(20px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        .settings-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text);
+            text-align: center;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .settings-balance {
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: var(--gold);
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+        .settings-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .settings-tab {
+            flex: 1;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+        .settings-tab.active {
+            border-color: var(--gold);
+            background: rgba(184,150,46,0.1);
+        }
+
+        .stats-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin: 0 -5px 10px -5px;
+            padding-left: 5px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--gold) transparent;
+        }
+        .stats-scroll::-webkit-scrollbar { width: 5px; }
+        .stats-scroll::-webkit-scrollbar-track { background: transparent; }
+        .stats-scroll::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
+
+        .stats-block {
+            background: #1a1a10;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: border-color 0.3s;
+        }
+        .stats-block:hover { border-color: rgba(184,150,46,0.5); }
+        .stats-block-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--text);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stats-block-title .lvl-badge {
+            font-size: 0.7rem;
+            color: var(--gold);
+            background: rgba(184,150,46,0.15);
+            padding: 2px 8px;
+            border-radius: 10px;
+            border: 1px solid var(--gold);
+        }
+
+        .level-segments { display: flex; gap: 3px; margin-bottom: 10px; flex-wrap: nowrap; }
+        .level-segments span {
+            flex: 1;
+            height: 10px;
+            background: #0f0f00;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            transition: all 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+        }
+        .level-segments span.filled {
+            background: linear-gradient(180deg, #ffd76b, #b8962e);
+            border-color: var(--gold);
+            box-shadow: 0 0 6px rgba(184,150,46,0.7);
+        }
+
+        .stats-effect { font-size: 0.78rem; color: #8fd4b0; margin-bottom: 5px; font-weight: 600; }
+        .stats-cost { font-size: 0.78rem; color: var(--accent); margin-bottom: 10px; }
+        .stats-cost b { color: var(--gold); }
+
+        .upgrade-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 9px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .upgrade-btn:hover:not(:disabled) {
+            background: rgba(184,150,46,0.2);
+            box-shadow: 0 0 15px rgba(184,150,46,0.5);
+        }
+        .upgrade-btn:active:not(:disabled) { transform: scale(0.97); }
+        .upgrade-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            border-color: var(--border);
+            color: var(--accent);
+        }
+
+        .stat-message {
+            font-size: 0.75rem;
+            color: #ff5a5a;
+            text-align: center;
+            margin-top: 6px;
+            min-height: 1em;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+        .stat-message.show { opacity: 1; }
+
+        .avatar-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .avatar-option {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+        .avatar-option:hover { border-color: var(--gold); transform: scale(1.1); }
+        .avatar-option.selected {
+            border-color: var(--gold);
+            background: rgba(184,150,46,0.2);
+            transform: scale(1.1);
+        }
+
+        .upload-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+        .upload-btn:hover { background: rgba(74,74,58,0.5); }
+
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            background: #1a1a10;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 10px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .modal-input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 10px rgba(184,150,46,0.3);
+        }
+        .modal-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            pointer-events: auto;
+        }
+        .modal-btn:hover { background: rgba(74,74,58,0.5); }
+        .error-msg { color: #e74c3c; font-size: 0.8rem; margin-bottom: 10px; display: none; }
+
+        @media (max-width: 400px) {
+            .profile-avatar { width: 95px; height: 95px; font-size: 3rem; }
+            .profile-nickname { font-size: 1.3rem; }
+            .battle-value { font-size: 0.9rem; }
+            .battle-icon { font-size: 1.3rem; }
+            .battle-label { font-size: 0.6rem; }
+            .tabs-bar { padding: 8px 15px 80px; }
+        }
     </style>
 </head>
 <body>
+    <!-- Скрипты синхронизации — ДО основного кода, чтобы tgSyncReady был доступен -->
+    <script src="income.js"></script>
+    <script src="telegram-sync.js"></script>
+
     <div class="loading-screen" id="loadingScreen">
         <div class="loading-circle"></div>
         <div class="loading-text">Загрузка профиля</div>
@@ -161,9 +760,10 @@
         </div>
     </div>
 
+    <!-- Статистика: только прокачки -->
     <div id="statsModal" class="settings-overlay">
         <div class="settings-box stats-box">
-            <div class="settings-title">СТАТИСТИКА</div>
+            <div class="settings-title">ПРОКАЧКИ</div>
             <div class="settings-balance">💰 <span id="statsBalance">0</span> секспахомов</div>
             <div class="stats-scroll">
                 <div class="stats-block">
@@ -189,24 +789,6 @@
                     <button class="upgrade-btn" id="lootUpgradeBtn">Улучшить</button>
                     <div class="stat-message" id="lootMessage"></div>
                 </div>
-
-                <div class="stats-block">
-                    <div class="stats-block-title">
-                        <span>Статистика боссов</span>
-                    </div>
-                    <div class="boss-stat-row">
-                        <span>🏆 Побеждено</span>
-                        <b id="bossWins">0</b>
-                    </div>
-                    <div class="boss-stat-row">
-                        <span>💀 Провалено</span>
-                        <b id="bossLosses">0</b>
-                    </div>
-                    <div class="boss-stat-row">
-                        <span>💰 Заработано</span>
-                        <b><span id="bossEarned">0</span> секспахомов</b>
-                    </div>
-                </div>
             </div>
             <button id="closeStats" class="modal-btn" style="width:100%;">Закрыть</button>
         </div>
@@ -215,7 +797,7 @@
     <div class="profile-container" id="profileContainer">
         <div class="header">
             <div class="header-title">ПРОФИЛЬ</div>
-            <button class="stats-btn" id="statsBtn" title="Статистика">
+            <button class="stats-btn" id="statsBtn" title="Прокачки">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="3" y1="21" x2="21" y2="21"/>
                     <line x1="7" y1="21" x2="7" y2="12"/>
@@ -225,23 +807,59 @@
             </button>
             <button class="settings-btn" id="settingsBtn">⚙️</button>
         </div>
+
         <div class="profile-content">
-            <div class="profile-avatar" id="profileAvatar">👤</div>
+            <div class="profile-avatar-wrap">
+                <div class="profile-avatar" id="profileAvatar">👤</div>
+            </div>
             <div class="profile-nickname" id="profileNickname">Игрок</div>
             <div class="profile-ip" id="profileIP">0.0.0.0</div>
 
+            <!-- Выслуга и опыт -->
             <div class="player-level-block">
-                <div class="player-level">Уровень <span id="playerLevel">1</span></div>
+                <div class="player-level">Выслуга <span id="playerLevel">1</span> лет</div>
                 <div class="exp-bar-bg">
                     <div class="exp-bar-fill" id="expBarFill"></div>
                 </div>
-                <div class="exp-text"><span id="expCurrent">0</span> / <span id="expRequired">1200</span> опыта</div>
+                <div class="exp-text">Прославился на всю дивизию: <span id="expCurrent">0</span> / <span id="expRequired">1200</span></div>
             </div>
 
+            <!-- БОЕВАЯ СЛАВА (боссы) -->
+            <div class="battle-glory-title">
+                ⚔️ Боевая слава
+            </div>
+            <div class="battle-grid">
+                <div class="battle-card wins">
+                    <div class="battle-icon">🏆</div>
+                    <div class="battle-value" id="bossWins">0</div>
+                    <div class="battle-label">Побеждено</div>
+                </div>
+                <div class="battle-card losses">
+                    <div class="battle-icon">💀</div>
+                    <div class="battle-value" id="bossLosses">0</div>
+                    <div class="battle-label">Провалено</div>
+                </div>
+                <div class="battle-card earned">
+                    <div class="battle-icon">💰</div>
+                    <div class="battle-value" id="bossEarned">0</div>
+                    <div class="battle-label">Заработано</div>
+                </div>
+            </div>
+
+            <!-- Основные статы -->
             <div class="profile-stats">
-                <div class="stat-item">Кликов всего: <span id="totalClicks">0</span></div>
-                <div class="stat-item">Секспахомов: <span id="profileSexpah">0</span></div>
-                <div class="stat-item">Перевозбуждений: <span id="totalOverexcites">0</span></div>
+                <div class="stat-item">
+                    <span class="stat-item-label"><span class="icon">👆</span> Кликов всего</span>
+                    <span class="stat-item-value" id="totalClicks">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-item-label"><span class="icon">🔞</span> Секспахомов</span>
+                    <span class="stat-item-value" id="profileSexpah">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-item-label"><span class="icon">💥</span> Перевозбуждений</span>
+                    <span class="stat-item-value" id="totalOverexcites">0</span>
+                </div>
             </div>
         </div>
 
@@ -301,6 +919,10 @@
             const expRequiredSpan = $('expRequired');
             const expBarFill = $('expBarFill');
 
+            const bossWinsEl = $('bossWins');
+            const bossLossesEl = $('bossLosses');
+            const bossEarnedEl = $('bossEarned');
+
             const MAX_LOVE_UP = 20;
             const MAX_LOOT_UP = 5;
             const BASE_EXP = 1200;
@@ -315,7 +937,11 @@
             function lootUpgradeCost(targetLevel) { return 500000 * (targetLevel - 1); }
             function loveBonus(level) { return (level - 1) * 0.5; }
             function lootBonusPct(level) { return (level - 1) * 5; }
-            function formatNumber(n) { return Number(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+            function formatNumber(n) {
+                if (n >= 1000000000) { const v = n/1000000000; return (v<10?v.toFixed(1):Math.floor(v))+'B'; }
+                if (n >= 1000000) { const v = n/1000000; return (v<10?v.toFixed(1):Math.floor(v))+'M'; }
+                return Number(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+            }
 
             function updateProfile() {
                 const totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0', 10) || 0;
@@ -323,6 +949,10 @@
                 const totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0', 10) || 0;
                 const playerExp = parseInt(localStorage.getItem('pahomPlayerExp') || '0', 10) || 0;
                 const playerLevel = parseInt(localStorage.getItem('pahomPlayerLevel') || '1', 10) || 1;
+
+                nickname = localStorage.getItem('pahomNickname') || '';
+                playerIP = localStorage.getItem('pahomIP') || '';
+                avatarData = localStorage.getItem('pahomAvatar') || '';
 
                 profileNickname.textContent = nickname || 'Игрок';
                 profileIP.textContent = playerIP || '0.0.0.0';
@@ -338,10 +968,22 @@
                 expBarFill.style.width = pct + '%';
 
                 if (avatarData) {
-                    profileAvatar.innerHTML = '<img src="' + avatarData + '" alt="аватар" style="width:100%;height:100%;object-fit:cover;">';
+                    profileAvatar.innerHTML = '<img src="' + avatarData + '" alt="аватар">';
                 } else {
                     profileAvatar.textContent = '👤';
                 }
+
+                // Стата боссов
+                let bossStats = { wins: 0, losses: 0, earned: 0 };
+                try {
+                    const raw = JSON.parse(localStorage.getItem('pahomBossStats') || 'null');
+                    if (raw && typeof raw === 'object') {
+                        bossStats = { wins: raw.wins || 0, losses: raw.losses || 0, earned: raw.earned || 0 };
+                    }
+                } catch(e) {}
+                bossWinsEl.textContent = formatNumber(bossStats.wins);
+                bossLossesEl.textContent = formatNumber(bossStats.losses);
+                bossEarnedEl.textContent = formatNumber(bossStats.earned);
             }
 
             function renderSegments(containerId, current, max) {
@@ -361,12 +1003,6 @@
                 const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
                 const loveUpgrade = parseInt(localStorage.getItem('pahomUpgradeLove') || '1', 10) || 1;
                 const lootUpgrade = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1;
-
-                let bossStats = { wins: 0, losses: 0, earned: 0 };
-                try {
-                    const raw = JSON.parse(localStorage.getItem('pahomBossStats') || 'null');
-                    if (raw && typeof raw === 'object') bossStats = { wins: raw.wins || 0, losses: raw.losses || 0, earned: raw.earned || 0 };
-                } catch(e) {}
 
                 document.getElementById('statsBalance').textContent = formatNumber(sexpah);
 
@@ -399,10 +1035,6 @@
                     lootBtn.disabled = sexpah < cost;
                     lootBtn.textContent = sexpah < cost ? 'НЕДОСТАТОЧНО' : 'УЛУЧШИТЬ';
                 }
-
-                document.getElementById('bossWins').textContent = formatNumber(bossStats.wins);
-                document.getElementById('bossLosses').textContent = formatNumber(bossStats.losses);
-                document.getElementById('bossEarned').textContent = formatNumber(bossStats.earned);
             }
 
             function flashMessage(elId, text, isError) {
@@ -543,8 +1175,18 @@
             }
 
             setInterval(updateProfile, 1500);
+
+            // === TELEGRAM SYNC ===
+            // Скрипт telegram-sync.js уже загружен выше, так что tgSyncReady доступен сразу
+            if (window.tgSyncReady) {
+                window.tgSyncLoad(function(loaded) {
+                    if (loaded) {
+                        updateProfile();
+                        if (typeof updateStatsPanel === 'function') updateStatsPanel();
+                    }
+                });
+            }
         })();
     </script>
-<script src="income.js"></script>
 </body>
 </html>
