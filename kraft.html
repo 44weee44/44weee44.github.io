@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>ВЕРСТАК — кликер Пахома</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
+
+  :root {
+    --bg: #0a0a0a;
+    --panel: #1a1a1a;
+    --border: #4a4a2a;
+    --text: #c4b08a;
+    --accent: #8a7a5a;
+    --gold: #b8962e;
+    --red: #c0392b;
+    --purple: #6a4a9a;
+  }
+
+  html, body {
+    background: #0a0a0a;
+    width: 100%; height: 100%;
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    overflow: hidden;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    touch-action: manipulation;
+  }
+
+  .game-container {
+    background-color: #1a1a1a;
+    background-image:
+      linear-gradient(rgba(15,10,25,0.85), rgba(5,5,15,0.95)),
+      url('Fon.jpeg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 0;
+    overflow: hidden;
+    animation: fadeInSoft 0.8s ease-out;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  .game-container.exit {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  @keyframes fadeInSoft {
+    from { opacity: 0.6; }
+    to   { opacity: 1; }
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 15px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--purple);
+    background: rgba(35, 25, 55, 0.85);
+    z-index: 10;
+    position: relative;
+    min-height: 56px;
+  }
+
+  .header-icon {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    margin-right: 10px;
+    filter: drop-shadow(0 0 6px rgba(150,100,200,0.7));
+  }
+
+  .header-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: var(--text);
+    text-transform: uppercase;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 10px rgba(150,100,200,0.4);
+  }
+
+  /* ==== КНОПКА НАЗАД ==== */
+  .back-btn {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(106, 74, 154, 0.3), rgba(60, 30, 100, 0.2));
+    border: 2px solid var(--purple);
+    color: #d8c8ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 0 15px rgba(150,100,200,0.3);
+    text-decoration: none;
+    z-index: 20;
+  }
+
+  .back-btn svg {
+    width: 20px;
+    height: 20px;
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  .back-btn:hover {
+    background: linear-gradient(135deg, rgba(106, 74, 154, 0.55), rgba(60, 30, 100, 0.4));
+    box-shadow: 0 0 25px rgba(150,100,200,0.8);
+    transform: translateY(-50%) scale(1.1);
+    color: #ffffff;
+  }
+
+  .back-btn:hover svg {
+    transform: translateX(-3px);
+  }
+
+  .back-btn:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+
+  .score-board {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 15px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    background: rgba(28, 28, 14, 0.7);
+    z-index: 10;
+    gap: 10px;
+  }
+
+  .sexpah {
+    background: rgba(37, 37, 21, 0.9);
+    padding: 5px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .sexpah.bump {
+    transform: scale(1.08);
+    box-shadow: 0 0 20px rgba(184,150,46,0.7);
+  }
+
+  .income-badge {
+    background: rgba(106, 74, 154, 0.25);
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--purple);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #b8a8e0;
+    font-family: 'Courier New', monospace;
+    transition: all 0.3s;
+  }
+
+  .income-badge.active {
+    box-shadow: 0 0 15px rgba(150,100,200,0.5);
+    color: #d8c8ff;
+  }
+
+  .shop-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    flex-shrink: 0;
+  }
+
+  .shop-tab {
+    flex: 1;
+    background: rgba(30, 30, 14, 0.6);
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .shop-tab.active {
+    border-color: var(--purple);
+    background: rgba(106, 74, 154, 0.25);
+    color: #d8c8ff;
+    box-shadow: 0 0 15px rgba(150,100,200,0.4);
+  }
+
+  .content-area {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+    perspective: 1200px;
+    padding-bottom: 20px;
+  }
+
+  .page {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0; left: 0;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+  }
+
+  .page.active {
+    display: block;
+    animation: pageInRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  .page.exit-left {
+    display: block;
+    animation: pageOutLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  .page.exit-right {
+    display: block;
+    animation: pageOutRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+  .page.enter-left {
+    display: block;
+    animation: pageInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  @keyframes pageInRight {
+    0% { opacity: 0; transform: translateX(100%); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes pageOutLeft {
+    0% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(-100%); }
+  }
+  @keyframes pageOutRight {
+    0% { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(100%); }
+  }
+  @keyframes pageInLeft {
+    0% { opacity: 0; transform: translateX(-100%); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+
+  .shop-panel {
+    padding: 10px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    height: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: var(--purple) transparent;
+  }
+
+  .shop-panel::-webkit-scrollbar { width: 6px; }
+  .shop-panel::-webkit-scrollbar-track { background: transparent; }
+  .shop-panel::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 3px; }
+
+  .claim-btn {
+    width: 100%;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, rgba(106, 74, 154, 0.35), rgba(60, 30, 100, 0.25));
+    border: 2px solid var(--purple);
+    border-radius: 12px;
+    color: #d8c8ff;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    box-shadow: 0 0 20px rgba(150,100,200,0.3);
+    animation: claimPulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes claimPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(150,100,200,0.3); }
+    50%      { box-shadow: 0 0 35px rgba(150,100,200,0.6); }
+  }
+
+  .claim-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    transition: left 0.7s ease;
+  }
+
+  .claim-btn:hover:not(:disabled)::before { left: 100%; }
+
+  .claim-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(106, 74, 154, 0.55), rgba(60, 30, 100, 0.4));
+    box-shadow: 0 0 40px rgba(150,100,200,0.7);
+    transform: translateY(-2px);
+  }
+
+  .claim-btn:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .claim-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    animation: none;
+    box-shadow: 0 0 10px rgba(150,100,200,0.15);
+    background: rgba(60, 40, 90, 0.3);
+  }
+
+  .claim-btn-label {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    letter-spacing: 2px;
+  }
+
+  .claim-btn-amount {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #ffd76b;
+    font-family: 'Courier New', monospace;
+    text-shadow: 0 0 12px rgba(184,150,46,0.8);
+  }
+
+  .recipe-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: rgba(30, 30, 14, 0.8);
+    backdrop-filter: blur(4px);
+    cursor: pointer;
+    transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                border-color 0.35s ease,
+                background 0.35s ease,
+                box-shadow 0.35s ease;
+    flex-shrink: 0;
+    animation: cardSlide 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+  }
+  .recipe-card:nth-child(1) { animation-delay: 0.05s; }
+  .recipe-card:nth-child(2) { animation-delay: 0.15s; }
+  .recipe-card:nth-child(3) { animation-delay: 0.25s; }
+  .recipe-card:nth-child(4) { animation-delay: 0.35s; }
+  .recipe-card:nth-child(5) { animation-delay: 0.45s; }
+
+  @keyframes cardSlide {
+    from { transform: translateX(-15px); opacity: 0; }
+    to   { transform: translateX(0); opacity: 1; }
+  }
+
+  .recipe-card:hover:not(.locked) {
+    border-color: var(--purple);
+    transform: translateX(4px);
+    background: rgba(45, 35, 65, 0.9);
+    box-shadow: 0 0 20px rgba(150,100,200,0.3);
+  }
+
+  .recipe-card.locked {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .recipe-card.crafted {
+    border-color: #4cd964;
+    background: rgba(30, 60, 30, 0.4);
+  }
+
+  .recipe-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    border: 2px solid var(--purple);
+    background: rgba(40, 30, 60, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease;
+    box-shadow: 0 0 15px rgba(150,100,200,0.3);
+  }
+
+  .recipe-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .recipe-card:hover:not(.locked) .recipe-avatar {
+    transform: scale(1.08);
+    box-shadow: 0 0 25px rgba(150,100,200,0.6);
+  }
+
+  .recipe-info { flex: 1; min-width: 0; }
+
+  .recipe-name {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+  }
+
+  .recipe-desc {
+    font-size: 0.75rem;
+    color: #b0a070;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .recipe-req {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #d4c4a0;
+    font-weight: 600;
+  }
+
+  .recipe-req.bad { color: #ff5a5a; }
+  .recipe-req.good { color: #8fd4b0; }
+
+  .recipe-req .req-icon {
+    display: inline-flex;
+    width: 16px;
+    height: 16px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .recipe-req .req-icon img {
+    width: 16px;
+    height: 16px;
+    object-fit: contain;
+  }
+
+  .recipe-effect {
+    color: #b8a8e0;
+    font-weight: 700;
+    font-size: 0.72rem;
+    margin-top: 2px;
+  }
+
+  .recipe-btn {
+    padding: 8px 14px;
+    background: rgba(106, 74, 154, 0.3);
+    border: 1px solid var(--purple);
+    color: #d8c8ff;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    pointer-events: auto;
+  }
+
+  .recipe-btn:hover:not(:disabled) {
+    background: rgba(106, 74, 154, 0.5);
+    box-shadow: 0 0 15px rgba(150,100,200,0.5);
+  }
+
+  .recipe-btn:active:not(:disabled) { transform: scale(0.96); }
+
+  .recipe-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    border-color: var(--border);
+    color: var(--accent);
+    background: transparent;
+  }
+
+  .recipe-btn.done {
+    border-color: #4cd964;
+    color: #4cd964;
+    background: rgba(60, 180, 80, 0.15);
+  }
+
+  .my-srochnik-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    border: 1px solid var(--purple);
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(106, 74, 154, 0.2), rgba(60, 30, 100, 0.15));
+    backdrop-filter: blur(4px);
+    animation: cardSlide 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards;
+    box-shadow: 0 0 15px rgba(150,100,200,0.15);
+  }
+
+  .my-srochnik-avatar {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    border: 2px solid var(--purple);
+    background: rgba(40, 30, 60, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(150,100,200,0.4);
+  }
+
+  .my-srochnik-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .my-srochnik-info { flex: 1; min-width: 0; }
+
+  .my-srochnik-name {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #d8c8ff;
+    margin-bottom: 3px;
+    letter-spacing: 1px;
+  }
+
+  .my-srochnik-bonus {
+    font-size: 0.75rem;
+    color: #8fd4b0;
+    font-weight: 700;
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--accent);
+    font-size: 0.9rem;
+    padding: 30px 20px;
+    animation: fadeInSoft 0.8s ease;
+  }
+
+  .empty-state .empty-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 10px;
+    opacity: 0.5;
+  }
+
+  .notify-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 15px;
+    flex-shrink: 0;
+    z-index: 100;
+    pointer-events: none;
+  }
+  .notify-bar:empty { padding: 0; }
+
+  .notify-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(106, 74, 154, 0.25);
+    border: 1px solid var(--purple);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #d8c8ff;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 0 20px rgba(150,100,200,0.5);
+    animation: chipIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    align-self: flex-start;
+  }
+
+  .notify-chip.leaving {
+    animation: chipOut 0.4s ease forwards;
+  }
+
+  @keyframes chipIn {
+    from { opacity: 0; transform: translateY(-20px) scale(0.8); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes chipOut {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to   { opacity: 0; transform: translateY(-15px) scale(0.9); }
+  }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 400px) {
+    .recipe-avatar { width: 50px; height: 50px; font-size: 1.8rem; }
+    .recipe-name { font-size: 0.95rem; }
+    .recipe-btn { padding: 6px 10px; font-size: 0.7rem; }
+    .claim-btn-amount { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+<div class="game-container" id="gameContainer">
+
+  <div class="header">
+    <a href="seks.html#inventory" class="back-btn" id="backBtn" title="Назад в инвентарь">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+      </svg>
+    </a>
+    <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 21h18"/>
+      <path d="M5 21V10l4-3 4 3v11"/>
+      <path d="M13 21V8l3-2 3 2v13"/>
+      <path d="M7 14h2"/>
+      <path d="M15 12h2"/>
+      <path d="M15 16h2"/>
+    </svg>
+    <div class="header-title">ВЕРСТАК</div>
+  </div>
+
+  <div class="score-board">
+    <div class="sexpah" id="sexpahBox">🔞 <span id="sexpahCount">0</span> секспахомов</div>
+    <div class="income-badge" id="incomeBadge">+0/мин</div>
+  </div>
+
+  <div class="notify-bar" id="notifyBar"></div>
+
+  <div class="shop-tabs">
+    <button id="craftTab" class="shop-tab active">Срочники</button>
+    <button id="myTab" class="shop-tab">Мои срочники</button>
+  </div>
+
+  <div class="content-area">
+    <div id="craftPanel" class="page active">
+      <div class="shop-panel" id="craftList"></div>
+    </div>
+    <div id="myPanel" class="page">
+      <div class="shop-panel" id="myList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  function $(id) { return document.getElementById(id); }
+
+  var gameContainer = $('gameContainer');
+  var backBtn = $('backBtn');
+  var sexpahBox = $('sexpahBox');
+  var sexpahCount = $('sexpahCount');
+  var incomeBadge = $('incomeBadge');
+  var notifyBar = $('notifyBar');
+  var craftTab = $('craftTab');
+  var myTab = $('myTab');
+  var craftPanel = $('craftPanel');
+  var myPanel = $('myPanel');
+  var craftList = $('craftList');
+  var myList = $('myList');
+
+  var STATE_KEY = 'pahomBossInventory';
+  var CRAFT_STATE = 'pahomKraftState';
+  var LAST_TICK = 'pahomKraftLastTick';
+  var PENDING = 'pahomKraftPending';
+
+  var RECIPES = [
+    {
+      id: 'medic',
+      name: 'Медик',
+      icon: '⚕️',
+      description: 'Ебаный сракан',
+      effectText: '+2 секспахома/мин (оффлайн тоже)',
+      requirements: [
+        { itemId: 'medphone', name: 'Телефон медика', icon: '📱', count: 10 }
+      ],
+      levelReq: 15,
+      maxCraft: 1,
+      type: 'srochnik',
+      incomePerMin: 2
+    },
+    {
+      id: 'dodonov',
+      name: 'Додонов',
+      icon: null,
+      image: 'Penis.png',
+      description: 'Малыш-срочник',
+      effectText: '+1 секспахом/мин (оффлайн тоже)',
+      requirements: [
+        { itemId: 'sextoy', name: 'Секс игрушка', icon: '🍆', count: 3 }
+      ],
+      levelReq: 5,
+      maxCraft: 1,
+      type: 'srochnik',
+      incomePerMin: 1
+    },
+    {
+      id: 'wholetooth',
+      name: 'Целый зубик',
+      icon: '🦷',
+      description: 'Восстановленный зуб Сеймура 😧',
+      effectText: 'Добавляется в инвентарь (макс 5)',
+      requirements: [
+        { itemId: 'rotten', name: 'Гнилой зубик', icon: '🦷', count: 10 }
+      ],
+      levelReq: 29,
+      maxCraft: 5,
+      type: 'item',
+      resultItemId: 'wholetooth',
+      incomePerMin: 0
+    },
+    {
+      id: 'seimur',
+      name: 'Сеймур',
+      icon: null,
+      image: 'Seimur.png',
+      description: 'Легендарный срочник',
+      effectText: '+10 секспахомов/мин (оффлайн тоже)',
+      requirements: [
+        { itemId: 'wholetooth', name: 'Целый зубик', icon: '🦷', count: 5 }
+      ],
+      levelReq: 29,
+      maxCraft: 1,
+      type: 'srochnik',
+      incomePerMin: 10
+    }
+  ];
+
+  // ==== ПЛАВНЫЙ ПЕРЕХОД НАЗАД ====
+  backBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    gameContainer.classList.add('exit');
+    setTimeout(function() {
+      window.location.href = 'seks.html#inventory';
+    }, 380);
+  });
+
+  function getBossInventory() {
+    try { return JSON.parse(localStorage.getItem(STATE_KEY) || '{}') || {}; } catch(e) { return {}; }
+  }
+  function setBossInventory(inv) {
+    try { localStorage.setItem(STATE_KEY, JSON.stringify(inv)); } catch(e) {}
+  }
+  function getCraftState() {
+    try { return JSON.parse(localStorage.getItem(CRAFT_STATE) || '{}') || {}; } catch(e) { return {}; }
+  }
+  function setCraftState(state) {
+    try { localStorage.setItem(CRAFT_STATE, JSON.stringify(state)); } catch(e) {}
+  }
+  function getPlayerLevel() {
+    return parseInt(localStorage.getItem('pahomPlayerLevel') || '1', 10) || 1;
+  }
+  function getSexpah() {
+    return parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
+  }
+  function getPending() {
+    if (window.pahomGetPending) return window.pahomGetPending();
+    return parseInt(localStorage.getItem(PENDING) || '0', 10) || 0;
+  }
+
+  function fmt(n) {
+    if (n >= 1000000000) { var v = n/1000000000; return (v<10?v.toFixed(1):Math.floor(v))+'B'; }
+    if (n >= 1000000) { var v = n/1000000; return (v<10?v.toFixed(1):Math.floor(v))+'M'; }
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  function bumpEl(el) {
+    if (!el) return;
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+    setTimeout(function() { el.classList.remove('bump'); }, 300);
+  }
+
+  function showNotify(text) {
+    if (!notifyBar) return;
+    var chip = document.createElement('div');
+    chip.className = 'notify-chip';
+    chip.textContent = text;
+    notifyBar.appendChild(chip);
+    setTimeout(function() {
+      chip.classList.add('leaving');
+      setTimeout(function() { if (chip.parentNode) chip.parentNode.removeChild(chip); }, 400);
+    }, 4000);
+  }
+
+  function calcIncomePerMin() {
+    if (window.pahomCalcIncomePerMin) return window.pahomCalcIncomePerMin();
+    var state = getCraftState();
+    var perMin = 0;
+    RECIPES.forEach(function(r) {
+      if (r.type === 'srochnik' && state[r.id] && r.incomePerMin) {
+        perMin += r.incomePerMin * state[r.id];
+      }
+    });
+    return perMin;
+  }
+
+  function updateIncomeBadge() {
+    var perMin = calcIncomePerMin();
+    incomeBadge.textContent = '+' + perMin + '/мин';
+    if (perMin > 0) incomeBadge.classList.add('active');
+    else incomeBadge.classList.remove('active');
+  }
+
+  function updateSexpahUI() {
+    sexpahCount.textContent = fmt(getSexpah());
+  }
+
+  function canCraft(recipe) {
+    var craftState = getCraftState();
+    var playerLevel = getPlayerLevel();
+    var bossInv = getBossInventory();
+
+    var crafted = craftState[recipe.id] || 0;
+    if (crafted >= recipe.maxCraft) return { ok: false, reason: 'Лимит: макс 1 срочник' };
+    if (playerLevel < recipe.levelReq) return { ok: false, reason: 'Нужна выслуга ' + recipe.levelReq + ' лет' };
+
+    for (var i = 0; i < recipe.requirements.length; i++) {
+      var req = recipe.requirements[i];
+      var have = bossInv[req.itemId] || 0;
+      if (have < req.count) return { ok: false, reason: 'Не хватает предметов' };
+    }
+    return { ok: true };
+  }
+
+  function craft(recipe) {
+    var check = canCraft(recipe);
+    if (!check.ok) {
+      showNotify('❌ ' + check.reason);
+      return;
+    }
+
+    var bossInv = getBossInventory();
+    var craftState = getCraftState();
+
+    for (var i = 0; i < recipe.requirements.length; i++) {
+      var req = recipe.requirements[i];
+      bossInv[req.itemId] = (bossInv[req.itemId] || 0) - req.count;
+      if (bossInv[req.itemId] <= 0) delete bossInv[req.itemId];
+    }
+
+    craftState[recipe.id] = (craftState[recipe.id] || 0) + 1;
+
+    if (recipe.type === 'item' && recipe.resultItemId) {
+      bossInv[recipe.resultItemId] = (bossInv[recipe.resultItemId] || 0) + 1;
+    }
+
+    setBossInventory(bossInv);
+    setCraftState(craftState);
+
+    var last = parseInt(localStorage.getItem(LAST_TICK) || '0', 10) || 0;
+    if (last === 0) localStorage.setItem(LAST_TICK, String(Date.now()));
+
+    if (recipe.type === 'srochnik') {
+      showNotify('🛠 ' + recipe.name + ' вступил в строй!');
+    } else if (recipe.type === 'item') {
+      showNotify('🛠 Получен: ' + recipe.name);
+    }
+
+    renderCraftList();
+    renderMyList();
+    updateIncomeBadge();
+    updateSexpahUI();
+  }
+
+  function renderCraftList() {
+    craftList.innerHTML = '';
+    var bossInv = getBossInventory();
+    var craftState = getCraftState();
+    var playerLevel = getPlayerLevel();
+
+    RECIPES.forEach(function(recipe) {
+      var crafted = craftState[recipe.id] || 0;
+      var isDone = crafted >= recipe.maxCraft;
+      var check = canCraft(recipe);
+
+      var card = document.createElement('div');
+      card.className = 'recipe-card';
+      if (!check.ok && !isDone) card.classList.add('locked');
+      if (isDone) card.classList.add('crafted');
+
+      var avatarHTML = recipe.image
+        ? '<img src="' + recipe.image + '" alt="' + recipe.name + '">'
+        : (recipe.icon || '❓');
+
+      var reqHTML = '';
+      recipe.requirements.forEach(function(req) {
+        var have = bossInv[req.itemId] || 0;
+        var need = req.count;
+        var ok = have >= need;
+        var cls = ok ? 'good' : 'bad';
+        var iconHTML = req.icon || '';
+        reqHTML += '<span class="recipe-req ' + cls + '">' +
+          '<span class="req-icon">' + iconHTML + '</span> ' +
+          need + 'x ' + req.name + ' (' + have + '/' + need + ')</span>';
+      });
+
+      var lvlOk = playerLevel >= recipe.levelReq;
+      var lvlCls = lvlOk ? 'good' : 'bad';
+      reqHTML += '<span class="recipe-req ' + lvlCls + '">📈 Выслуга лет ' + recipe.levelReq + ' (' + playerLevel + ')</span>';
+
+      var btnText, btnDisabled, btnDone = false;
+      if (isDone) { btnText = 'ГОТОВО'; btnDisabled = true; btnDone = true; }
+      else if (!check.ok) { btnText = 'НЕДОСТУПНО'; btnDisabled = true; }
+      else { btnText = 'СКРАФТИТЬ'; btnDisabled = false; }
+
+      var progressHTML = '';
+      if (recipe.maxCraft > 1) {
+        progressHTML = '<span class="recipe-effect">Скрафчено: ' + crafted + ' / ' + recipe.maxCraft + '</span>';
+      }
+
+      card.innerHTML =
+        '<div class="recipe-avatar">' + avatarHTML + '</div>' +
+        '<div class="recipe-info">' +
+          '<div class="recipe-name">' + recipe.name + '</div>' +
+          '<div class="recipe-desc">' +
+            '<span>' + recipe.description + '</span>' +
+            reqHTML +
+            '<span class="recipe-effect">✨ ' + recipe.effectText + '</span>' +
+            progressHTML +
+          '</div>' +
+        '</div>' +
+        '<button class="recipe-btn ' + (btnDone ? 'done' : '') + '"' +
+          (btnDisabled ? ' disabled' : '') +
+          ' data-recipe="' + recipe.id + '">' + btnText + '</button>';
+
+      var btn = card.querySelector('.recipe-btn');
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        craft(recipe);
+      });
+
+      craftList.appendChild(card);
+    });
+  }
+
+  function renderMyList() {
+    myList.innerHTML = '';
+    var craftState = getCraftState();
+
+    var srochniki = RECIPES.filter(function(r) {
+      return r.type === 'srochnik' && (craftState[r.id] || 0) > 0;
+    });
+
+    if (srochniki.length === 0) {
+      myList.innerHTML =
+        '<div class="empty-state">' +
+          '<span class="empty-icon">🪖</span>' +
+          'Пока никого нет. Скрафти первого срочника на вкладке «Срочники»' +
+        '</div>';
+      return;
+    }
+
+    var claimBtn = document.createElement('button');
+    claimBtn.className = 'claim-btn';
+    claimBtn.id = 'claimBtn';
+
+    var pending = getPending();
+    claimBtn.innerHTML =
+      '<span class="claim-btn-label">Скинуться</span>' +
+      '<span class="claim-btn-amount">+' + fmt(pending) + ' сексп.</span>';
+
+    if (pending <= 0) claimBtn.disabled = true;
+
+    claimBtn.addEventListener('click', function() {
+      var earned = 0;
+      if (window.pahomClaimPending) earned = window.pahomClaimPending();
+
+      if (earned > 0) {
+        showNotify('💰 Получено: +' + fmt(earned) + ' секспахомов');
+        bumpEl(sexpahBox);
+      }
+      updateSexpahUI();
+      updateClaimBtn();
+    });
+
+    myList.appendChild(claimBtn);
+
+    srochniki.forEach(function(recipe, index) {
+      var count = craftState[recipe.id] || 0;
+
+      var avatarHTML = recipe.image
+        ? '<img src="' + recipe.image + '" alt="' + recipe.name + '">'
+        : (recipe.icon || '❓');
+
+      var card = document.createElement('div');
+      card.className = 'my-srochnik-card';
+      card.style.animationDelay = (index * 0.1) + 's';
+
+      card.innerHTML =
+        '<div class="my-srochnik-avatar">' + avatarHTML + '</div>' +
+        '<div class="my-srochnik-info">' +
+          '<div class="my-srochnik-name">' + recipe.name + '</div>' +
+          '<div class="my-srochnik-bonus">+ ' + (recipe.incomePerMin * count) + ' секспахомов / мин' +
+            (count > 1 ? ' (x' + count + ')' : '') +
+          '</div>' +
+        '</div>';
+
+      myList.appendChild(card);
+    });
+  }
+
+  function updateClaimBtn() {
+    var btn = document.getElementById('claimBtn');
+    if (!btn) return;
+    var pending = getPending();
+    var amountEl = btn.querySelector('.claim-btn-amount');
+    if (amountEl) amountEl.textContent = '+' + fmt(pending) + ' сексп.';
+    btn.disabled = pending <= 0;
+  }
+
+  var currentTab = 'craft';
+  var isTabAnimating = false;
+
+  function switchTab(tab) {
+    if (isTabAnimating || tab === currentTab) return;
+    isTabAnimating = true;
+
+    var fromPage = tab === 'my' ? craftPanel : myPanel;
+    var toPage = tab === 'my' ? myPanel : craftPanel;
+
+    craftTab.classList.toggle('active', tab === 'craft');
+    myTab.classList.toggle('active', tab === 'my');
+
+    var movingRight = (tab === 'my');
+
+    fromPage.classList.remove('active', 'enter-left', 'exit-left', 'exit-right');
+    toPage.classList.remove('active', 'enter-left', 'exit-left', 'exit-right');
+
+    if (movingRight) {
+      fromPage.classList.add('exit-left');
+      toPage.classList.add('active');
+    } else {
+      fromPage.classList.add('exit-right');
+      toPage.classList.add('enter-left');
+    }
+
+    setTimeout(function() {
+      fromPage.classList.remove('exit-left', 'exit-right');
+      toPage.classList.remove('enter-left', 'active');
+      toPage.classList.add('active');
+      isTabAnimating = false;
+    }, 620);
+
+    currentTab = tab;
+  }
+
+  craftTab.addEventListener('click', function() { switchTab('craft'); });
+  myTab.addEventListener('click', function() { switchTab('my'); });
+
+  window.addEventListener('pahomPendingChanged', function() {
+    updateClaimBtn();
+  });
+
+  function init() {
+    updateSexpahUI();
+    updateIncomeBadge();
+    renderCraftList();
+    renderMyList();
+
+    setInterval(function() {
+      updateSexpahUI();
+      updateIncomeBadge();
+      updateClaimBtn();
+    }, 2000);
+
+    window.addEventListener('storage', function(e) {
+      if (e.key === STATE_KEY || e.key === CRAFT_STATE || e.key === 'pahomSexpah' || e.key === PENDING) {
+        updateSexpahUI();
+        updateIncomeBadge();
+        renderCraftList();
+        renderMyList();
+      }
+    });
+  }
+
+  init();
+})();
+</script>
+<script src="income.js"></script>
+</body>
+</html>

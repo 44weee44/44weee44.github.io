@@ -518,7 +518,9 @@
         .shop-panel {
             padding: 10px;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             height: 100%;
+            max-height: 100%;
             scrollbar-width: thin;
             scrollbar-color: var(--border) transparent;
         }
@@ -569,6 +571,7 @@
         .inventory-panel {
             padding: 10px;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             height: 100%;
         }
 
@@ -582,6 +585,74 @@
             text-align: center;
             border-bottom: 1px solid var(--border);
             padding-bottom: 8px;
+        }
+
+        /* ==== КНОПКА ВЕРСТАК ==== */
+        .kraft-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, rgba(184, 150, 46, 0.22), rgba(139, 105, 20, 0.15));
+            border: 2px solid var(--gold);
+            border-radius: 8px;
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 800;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .kraft-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .kraft-btn:hover {
+            background: linear-gradient(135deg, rgba(184, 150, 46, 0.35), rgba(139, 105, 20, 0.25));
+            box-shadow: 0 0 25px rgba(184, 150, 46, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .kraft-btn:hover::before {
+            left: 100%;
+        }
+
+        .kraft-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .kraft-btn-icon {
+            font-size: 1.6rem;
+            filter: drop-shadow(0 0 8px rgba(184, 150, 46, 0.7));
+            flex-shrink: 0;
+        }
+
+        .kraft-btn-text {
+            flex: 1;
+            color: var(--gold);
+        }
+
+        .kraft-btn-arrow {
+            font-size: 1.2rem;
+            opacity: 0.7;
+            transition: transform 0.3s ease;
+        }
+
+        .kraft-btn:hover .kraft-btn-arrow {
+            transform: translateX(4px);
+            opacity: 1;
         }
 
         .inventory-section { margin-bottom: 20px; }
@@ -850,6 +921,12 @@
                         </div>
                         <div id="shopInventoryContent" class="shop-page">
                             <div class="inventory-panel">
+                                <a href="kraft.html" class="kraft-btn">
+                                    <span class="kraft-btn-icon">🛠️</span>
+                                    <span class="kraft-btn-text">Верстак Пахома</span>
+                                    <span class="kraft-btn-arrow">→</span>
+                                </a>
+
                                 <div class="inventory-title">Инвентарь</div>
                                 <div id="inventoryList"></div>
                             </div>
@@ -921,7 +998,8 @@
 
             let sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0');
             let love = 0;
-            const MAX_LOVE = 300;
+            const BASE_MAX_LOVE = 300;
+            const CIGS_MAX_LOVE = 500;
             let totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0');
             let totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0');
             let currentTool = localStorage.getItem('pahomTool') || 'hand';
@@ -937,14 +1015,17 @@
                 shank: { name: 'Черенок', icon: '🔧', clickPower: 4, requirement: 25000 },
                 shovel: { name: 'Лопата', icon: '🪏', clickPower: 5, requirement: 55000 },
                 commissar: { name: 'Замполит', icon: '🎖️', clickPower: 6, requirement: 85000 },
-                drin: { name: 'Дрын', icon: '🌲', clickPower: 10, requirement: 100000 }
+                drin: { name: 'Дрын', icon: '🌲', clickPower: 10, requirement: 100000 },
+                tyrchik: { name: 'Тырчик', icon: '⚡', clickPower: 12, requirement: 250000 },
+                napilnik: { name: 'Напильник', icon: '🔩', clickPower: 13, requirement: 500000 },
+                srochnik: { name: 'Срочник', icon: '🪖', clickPower: 14, requirement: 1000000 }
             };
 
             const buffs = {
-                viagra: { name: 'Виагра', icon: '💊', price: 5000, duration: 5 * 60 * 1000 }
+                viagra: { name: 'Виагра', icon: '💊', price: 5000, duration: 5 * 60 * 1000 },
+                cigs:   { name: 'Пачка сигарет', icon: '🚬', price: 10000, duration: 5 * 60 * 1000 }
             };
 
-            // ==== LOOT_META — обновлённый ====
             const LOOT_META = {
                 ladder:   { name: 'Пиздец дорогая лестница', icon: '🪜' },
                 medphone: { name: 'Телефон медика', icon: '📱' },
@@ -1002,8 +1083,23 @@
                 localStorage.setItem('pahomBuffs', JSON.stringify(activeBuffs));
             }
 
+            // Подтягиваем актуальное значение sexpah из localStorage (для оффлайн-дохода)
+            function syncSexpahFromStorage() {
+                var v = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
+                if (v !== sexpah) sexpah = v;
+            }
+            window.addEventListener('pahomIncome', syncSexpahFromStorage);
+
             function isViagraActive() {
                 return activeBuffs.viagra && activeBuffs.viagra > Date.now();
+            }
+
+            function isCigsActive() {
+                return activeBuffs.cigs && activeBuffs.cigs > Date.now();
+            }
+
+            function getMaxLove() {
+                return isCigsActive() ? CIGS_MAX_LOVE : BASE_MAX_LOVE;
             }
 
             function getBaseClickPower() { return tools[currentTool].clickPower; }
@@ -1023,24 +1119,29 @@
             function ensureBuffsTop() {
                 const now = Date.now();
                 const hasViagra = activeBuffs.viagra && activeBuffs.viagra > now;
+                const hasCigs = activeBuffs.cigs && activeBuffs.cigs > now;
 
-                if (!hasViagra) {
+                buffsTop.innerHTML = '';
+
+                if (!hasViagra && !hasCigs) {
                     buffsTop.classList.add('hidden');
-                    if (buffsTop.innerHTML !== '') buffsTop.innerHTML = '';
                     return;
                 }
 
                 buffsTop.classList.remove('hidden');
 
-                let chip = buffsTop.querySelector('.buff-chip');
-                if (!chip) {
-                    buffsTop.innerHTML = '';
-                    chip = document.createElement('div');
+                if (hasViagra) {
+                    const chip = document.createElement('div');
                     chip.className = 'buff-chip';
-                    chip.innerHTML = '<span class="buff-icon">💊</span><span class="buff-timer">--:--</span>';
+                    chip.innerHTML = '<span class="buff-icon">💊</span><span class="buff-timer">' + formatTime(activeBuffs.viagra - now) + '</span>';
                     buffsTop.appendChild(chip);
                 }
-                chip.querySelector('.buff-timer').textContent = formatTime(activeBuffs.viagra - now);
+                if (hasCigs) {
+                    const chip = document.createElement('div');
+                    chip.className = 'buff-chip';
+                    chip.innerHTML = '<span class="buff-icon">🚬</span><span class="buff-timer">' + formatTime(activeBuffs.cigs - now) + '</span>';
+                    buffsTop.appendChild(chip);
+                }
             }
 
             function renderShopOnce() {
@@ -1072,12 +1173,20 @@
                     const buff = buffs[key];
                     const item = document.createElement('div');
                     item.className = 'shop-item';
+
+                    let desc = '';
+                    if (key === 'viagra') {
+                        desc = 'Пахом возбуждается медленнее · ' + formatSexpah(buff.price) + ' секспахомов · 5 мин';
+                    } else if (key === 'cigs') {
+                        desc = 'Максимальная любовь 500 единиц · ' + formatSexpah(buff.price) + ' секспахомов · 5 мин';
+                    }
+
                     item.innerHTML =
                         '<div class="shop-item-info">' +
                             '<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:#111;border-radius:6px;">' + buff.icon + '</div>' +
                             '<div class="item-info">' +
                                 '<div class="item-name">' + buff.name + '</div>' +
-                                '<div class="item-desc">Пахом возбуждается медленнее · ' + formatSexpah(buff.price) + ' секспахомов · 5 мин</div>' +
+                                '<div class="item-desc">' + desc + '</div>' +
                             '</div>' +
                         '</div>';
                     item.addEventListener('click', () => buyBuff(key));
@@ -1140,6 +1249,7 @@
             }
 
             function selectTool(toolKey) {
+                syncSexpahFromStorage();
                 if (currentTool !== toolKey && sexpah >= tools[toolKey].requirement) {
                     currentTool = toolKey;
                     shopItemsContent.querySelectorAll('.shop-item').forEach(el => {
@@ -1150,6 +1260,7 @@
             }
 
             function buyBuff(buffKey) {
+                syncSexpahFromStorage();
                 const buff = buffs[buffKey];
                 if (!buff) return;
                 if (sexpah < buff.price) return;
@@ -1168,12 +1279,14 @@
 
             function updateUI() {
                 sexpahSpan.textContent = formatSexpah(sexpah);
-                loveVerticalFill.style.height = Math.min(100, (love / MAX_LOVE) * 100) + '%';
-                excitedDiv.classList.toggle('hidden', love < MAX_LOVE);
+
+                const maxLove = getMaxLove();
+                loveVerticalFill.style.height = Math.min(100, (love / maxLove) * 100) + '%';
+                excitedDiv.classList.toggle('hidden', love < maxLove);
 
                 if (isCooldown) {
                     cooldownDiv.textContent = '⏳ ' + cooldownRemaining + ' сек';
-                } else if (love >= MAX_LOVE) {
+                } else if (love >= maxLove) {
                     cooldownDiv.textContent = '💔 Переполнена';
                 } else {
                     cooldownDiv.textContent = 'Давануть Пахома😍';
@@ -1370,7 +1483,6 @@
                 pahomHitbox.classList.toggle('combo-max', combo >= COMBO_MAX);
             }
 
-            // ==== Опыт ====
             function getExpRequired(level) { return 1200 + (level - 1) * 600; }
 
             function addPlayerExp(amount) {
@@ -1383,6 +1495,7 @@
             }
 
             function handleClick() {
+                syncSexpahFromStorage();
                 if (isCooldown) return;
 
                 const minInterval = 60;
@@ -1394,7 +1507,6 @@
                 totalClicks++;
                 bumpCombo();
 
-                // Опыт за каждые 10 кликов
                 let lastExpClick = parseInt(localStorage.getItem('pahomLastExpClick') || '0', 10) || 0;
                 if (totalClicks - lastExpClick >= 10) {
                     const steps = Math.floor((totalClicks - lastExpClick) / 10);
@@ -1405,7 +1517,9 @@
 
                 const gained = getClickPower();
                 sexpah += gained;
-                love = Math.min(MAX_LOVE, love + getLoveAdd());
+
+                const maxLove = getMaxLove();
+                love = Math.min(maxLove, love + getLoveAdd());
 
                 const rect = pahomHitbox.getBoundingClientRect();
                 const cx = rect.left + rect.width / 2 + (Math.random() - 0.5) * rect.width * 0.7;
@@ -1414,14 +1528,14 @@
                 spawnRipple(cx, cy);
                 spawnFloatText(cx, cy, '+' + gained);
 
-                if (love > 270 && !isCooldown) {
+                if (love > maxLove * 0.9 && !isCooldown) {
                     pahomHitbox.classList.remove('shake');
                     void pahomHitbox.offsetWidth;
                     pahomHitbox.classList.add('shake');
                     setTimeout(function() { pahomHitbox.classList.remove('shake'); }, 250);
                 }
 
-                if (love >= MAX_LOVE) {
+                if (love >= maxLove) {
                     totalOverexcites++;
                     startCooldown();
                 }
@@ -1444,12 +1558,21 @@
                 buffInterval = setInterval(function() {
                     const now = Date.now();
                     let changed = false;
+
                     if (activeBuffs.viagra && activeBuffs.viagra <= now) {
                         delete activeBuffs.viagra;
                         changed = true;
                     }
+                    if (activeBuffs.cigs && activeBuffs.cigs <= now) {
+                        delete activeBuffs.cigs;
+                        if (love > BASE_MAX_LOVE) {
+                            love = BASE_MAX_LOVE;
+                        }
+                        changed = true;
+                    }
+
                     ensureBuffsTop();
-                    if (changed) saveData();
+                    if (changed) { saveData(); updateUI(); }
                 }, 1000);
             }
 
@@ -1563,11 +1686,45 @@
                 if (tickerInterval) clearInterval(tickerInterval);
                 tickerInterval = setInterval(() => {
                     ensureBuffsTop();
+                    syncSexpahFromStorage();
+                    updateUI();
                     if (currentShopTab === 'inventory' && !shopPanel.classList.contains('hidden')) {
                         bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}');
                         refreshInventoryValues();
                     }
                 }, 1000);
+            }
+
+            function openInventoryFromHash() {
+                if (window.location.hash !== '#inventory') return;
+
+                homePanel.classList.remove('active');
+                homePanel.classList.add('hidden');
+                shopPanel.classList.remove('hidden');
+                shopPanel.classList.add('active');
+
+                homeTab.classList.remove('active');
+                shopTab.classList.add('active');
+
+                shopItemsContent.classList.remove('active');
+                shopBuffsContent.classList.remove('active');
+                shopInventoryContent.classList.add('active');
+
+                shopItemsTab.classList.remove('active');
+                shopBuffsTab.classList.remove('active');
+                shopInventoryTab.classList.add('active');
+
+                headerTitle.textContent = 'МАГАЗИН';
+                $('scoreBoard').style.display = 'flex';
+                cooldownDiv.style.display = 'none';
+
+                currentShopTab = 'inventory';
+
+                renderShopOnce();
+                bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}');
+                refreshInventoryValues();
+
+                try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
             }
 
             function init() {
@@ -1591,6 +1748,9 @@
                 ensureBuffsTop();
                 updateUI();
 
+                // Открытие вкладки «Инвентарь» при переходе из kraft.html#inventory
+                openInventoryFromHash();
+
                 if (!sessionStorage.getItem('pahomLoaded')) {
                     setTimeout(function() {
                         if (loadingScreen) loadingScreen.style.display = 'none';
@@ -1606,5 +1766,6 @@
             init();
         })();
     </script>
+    <script src="income.js"></script>
 </body>
 </html>
