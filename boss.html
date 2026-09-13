@@ -36,7 +36,39 @@
 
   .hidden { display:none !important; }
 
-  .boss-list { flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:15px 15px 5px; display:flex; flex-direction:column; gap:12px; scrollbar-width:thin; scrollbar-color:#4a4a2a transparent; transition:opacity 0.4s ease, transform 0.4s ease; }
+  .boss-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 10px 15px;
+    flex-shrink: 0;
+    z-index: 20;
+  }
+  .boss-tab {
+    flex: 1;
+    background: rgba(30, 30, 14, 0.6);
+    backdrop-filter: blur(4px);
+    border: 1px solid #4a4a2a;
+    color: #c4b08a;
+    padding: 10px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.8rem;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .boss-tab.active {
+    border-color: #b8962e;
+    background: rgba(184, 150, 46, 0.25);
+    color: #ffd76b;
+    box-shadow: 0 0 15px rgba(184,150,46,0.4);
+  }
+
+  .boss-list { flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:0 15px 5px; display:flex; flex-direction:column; gap:12px; scrollbar-width:thin; scrollbar-color:#4a4a2a transparent; transition:opacity 0.4s ease, transform 0.4s ease; }
   .boss-list.fade-out { opacity:0; transform:translateX(-20px); pointer-events:none; }
   .boss-list::-webkit-scrollbar { width:5px; }
   .boss-list::-webkit-scrollbar-track { background:transparent; }
@@ -57,6 +89,7 @@
   .boss-name { font-size:1rem; font-weight:700; color:#c4b08a; margin-bottom:3px; }
   .boss-meta { display:flex; flex-direction:column; gap:2px; font-size:0.75rem; color:#b0a070; }
   .boss-reward { color:#b8962e; font-weight:700; }
+  .boss-lvl { color:#ffd76b; font-weight:700; }
   .boss-loot { color:#8fd4b0; font-size:0.7rem; display:flex; flex-direction:column; gap:2px; }
   .boss-loot .loot-line { display:flex; align-items:center; gap:4px; }
   .boss-loot img { width:0.95rem; height:0.95rem; object-fit:contain; border-radius:2px; vertical-align:middle; }
@@ -166,6 +199,12 @@
   </div>
 
   <div class="notify-bar" id="notifyBar"></div>
+
+  <div class="boss-tabs" id="bossTabs">
+    <button class="boss-tab active" id="tabSrokany" data-group="srokany">Сроканы</button>
+    <button class="boss-tab" id="tabKontr" data-group="kontrslony">Контрслоны</button>
+  </div>
+
   <div class="boss-list" id="bossList"></div>
 
   <div class="arena" id="arena">
@@ -238,6 +277,7 @@
   var resultOverlay=$('resultOverlay'), resultTitle=$('resultTitle'), resultText=$('resultText');
   var resultReward=$('resultReward'), resultLoot=$('resultLoot'), resultBtn=$('resultBtn');
   var arenaBack=$('arenaBack'), tabsBar=$('tabsBar');
+  var bossTabs=$('bossTabs'), tabSrokany=$('tabSrokany'), tabKontr=$('tabKontr');
 
   var sexpah = 0;
   try { sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0; } catch(e) {}
@@ -245,37 +285,53 @@
   try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) { bossInventory = {}; }
 
   var BOSSES = [
-    { id:'dodonov', name:'Додонов', face:'👶',
+    {
+      id:'kasalapov', name:'Касалапов', face:'🪖', group:'srokany',
+      reward:15000, exciteMax:1200, clickPower:3,
+      fightDuration:5*60*1000, cooldownDuration:15*60*1000,
+      lvl:500,
+      loot:[
+        {id:'ishmatov_info', name:'Информация по Ишматову', icon:'📋', chance:25},
+        {id:'tvn', name:'ТВН', icon:null, image:'Tvn.png', chance:20}
+      ]
+    },
+    { id:'dodonov', name:'Додонов', face:'👶', group:'kontrslony',
       reward:25000, exciteMax:1500, clickPower:3,
       fightDuration:5*60*1000, cooldownDuration:15*60*1000,
+      lvl:500,
       loot:[{id:'sextoy',name:'Секс игрушка',icon:'🍆',image:'Penis.png',chance:20}] },
 
-    { id:'seimur', name:'Сеймур', face:'🦧', image:'Seimur.png',
+    { id:'seimur', name:'Сеймур', face:'🦧', image:'Seimur.png', group:'kontrslony',
       reward:25000, exciteMax:1500, clickPower:3,
       fightDuration:5*60*1000, cooldownDuration:15*60*1000,
+      lvl:500,
       loot:[
         {id:'rotten',name:'Гнилой зубик',icon:'🦷',chance:20},
         {id:'tapik',name:'Тапик',icon:'🩴',chance:5}
       ] },
 
-    { id:'millirut', name:'Миллирут', face:'👨‍🦲',
+    { id:'millirut', name:'Миллирут', face:'👨‍🦲', group:'kontrslony',
       reward:50000, exciteMax:2000, clickPower:3,
       fightDuration:5*60*1000, cooldownDuration:60*60*1000,
+      lvl:500,
       loot:[{id:'ladder',name:'Пиздец дорогая лестница',icon:'🪜',chance:25}] },
 
-    { id:'galyamov', name:'Галямов', face:'🧑‍🦲',
+    { id:'galyamov', name:'Галямов', face:'🧑‍🦲', group:'kontrslony',
       reward:500000, exciteMax:5000, clickPower:3,
       fightDuration:10*60*1000, cooldownDuration:120*60*1000,
+      lvl:500,
       loot:[{id:'medphone',name:'Телефон медика',icon:'📱',chance:20}] },
 
-    { id:'gorin', name:'Горин', face:'👨‍🦲',
+    { id:'gorin', name:'Горин', face:'👨‍🦲', group:'kontrslony',
       reward:1000000, exciteMax:10000, clickPower:3,
       fightDuration:15*60*1000, cooldownDuration:180*60*1000,
+      lvl:500,
       loot:[{id:'dern',name:'Дёрн',icon:'🌿',chance:15}] }
   ];
 
-  var LOOT_MAX=200, STATE_KEY='pahomBossState', STATE_VERSION=5;
+  var LOOT_MAX=200, STATE_KEY='pahomBossState', STATE_VERSION=6;
   var bossState = {};
+  var currentGroup = 'srokany';
 
   function getSt(id) {
     if (!bossState || typeof bossState !== 'object') bossState = {};
@@ -339,10 +395,6 @@
     var lv = parseInt(localStorage.getItem('pahomUpgradeLove') || '1', 10) || 1;
     return (lv - 1) * 0.5;
   }
-  function getLootBonusPct() {
-    var lv = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1;
-    return (lv - 1) * 5;
-  }
   function getExpRequired(level) { return 1200 + (level - 1) * 600; }
 
   function addPlayerExp(amount) {
@@ -360,9 +412,20 @@
     try { localStorage.setItem('pahomBossStats', JSON.stringify(st)); } catch(e) {}
   }
 
+  function getGroupBosses(group) {
+    return BOSSES.filter(function(b){ return b.group === group; });
+  }
+
   function buildList() {
     bossList.innerHTML = ''; cardRefs = {};
-    for (var i=0;i<BOSSES.length;i++) {
+    var list = getGroupBosses(currentGroup);
+
+    if (list.length === 0) {
+      bossList.innerHTML = '<div style="color:#8a7a5a;text-align:center;padding:20px;">Пусто</div>';
+      return;
+    }
+
+    for (var i=0;i<list.length;i++) {
       (function(boss){
         var card = document.createElement('div');
         card.className = 'boss-card';
@@ -381,6 +444,7 @@
           '<div class="boss-info"><div class="boss-name">'+boss.name+'</div>' +
           '<div class="boss-meta">' +
             '<span class="boss-reward">💰 '+fmt(boss.reward)+' секспахомов</span>' +
+            '<span class="boss-lvl">🌟'+boss.lvl+'</span>' +
             '<span>🎯 Перевозбуждение: '+fmt(boss.exciteMax)+'</span>' +
             '<span>⏳ КД: '+fmtTime(boss.cooldownDuration)+'</span>' +
             lootBlockHTML +
@@ -390,16 +454,17 @@
         card.addEventListener('click', function(){ onCard(boss); });
         bossList.appendChild(card);
         cardRefs[boss.id] = { card:card, timer:card.querySelector('.boss-timer'), status:card.querySelector('.boss-status') };
-      })(BOSSES[i]);
+      })(list[i]);
     }
   }
 
   function refreshList() {
     var now = Date.now();
+    var list = getGroupBosses(currentGroup);
     var otherInProgress = false;
     for (var i=0;i<BOSSES.length;i++) { if (getSt(BOSSES[i].id).fight) { otherInProgress = true; break; } }
-    for (var j=0;j<BOSSES.length;j++) {
-      var boss = BOSSES[j], ref = cardRefs[boss.id];
+    for (var j=0;j<list.length;j++) {
+      var boss = list[j], ref = cardRefs[boss.id];
       if (!ref) continue;
       var st = getSt(boss.id);
       ref.card.classList.remove('locked', 'in-progress');
@@ -448,6 +513,7 @@
 
     currentBoss = boss; isFightActive = true; lastClick = 0; lastSave = 0;
     bossList.style.display = 'none';
+    bossTabs.style.display = 'none';
     scoreBoard.style.display = 'none';
     tabsBar.classList.add('hidden');
     arena.classList.add('active');
@@ -653,6 +719,7 @@
     isFightActive = false; currentBoss = null; lastClick = 0; lastSave = 0;
     arena.classList.remove('active');
     bossList.style.display = '';
+    bossTabs.style.display = '';
     scoreBoard.style.display = '';
     tabsBar.classList.remove('hidden');
     headerTitle.textContent = 'БОССЫ';
@@ -681,9 +748,18 @@
       updateScore();
       bumpEl(sexpahBox);
 
+      // === ВЫСЛУГА +500 (пишем в exp игрока) ===
+      try {
+        var exp = parseInt(localStorage.getItem('pahomPlayerExp') || '0', 10) || 0;
+        var lv = parseInt(localStorage.getItem('pahomPlayerLevel') || '1', 10) || 1;
+        exp += boss.lvl;
+        while (exp >= getExpRequired(lv)) { exp -= getExpRequired(lv); lv++; }
+        localStorage.setItem('pahomPlayerExp', String(exp));
+        localStorage.setItem('pahomPlayerLevel', String(lv));
+      } catch(e) {}
+
       addBossStat('wins', 1);
       addBossStat('earned', boss.reward);
-      addPlayerExp(500);
 
       var lootUpLevel = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1;
       var lootBonusPct = (lootUpLevel - 1) * 5;
@@ -714,7 +790,7 @@
 
       setTimeout(function(){
         showBossList();
-        showResult(true, boss.reward, droppedItems);
+        showResult(true, boss.reward, boss.lvl, droppedItems);
       }, 600);
       return;
     } else {
@@ -722,16 +798,16 @@
       saveState();
       addBossStat('losses', 1);
       showBossList();
-      showResult(false, 0, null);
+      showResult(false, 0, 0, null);
     }
   }
 
-  function showResult(win, reward, lootArr) {
+  function showResult(win, reward, lvl, lootArr) {
     resultTitle.textContent = win ? 'ПОБЕДА!' : 'ПОРАЖЕНИЕ';
     resultTitle.className = 'result-title ' + (win ? 'win' : 'lose');
     if (win) {
       resultText.textContent = 'Ты завалил босса!';
-      resultReward.textContent = '+' + fmt(reward) + ' секспахомов';
+      resultReward.innerHTML = '+' + fmt(reward) + ' секспахомов<br>🌟' + lvl;
       resultReward.style.display = 'block';
       if (lootArr && lootArr.length) {
         var html = lootArr.map(function(l) {
@@ -773,6 +849,18 @@
     if (activeBoss) enterFight(activeBoss);
   }
 
+  function switchBossGroup(group) {
+    if (group === currentGroup) return;
+    currentGroup = group;
+    tabSrokany.classList.toggle('active', group === 'srokany');
+    tabKontr.classList.toggle('active', group === 'kontrslony');
+    buildList();
+    refreshList();
+  }
+
+  tabSrokany.addEventListener('click', function(){ switchBossGroup('srokany'); });
+  tabKontr.addEventListener('click', function(){ switchBossGroup('kontrslony'); });
+
   function init() {
     updateScore(); loadState(); buildList(); refreshList();
     bossHitbox.addEventListener('click', hitBoss);
@@ -783,7 +871,6 @@
     document.addEventListener('visibilitychange', function(){ if (document.hidden && isFightActive) saveState(); });
     startTicker(); autoEnter();
 
-    // === TELEGRAM SYNC ===
     if (window.tgSyncReady) {
       window.tgSyncLoad(function(loaded) {
         if (loaded) {

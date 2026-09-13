@@ -2,8 +2,610 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="refresh" content="0; url=seks.html">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>Кликер Пахома</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    width: 100%; height: 100%;
+    background: #0a0a0a;
+    overflow: hidden;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* ===== ФОН ===== */
+  .load-bg {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 50% 40%, rgba(184, 150, 46, 0.15), transparent 55%),
+      radial-gradient(circle at 50% 60%, rgba(106, 74, 154, 0.12), transparent 65%),
+      radial-gradient(circle at 20% 80%, rgba(192, 57, 43, 0.08), transparent 60%),
+      linear-gradient(160deg, #0d0d0d, #050505);
+    z-index: 0;
+    animation: bgPulse 6s ease-in-out infinite;
+  }
+  @keyframes bgPulse {
+    0%, 100% { filter: brightness(1); }
+    50%      { filter: brightness(1.15); }
+  }
+
+  /* Частицы */
+  .load-particles {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .load-particles span {
+    position: absolute;
+    width: 3px; height: 3px;
+    background: rgba(184, 150, 46, 0.6);
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(184, 150, 46, 0.9);
+    animation: particleFloat linear infinite;
+    opacity: 0.8;
+  }
+  @keyframes particleFloat {
+    0%   { transform: translateY(105vh) scale(0.3); opacity: 0; }
+    15%  { opacity: 1; }
+    85%  { opacity: 1; }
+    100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+  }
+
+  /* Крупные "блуждающие" свечения */
+  .load-glow {
+    position: fixed;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.35;
+    z-index: 1;
+    pointer-events: none;
+    animation: glowFloat 10s ease-in-out infinite;
+  }
+  .glow-1 { background: #b8962e; top: 5%; left: 5%; animation-delay: 0s; }
+  .glow-2 { background: #6a4a9a; bottom: 5%; right: 5%; animation-delay: 3s; }
+  .glow-3 { background: #c0392b; top: 45%; left: 50%; animation-delay: 6s; opacity: 0.2; }
+  @keyframes glowFloat {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(40px, -30px) scale(1.15); }
+    66%      { transform: translate(-30px, 40px) scale(0.9); }
+  }
+
+  /* ===== ЦЕНТР ===== */
+  .load-wrap {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    animation: wrapAppear 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    padding: 20px;
+  }
+  @keyframes wrapAppear {
+    0% { opacity: 0; transform: translateY(30px) scale(0.92); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Кольца */
+  .load-ring-wrap {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .load-ring-outer,
+  .load-ring-mid,
+  .load-ring-inner {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid transparent;
+  }
+  .load-ring-outer {
+    inset: 0;
+    border-top-color: #ffd76b;
+    border-right-color: rgba(255, 215, 107, 0.3);
+    animation: ringSpin 2s linear infinite;
+    box-shadow: 0 0 40px rgba(184, 150, 46, 0.4), inset 0 0 30px rgba(184, 150, 46, 0.2);
+  }
+  .load-ring-mid {
+    inset: 14px;
+    border-bottom-color: #6a4a9a;
+    border-left-color: rgba(106, 74, 154, 0.4);
+    animation: ringSpinRev 3s linear infinite;
+    box-shadow: 0 0 28px rgba(106, 74, 154, 0.4);
+  }
+  .load-ring-inner {
+    inset: 28px;
+    border-top-color: #c0392b;
+    border-right-color: rgba(192, 57, 43, 0.3);
+    animation: ringSpin 4s linear infinite;
+    box-shadow: 0 0 22px rgba(192, 57, 43, 0.4);
+  }
+  @keyframes ringSpin { to { transform: rotate(360deg); } }
+  @keyframes ringSpinRev { to { transform: rotate(-360deg); } }
+
+  .load-emoji {
+    font-size: 5rem;
+    z-index: 2;
+    animation: emojiPulse 2.4s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px rgba(184, 150, 46, 0.7));
+  }
+  @keyframes emojiPulse {
+    0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 20px rgba(184, 150, 46, 0.7)); }
+    50%      { transform: scale(1.1) rotate(-3deg); filter: drop-shadow(0 0 40px rgba(255, 215, 107, 1)); }
+  }
+
+  /* Заголовок */
+  .load-title {
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 5px;
+    color: #c4b08a;
+    text-transform: uppercase;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 22px rgba(184, 150, 46, 0.6);
+    animation: titleShine 2.8s ease-in-out infinite;
+    text-align: center;
+  }
+  @keyframes titleShine {
+    0%, 100% { text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 22px rgba(184, 150, 46, 0.6); }
+    50%      { text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 42px rgba(255, 215, 107, 1), 0 0 60px rgba(255, 215, 107, 0.6); }
+  }
+
+  /* Статус */
+  .load-status {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #8a7a5a;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1.5px;
+    min-height: 1.2em;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    text-align: center;
+    padding: 0 10px;
+  }
+  .load-status.fade { opacity: 0; transform: translateY(-5px); }
+
+  /* Прогресс-бар */
+  .load-bar-outer {
+    width: 280px;
+    max-width: 90vw;
+    height: 16px;
+    background: #0f0f00;
+    border: 1px solid #4a4a2a;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 6px black, 0 0 20px rgba(184, 150, 46, 0.2);
+    position: relative;
+  }
+  .load-bar-inner {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #8b1a1a, #b8962e, #ffd76b);
+    border-radius: 10px;
+    transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 0 18px rgba(184, 150, 46, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .load-bar-inner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transform: translateX(-100%);
+    animation: barShine 1.8s ease-in-out infinite;
+  }
+  @keyframes barShine {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Проценты + лог */
+  .load-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 280px;
+    max-width: 90vw;
+    gap: 10px;
+  }
+  .load-percent {
+    font-size: 1.4rem;
+    font-weight: 900;
+    font-family: 'Courier New', monospace;
+    color: #ffd76b;
+    letter-spacing: 2px;
+    text-shadow: 0 0 14px rgba(255, 215, 107, 0.8);
+    flex-shrink: 0;
+  }
+  .load-counter {
+    font-size: 0.75rem;
+    font-family: 'Courier New', monospace;
+    color: #8a7a5a;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  /* Точки */
+  .load-dots {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .load-dots span {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: #4a4a2a;
+    animation: dotPulse 1.6s ease-in-out infinite;
+  }
+  .load-dots span:nth-child(2) { animation-delay: 0.25s; }
+  .load-dots span:nth-child(3) { animation-delay: 0.5s; }
+  .load-dots span:nth-child(4) { animation-delay: 0.75s; }
+  .load-dots span:nth-child(5) { animation-delay: 1s; }
+  @keyframes dotPulse {
+    0%, 100% { background: #4a4a2a; transform: scale(1); box-shadow: none; }
+    50%      { background: #ffd76b; transform: scale(1.35); box-shadow: 0 0 12px rgba(255, 215, 107, 1); }
+  }
+
+  /* Финал — галочка */
+  .load-done {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    background: rgba(5,5,5,0.96);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+  }
+  .load-done.show { opacity: 1; pointer-events: auto; }
+  .load-done .check {
+    font-size: 6rem;
+    color: #4cd964;
+    filter: drop-shadow(0 0 40px rgba(76, 217, 100, 1));
+    animation: checkIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes checkIn {
+    0% { opacity: 0; transform: scale(0.2) rotate(-45deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+  .load-done .done-text {
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: #c4b08a;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    animation: titleShine 1.6s ease-in-out infinite;
+  }
+
+  .page-exit {
+    animation: pageExit 0.5s ease forwards;
+  }
+  @keyframes pageExit {
+    to { opacity: 0; }
+  }
+</style>
 </head>
-<body></body>
+<body>
+
+  <div class="load-bg"></div>
+  <div class="load-glow glow-1"></div>
+  <div class="load-glow glow-2"></div>
+  <div class="load-glow glow-3"></div>
+  <div class="load-particles" id="particles"></div>
+
+  <div class="load-wrap" id="loadWrap">
+    <div class="load-ring-wrap">
+      <div class="load-ring-outer"></div>
+      <div class="load-ring-mid"></div>
+      <div class="load-ring-inner"></div>
+      <div class="load-emoji">👴</div>
+    </div>
+
+    <div class="load-title">ЗАГРУЗКА ПАХОМА</div>
+    <div class="load-status" id="loadStatus">Подготовка...</div>
+
+    <div class="load-bar-outer">
+      <div class="load-bar-inner" id="loadBar"></div>
+    </div>
+
+    <div class="load-info">
+      <div class="load-percent" id="loadPercent">0%</div>
+      <div class="load-counter" id="loadCounter">0 / 0</div>
+    </div>
+
+    <div class="load-dots">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <div class="load-done" id="loadDone">
+    <div class="check">✓</div>
+    <div class="done-text">Готово</div>
+  </div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ===== ЧТО ГРУЗИМ =====
+  var SOUNDS = [
+    'A3.m4a',
+    'Grahou.m4a',
+    'Ihmatoov.m4a',
+    'Dada.m4a',
+    'Aimolodca.m4a'
+  ];
+  var IMAGES = [
+    'Tvn.png',
+    'Penis.png',
+    'Seimur.png',
+    'Fon.jpeg'
+  ];
+
+  // Минимальное время загрузки (чтобы анимация была видна даже если всё быстро загрузилось)
+  var MIN_DURATION_MS = 4000;
+  var startTime = Date.now();
+
+  // ===== ЭЛЕМЕНТЫ =====
+  var loadStatus = document.getElementById('loadStatus');
+  var loadBar = document.getElementById('loadBar');
+  var loadPercent = document.getElementById('loadPercent');
+  var loadCounter = document.getElementById('loadCounter');
+  var loadDone = document.getElementById('loadDone');
+  var particlesEl = document.getElementById('particles');
+
+  // ===== ЧАСТИЦЫ =====
+  (function makeParticles(){
+    var count = 40;
+    for (var i = 0; i < count; i++) {
+      var p = document.createElement('span');
+      p.style.left = (Math.random() * 100) + '%';
+      p.style.animationDuration = (5 + Math.random() * 9) + 's';
+      p.style.animationDelay = (Math.random() * 8) + 's';
+      var size = 2 + Math.random() * 4;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      var hue = Math.random() < 0.5 ? '184, 150, 46' : '106, 74, 154';
+      p.style.background = 'rgba(' + hue + ', 0.7)';
+      p.style.boxShadow = '0 0 10px rgba(' + hue + ', 1)';
+      particlesEl.appendChild(p);
+    }
+  })();
+
+  // ===== ПРОГРЕСС =====
+  var totalSteps = 0;
+  var doneSteps = 0;
+  var currentStatusBase = '';
+
+  function setStatus(text) {
+    currentStatusBase = text;
+    loadStatus.classList.add('fade');
+    setTimeout(function(){
+      loadStatus.textContent = text;
+      loadStatus.classList.remove('fade');
+    }, 150);
+  }
+
+  function updateProgress() {
+    var pct = totalSteps > 0 ? Math.min(100, Math.round((doneSteps / totalSteps) * 100)) : 0;
+    loadBar.style.width = pct + '%';
+    loadPercent.textContent = pct + '%';
+    loadCounter.textContent = doneSteps + ' / ' + totalSteps;
+  }
+
+  function step() {
+    doneSteps++;
+    updateProgress();
+  }
+
+  // ===== ЗАГРУЗКА ЗВУКОВ (параллельно, но через Promise.all) =====
+  function loadSound(url) {
+    return new Promise(function(resolve) {
+      var audio = new Audio();
+      audio.preload = 'auto';
+      audio.muted = true; // не пугаем звуком
+      var done = false;
+      function finish() {
+        if (done) return;
+        done = true;
+        resolve();
+      }
+      audio.addEventListener('canplaythrough', finish, { once: true });
+      audio.addEventListener('loadeddata', finish, { once: true });
+      audio.addEventListener('error', finish, { once: true });
+      audio.src = url;
+      audio.load();
+      // Таймаут на всякий
+      setTimeout(finish, 8000);
+    });
+  }
+
+  // ===== ЗАГРУЗКА КАРТИНОК =====
+  function loadImage(url) {
+    return new Promise(function(resolve) {
+      var img = new Image();
+      var done = false;
+      function finish() {
+        if (done) return;
+        done = true;
+        resolve();
+      }
+      img.onload = finish;
+      img.onerror = finish;
+      img.src = url;
+      setTimeout(finish, 8000);
+    });
+  }
+
+  // ===== ЧТЕНИЕ LOCALSTORAGE =====
+  function readAllData() {
+    return new Promise(function(resolve){
+      try {
+        var keys = [
+          'pahomSexpah', 'pahomClicks', 'pahomOverexcites', 'pahomTool',
+          'pahomBuffs', 'pahomKraftState', 'pahomKraftPending',
+          'pahomBossInventory', 'pahomBossState', 'pahomPlayerExp',
+          'pahomPlayerLevel', 'pahomNickname', 'pahomAvatar',
+          'pahomSoundMuted', 'pahomUpgradeLove', 'pahomUpgradeLoot'
+        ];
+        for (var i = 0; i < keys.length; i++) {
+          try { localStorage.getItem(keys[i]); } catch(e) {}
+        }
+      } catch(e) {}
+      resolve();
+    });
+  }
+
+  // ===== TG SYNC =====
+  function tgSync() {
+    return new Promise(function(resolve){
+      if (!window.tgSyncReady || typeof window.tgSyncLoad !== 'function') {
+        resolve();
+        return;
+      }
+      var done = false;
+      function finish() {
+        if (done) return;
+        done = true;
+        resolve();
+      }
+      try {
+        window.tgSyncLoad(function(){ finish(); });
+      } catch(e) { finish(); }
+      setTimeout(finish, 5000);
+    });
+  }
+
+  // ===== ЗАГРУЗКА СКРИПТОВ =====
+  function loadScript(src) {
+    return new Promise(function(resolve){
+      var s = document.createElement('script');
+      s.src = src;
+      var done = false;
+      function finish() {
+        if (done) return;
+        done = true;
+        resolve();
+      }
+      s.onload = finish;
+      s.onerror = finish;
+      document.body.appendChild(s);
+      setTimeout(finish, 4000);
+    });
+  }
+
+  function loadTgSync() {
+    if (window.tgSyncReady !== undefined) return Promise.resolve();
+    return loadScript('telegram-sync.js');
+  }
+  function loadIncome() {
+    if (window.pahomApplyIncome) return Promise.resolve();
+    return loadScript('income.js');
+  }
+
+  // ===== ЖДЁМ МИНИМАЛЬНОЕ ВРЕМЯ =====
+  function waitMinDuration() {
+    var elapsed = Date.now() - startTime;
+    var remaining = Math.max(0, MIN_DURATION_MS - elapsed);
+    return new Promise(function(resolve){ setTimeout(resolve, remaining); });
+  }
+
+  // ===== ГЛАВНАЯ ЛОГИКА =====
+  function run() {
+    // 2 скрипта + 1 данные + 1 sync + 5 звуков + 4 картинки = 13 шагов
+    totalSteps = 2 + 1 + 1 + SOUNDS.length + IMAGES.length;
+    updateProgress();
+
+    setStatus('Загрузка скриптов...');
+
+    loadTgSync()
+      .then(function(){
+        step();
+        return loadIncome();
+      })
+      .then(function(){
+        step();
+        setStatus('Чтение данных...');
+        return readAllData();
+      })
+      .then(function(){
+        step();
+        setStatus('Синхронизация с облаком...');
+        return tgSync();
+      })
+      .then(function(){
+        step();
+        setStatus('Загрузка звуков...');
+        // Грузим ВСЕ звуки ПАРАЛЛЕЛЬНО
+        var soundPromises = SOUNDS.map(function(url){
+          return loadSound(url).then(function(){
+            step();
+            setStatus('Звук загружен: ' + url);
+          });
+        });
+        return Promise.all(soundPromises);
+      })
+      .then(function(){
+        setStatus('Загрузка иконок...');
+        // Грузим ВСЕ картинки ПАРАЛЛЕЛЬНО
+        var imgPromises = IMAGES.map(function(url){
+          return loadImage(url).then(function(){
+            step();
+            setStatus('Иконка загружена: ' + url);
+          });
+        });
+        return Promise.all(imgPromises);
+      })
+      .then(function(){
+        setStatus('Финальные штрихи...');
+        return waitMinDuration();
+      })
+      .then(function(){
+        setStatus('Готово!');
+        updateProgress();
+        setTimeout(function(){
+          loadDone.classList.add('show');
+        }, 200);
+        setTimeout(function(){
+          document.body.classList.add('page-exit');
+          setTimeout(function(){
+            window.location.href = 'seks.html';
+          }, 500);
+        }, 900);
+      })
+      .catch(function(){
+        setStatus('Готово (с ошибками)');
+        setTimeout(function(){
+          window.location.href = 'seks.html';
+        }, 900);
+      });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+})();
+</script>
+</body>
 </html>

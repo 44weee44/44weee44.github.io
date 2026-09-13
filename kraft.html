@@ -176,27 +176,33 @@
     color: #d8c8ff;
   }
 
+  /* ==== ТАБЫ ==== */
   .shop-tabs {
     display: flex;
     gap: 8px;
     padding: 10px;
     flex-shrink: 0;
+    flex-wrap: wrap;
   }
 
   .shop-tab {
     flex: 1;
+    min-width: 0;
     background: rgba(30, 30, 14, 0.6);
     backdrop-filter: blur(4px);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 10px;
+    padding: 10px 6px;
     border-radius: 6px;
     cursor: pointer;
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     transition: all 0.3s;
     letter-spacing: 1px;
     text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .shop-tab.active {
@@ -618,6 +624,7 @@
     .recipe-name { font-size: 0.95rem; }
     .recipe-btn { padding: 6px 10px; font-size: 0.7rem; }
     .claim-btn-amount { font-size: 1.3rem; }
+    .shop-tab { font-size: 0.7rem; padding: 9px 4px; }
   }
 </style>
 </head>
@@ -650,16 +657,20 @@
   <div class="notify-bar" id="notifyBar"></div>
 
   <div class="shop-tabs">
-    <button id="craftTab" class="shop-tab active">Срочники</button>
-    <button id="myTab" class="shop-tab">Мои срочники</button>
+    <button id="tabItems" class="shop-tab active">Предметы</button>
+    <button id="tabSrochniki" class="shop-tab">Срочники</button>
+    <button id="tabMy" class="shop-tab">Мои срочники</button>
   </div>
 
   <div class="content-area">
-    <div id="craftPanel" class="page active">
-      <div class="shop-panel" id="craftList"></div>
+    <div id="panelItems" class="page active">
+      <div class="shop-panel" id="listItems"></div>
     </div>
-    <div id="myPanel" class="page">
-      <div class="shop-panel" id="myList"></div>
+    <div id="panelSrochniki" class="page">
+      <div class="shop-panel" id="listSrochniki"></div>
+    </div>
+    <div id="panelMy" class="page">
+      <div class="shop-panel" id="listMy"></div>
     </div>
   </div>
 </div>
@@ -676,12 +687,18 @@
   var sexpahCount = $('sexpahCount');
   var incomeBadge = $('incomeBadge');
   var notifyBar = $('notifyBar');
-  var craftTab = $('craftTab');
-  var myTab = $('myTab');
-  var craftPanel = $('craftPanel');
-  var myPanel = $('myPanel');
-  var craftList = $('craftList');
-  var myList = $('myList');
+
+  var tabItems = $('tabItems');
+  var tabSrochniki = $('tabSrochniki');
+  var tabMy = $('tabMy');
+
+  var panelItems = $('panelItems');
+  var panelSrochniki = $('panelSrochniki');
+  var panelMy = $('panelMy');
+
+  var listItems = $('listItems');
+  var listSrochniki = $('listSrochniki');
+  var listMy = $('listMy');
 
   var STATE_KEY = 'pahomBossInventory';
   var CRAFT_STATE = 'pahomKraftState';
@@ -689,6 +706,24 @@
   var PENDING = 'pahomKraftPending';
 
   var RECIPES = [
+    // === ПРЕДМЕТЫ ===
+    {
+      id: 'wholetooth',
+      name: 'Целый зубик',
+      icon: '🦷',
+      description: 'Восстановленный зуб Сеймура 😧',
+      effectText: 'Добавляется в инвентарь (макс 5)',
+      requirements: [
+        { itemId: 'rotten', name: 'Гнилой зубик', icon: '🦷', count: 10 }
+      ],
+      levelReq: 29,
+      maxCraft: 5,
+      type: 'item',
+      resultItemId: 'wholetooth',
+      incomePerMin: 0
+    },
+
+    // === СРОЧНИКИ ===
     {
       id: 'medic',
       name: 'Медик',
@@ -717,21 +752,6 @@
       maxCraft: 1,
       type: 'srochnik',
       incomePerMin: 1
-    },
-    {
-      id: 'wholetooth',
-      name: 'Целый зубик',
-      icon: '🦷',
-      description: 'Восстановленный зуб Сеймура 😧',
-      effectText: 'Добавляется в инвентарь (макс 5)',
-      requirements: [
-        { itemId: 'rotten', name: 'Гнилой зубик', icon: '🦷', count: 10 }
-      ],
-      levelReq: 29,
-      maxCraft: 5,
-      type: 'item',
-      resultItemId: 'wholetooth',
-      incomePerMin: 0
     },
     {
       id: 'seimur',
@@ -836,7 +856,7 @@
     var bossInv = getBossInventory();
 
     var crafted = craftState[recipe.id] || 0;
-    if (crafted >= recipe.maxCraft) return { ok: false, reason: 'Лимит: макс 1 срочник' };
+    if (crafted >= recipe.maxCraft) return { ok: false, reason: 'Лимит: макс ' + recipe.maxCraft };
     if (playerLevel < recipe.levelReq) return { ok: false, reason: 'Нужна выслуга ' + recipe.levelReq + ' лет' };
 
     for (var i = 0; i < recipe.requirements.length; i++) {
@@ -881,19 +901,26 @@
       showNotify('🛠 Получен: ' + recipe.name);
     }
 
-    renderCraftList();
-    renderMyList();
+    renderAll();
     updateIncomeBadge();
     updateSexpahUI();
   }
 
-  function renderCraftList() {
-    craftList.innerHTML = '';
+  function renderRecipesInto(container, filterType) {
+    if (!container) return;
+    container.innerHTML = '';
     var bossInv = getBossInventory();
     var craftState = getCraftState();
     var playerLevel = getPlayerLevel();
 
-    RECIPES.forEach(function(recipe) {
+    var list = RECIPES.filter(function(r) { return r.type === filterType; });
+
+    if (list.length === 0) {
+      container.innerHTML = '<div class="empty-state"><span class="empty-icon">📦</span>Пусто</div>';
+      return;
+    }
+
+    list.forEach(function(recipe) {
       var crafted = craftState[recipe.id] || 0;
       var isDone = crafted >= recipe.maxCraft;
       var check = canCraft(recipe);
@@ -954,12 +981,13 @@
         craft(recipe);
       });
 
-      craftList.appendChild(card);
+      container.appendChild(card);
     });
   }
 
   function renderMyList() {
-    myList.innerHTML = '';
+    if (!listMy) return;
+    listMy.innerHTML = '';
     var craftState = getCraftState();
 
     var srochniki = RECIPES.filter(function(r) {
@@ -967,7 +995,7 @@
     });
 
     if (srochniki.length === 0) {
-      myList.innerHTML =
+      listMy.innerHTML =
         '<div class="empty-state">' +
           '<span class="empty-icon">🪖</span>' +
           'Пока никого нет. Скрафти первого срочника на вкладке «Срочники»' +
@@ -998,7 +1026,7 @@
       updateClaimBtn();
     });
 
-    myList.appendChild(claimBtn);
+    listMy.appendChild(claimBtn);
 
     srochniki.forEach(function(recipe, index) {
       var count = craftState[recipe.id] || 0;
@@ -1020,7 +1048,7 @@
           '</div>' +
         '</div>';
 
-      myList.appendChild(card);
+      listMy.appendChild(card);
     });
   }
 
@@ -1033,20 +1061,31 @@
     btn.disabled = pending <= 0;
   }
 
-  var currentTab = 'craft';
+  function renderAll() {
+    renderRecipesInto(listItems, 'item');
+    renderRecipesInto(listSrochniki, 'srochnik');
+    renderMyList();
+  }
+
+  // ==== ПЕРЕКЛЮЧЕНИЕ ТАБОВ ====
+  var currentTab = 'items';
   var isTabAnimating = false;
 
   function switchTab(tab) {
     if (isTabAnimating || tab === currentTab) return;
     isTabAnimating = true;
 
-    var fromPage = tab === 'my' ? craftPanel : myPanel;
-    var toPage = tab === 'my' ? myPanel : craftPanel;
+    var panels = { items: panelItems, srochniki: panelSrochniki, my: panelMy };
+    var buttons = { items: tabItems, srochniki: tabSrochniki, my: tabMy };
 
-    craftTab.classList.toggle('active', tab === 'craft');
-    myTab.classList.toggle('active', tab === 'my');
+    var fromPage = panels[currentTab];
+    var toPage = panels[tab];
 
-    var movingRight = (tab === 'my');
+    buttons[currentTab].classList.remove('active');
+    buttons[tab].classList.add('active');
+
+    var order = ['items', 'srochniki', 'my'];
+    var movingRight = order.indexOf(tab) > order.indexOf(currentTab);
 
     fromPage.classList.remove('active', 'enter-left', 'exit-left', 'exit-right');
     toPage.classList.remove('active', 'enter-left', 'exit-left', 'exit-right');
@@ -1069,8 +1108,9 @@
     currentTab = tab;
   }
 
-  craftTab.addEventListener('click', function() { switchTab('craft'); });
-  myTab.addEventListener('click', function() { switchTab('my'); });
+  tabItems.addEventListener('click', function() { switchTab('items'); });
+  tabSrochniki.addEventListener('click', function() { switchTab('srochniki'); });
+  tabMy.addEventListener('click', function() { switchTab('my'); });
 
   window.addEventListener('pahomPendingChanged', function() {
     updateClaimBtn();
@@ -1079,8 +1119,7 @@
   function init() {
     updateSexpahUI();
     updateIncomeBadge();
-    renderCraftList();
-    renderMyList();
+    renderAll();
 
     setInterval(function() {
       updateSexpahUI();
@@ -1092,8 +1131,7 @@
       if (e.key === STATE_KEY || e.key === CRAFT_STATE || e.key === 'pahomSexpah' || e.key === PENDING) {
         updateSexpahUI();
         updateIncomeBadge();
-        renderCraftList();
-        renderMyList();
+        renderAll();
       }
     });
 
@@ -1103,8 +1141,7 @@
         if (loaded) {
           updateSexpahUI();
           updateIncomeBadge();
-          renderCraftList();
-          renderMyList();
+          renderAll();
         }
       });
     }

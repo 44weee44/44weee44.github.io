@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>ГЛАВНАЯ — кликер Пахома</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="sounds.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
 
@@ -39,18 +38,16 @@
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            background-attachment: fixed;
             width: 100%;
             height: 100vh;
             display: flex;
             flex-direction: column;
             position: relative;
             opacity: 0;
-            animation: containerAppear 1.5s ease-out 2.5s forwards;
+            animation: containerFadeIn 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s forwards;
         }
-
-        @keyframes containerAppear {
-            0% { opacity: 0; transform: scale(0.98); }
+        @keyframes containerFadeIn {
+            0%   { opacity: 0; transform: scale(0.985); }
             100% { opacity: 1; transform: scale(1); }
         }
 
@@ -572,24 +569,6 @@
         .inventory-item-count.max { color: #ff8c3c; text-shadow: 0 0 10px rgba(255, 140, 60, 0.7); }
         .inventory-empty { text-align: center; color: var(--accent); font-size: 0.9rem; padding: 20px; }
 
-        .loading-screen {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #0a0a0a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 2000;
-            animation: fadeOut 1.5s ease 3s forwards;
-            pointer-events: none;
-        }
-
-        .loading-emoji { font-size: 7rem; animation: loadingAppear 2s ease-out both, loadingPulse 2s ease-in-out 2s infinite; }
-        @keyframes loadingAppear { 0% { opacity: 0; transform: scale(0.3); } 100% { opacity: 1; transform: scale(1); } }
-        @keyframes loadingPulse { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.05); opacity: 1; } }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
-
         .float-text {
             position: fixed;
             pointer-events: none;
@@ -677,10 +656,6 @@
     </style>
 </head>
 <body>
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-emoji">👴</div>
-    </div>
-
     <div class="game-container">
         <div class="header">
             <div class="header-title" id="headerTitle">ГЛАВНАЯ</div>
@@ -781,10 +756,120 @@
     <div class="combo-counter" id="comboCounter">x1</div>
     <div class="combo-bonus" id="comboBonus">БОНУС КОМБО: +1</div>
 
-    <!-- ВНЕШНИЙ МОДУЛЬ ЗВУКА -->
-    <script src="sounds.js"></script>
+    <!-- ВСТРОЕННЫЙ ЗВУК -->
+    <script>
+    (function() {
+      'use strict';
 
-    <!-- ОСНОВНОЙ СКРИПТ ИГРЫ -->
+      var SOUND_URLS = ['A3.m4a', 'Grahou.m4a', 'Ihmatoov.m4a', 'Dada.m4a'];
+      var EXCITE_URL = 'Aimolodca.m4a';
+      var VOLUME = 1.0;
+      var MIN_INTERVAL = 60;
+
+      var audios = [];
+      var exciteAudio = null;
+      var lastPlay = 0;
+      var lastIdx = -1;
+      var isMuted = false;
+
+      function init() {
+        for (var i = 0; i < SOUND_URLS.length; i++) {
+          var a = new Audio(SOUND_URLS[i]);
+          a.preload = 'auto';
+          a.volume = VOLUME;
+          try { a.load(); } catch(e) {}
+          audios.push(a);
+        }
+        exciteAudio = new Audio(EXCITE_URL);
+        exciteAudio.preload = 'auto';
+        exciteAudio.volume = VOLUME;
+        try { exciteAudio.load(); } catch(e) {}
+      }
+
+      function playRandom() {
+        if (isMuted) return false;
+        if (audios.length === 0) return false;
+
+        var now = Date.now();
+        if (now - lastPlay < MIN_INTERVAL) return false;
+        lastPlay = now;
+
+        var idx;
+        if (audios.length === 1) {
+          idx = 0;
+        } else {
+          do {
+            idx = Math.floor(Math.random() * audios.length);
+          } while (idx === lastIdx);
+        }
+        lastIdx = idx;
+
+        var a = audios[idx];
+
+        try {
+          a.pause();
+          a.currentTime = 0;
+          var p = a.play();
+          if (p && typeof p.then === 'function') {
+            p.catch(function(){});
+          }
+          return true;
+        } catch(e) {
+          return false;
+        }
+      }
+
+      function playExcite() {
+        if (isMuted) return false;
+        if (!exciteAudio) return false;
+        try {
+          exciteAudio.pause();
+          exciteAudio.currentTime = 0;
+          var p = exciteAudio.play();
+          if (p && typeof p.then === 'function') {
+            p.catch(function(){});
+          }
+          return true;
+        } catch(e) {
+          return false;
+        }
+      }
+
+      function setMuted(m) {
+        isMuted = !!m;
+        try { localStorage.setItem('pahomSoundMuted', isMuted ? '1' : '0'); } catch(e) {}
+        try {
+          window.dispatchEvent(new CustomEvent('pahomSoundMutedChanged', { detail: { muted: isMuted } }));
+        } catch(e) {}
+      }
+      function toggleMute() { setMuted(!isMuted); return isMuted; }
+
+      try {
+        if (localStorage.getItem('pahomSoundMuted') === '1') isMuted = true;
+      } catch(e) {}
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      window.pahomSound = {
+        play: playRandom,
+        playRandom: playRandom,
+        playExcite: playExcite,
+        setMuted: setMuted,
+        toggleMute: toggleMute,
+        isMuted: function() { return isMuted; },
+        ready: function() { return audios.length > 0; },
+        loadedCount: function() { return audios.length + (exciteAudio ? 1 : 0); },
+        total: function() { return SOUND_URLS.length + 1; },
+        failed: function() { return []; }
+      };
+    })();
+    </script>
+
+    <!-- ОСНОВНОЙ СКРИПТ -->
     <script>
     (function() {
         'use strict';
@@ -800,7 +885,6 @@
         var currentToolNameSpan = $('currentToolName');
         var clickPowerLabel = $('clickPowerLabel');
         var headerTitle = $('headerTitle');
-        var loadingScreen = $('loadingScreen');
         var comboCounter = $('comboCounter');
         var comboBar = $('comboBar');
         var comboBonus = $('comboBonus');
@@ -858,12 +942,15 @@
         };
 
         var LOOT_META = {
-            ladder:   { name: 'Пиздец дорогая лестница', icon: '🪜' },
-            medphone: { name: 'Телефон медика', icon: '📱' },
-            dern:     { name: 'Дёрн', icon: '🌿' },
-            sextoy:   { name: 'Секс игрушка', icon: '<img src="Penis.png" alt="">' },
-            rotten:   { name: 'Гнилой зубик', icon: '🦷' },
-            tapik:    { name: 'Тапик', icon: '🩴' }
+            ladder:        { name: 'Пиздец дорогая лестница', icon: '🪜' },
+            medphone:      { name: 'Телефон медика', icon: '📱' },
+            dern:          { name: 'Дёрн', icon: '🌿' },
+            sextoy:        { name: 'Секс игрушка', icon: '<img src="Penis.png" alt="">' },
+            rotten:        { name: 'Гнилой зубик', icon: '🦷' },
+            tapik:         { name: 'Тапик', icon: '🩴' },
+            wholetooth:    { name: 'Целый зубик', icon: '🦷' },
+            ishmatov_info: { name: 'Информация по Ишматову', icon: '📋' },
+            tvn:           { name: 'ТВН', icon: '<img src="Tvn.png" alt="">' }
         };
 
         var isCooldown = false;
@@ -886,6 +973,15 @@
         var invRefs = {};
         var shopRendered = false;
 
+        var pahomRect = null;
+        var uiRafPending = false;
+        var dirtySave = false;
+        var lastFloatSpawn = 0;
+        var lastRippleSpawn = 0;
+        var SPAWN_INTERVAL = 50;
+        var MAX_EFFECTS = 15;
+        var activeEffects = 0;
+
         function formatSexpah(n) {
             if (n >= 1000000000) { var v = n / 1000000000; return (v < 10 ? v.toFixed(1) : Math.floor(v)) + 'B'; }
             if (n >= 1000000) { var v = n / 1000000; return (v < 10 ? v.toFixed(1) : Math.floor(v)) + 'M'; }
@@ -907,7 +1003,10 @@
                 localStorage.setItem('pahomTool', currentTool);
                 localStorage.setItem('pahomBuffs', JSON.stringify(activeBuffs));
             } catch(e) {}
+            dirtySave = false;
         }
+
+        function markDirty() { dirtySave = true; }
 
         function syncSexpahFromStorage() {
             try {
@@ -1105,7 +1204,7 @@
                         items[i].classList.toggle('selected', items[i].dataset.tool === currentTool);
                     }
                 }
-                updateUI();
+                scheduleUI();
             }
         }
 
@@ -1153,14 +1252,44 @@
                     comboBonus.classList.remove('show');
                 }
             }
+        }
 
-            saveData();
+        function quickUIUpdate() {
+            if (sexpahSpan) sexpahSpan.textContent = formatSexpah(sexpah);
+            var maxLove = getMaxLove();
+            if (loveVerticalFill) loveVerticalFill.style.height = Math.min(100, (love / maxLove) * 100) + '%';
+            if (clickPowerLabel) clickPowerLabel.textContent = '+' + getClickPower() + ' за клик';
+        }
+
+        function scheduleQuickUI() {
+            if (uiRafPending) return;
+            uiRafPending = true;
+            requestAnimationFrame(function() {
+                uiRafPending = false;
+                quickUIUpdate();
+            });
+        }
+
+        function scheduleUI() {
+            if (uiRafPending) return;
+            uiRafPending = true;
+            requestAnimationFrame(function() {
+                uiRafPending = false;
+                updateUI();
+            });
         }
 
         function startCooldown() {
             if (isCooldown) return;
             isCooldown = true;
             cooldownRemaining = 10;
+
+            try {
+                if (window.pahomSound && typeof window.pahomSound.playExcite === 'function') {
+                    window.pahomSound.playExcite();
+                }
+            } catch(e) {}
+
             triggerBlowup();
             if (cooldownInterval) clearInterval(cooldownInterval);
             cooldownInterval = setInterval(function() {
@@ -1170,7 +1299,7 @@
                     cooldownInterval = null;
                     isCooldown = false;
                 }
-                updateUI();
+                scheduleUI();
             }, 1000);
         }
 
@@ -1235,6 +1364,8 @@
         }
 
         function spawnFloatText(x, y, text) {
+            if (activeEffects >= MAX_EFFECTS) return;
+            activeEffects++;
             var el = document.createElement('div');
             el.className = 'float-text';
             el.textContent = text;
@@ -1255,12 +1386,17 @@
                 el.style.opacity = Math.max(0, opacity);
                 el.style.transform = 'translate(-50%, ' + (driftY * easeOut) + 'px) scale(' + scale + ')';
                 if (t < 1) requestAnimationFrame(frame);
-                else if (el.parentNode) el.parentNode.removeChild(el);
+                else {
+                    if (el.parentNode) el.parentNode.removeChild(el);
+                    activeEffects--;
+                }
             }
             requestAnimationFrame(frame);
         }
 
         function spawnRipple(x, y) {
+            if (activeEffects >= MAX_EFFECTS) return;
+            activeEffects++;
             var r = document.createElement('div');
             r.className = 'click-ripple';
             r.style.left = x + 'px';
@@ -1278,7 +1414,10 @@
                 r.style.height = size + 'px';
                 r.style.opacity = String(0.9 * (1 - t));
                 if (t < 1) requestAnimationFrame(frame);
-                else if (r.parentNode) r.parentNode.removeChild(r);
+                else {
+                    if (r.parentNode) r.parentNode.removeChild(r);
+                    activeEffects--;
+                }
             }
             requestAnimationFrame(frame);
         }
@@ -1292,7 +1431,7 @@
                 if (comboBar) { comboBar.classList.remove('show'); comboBar.style.width = '0%'; }
                 if (comboBonus) comboBonus.classList.remove('show');
                 if (pahomHitbox) pahomHitbox.classList.remove('combo-hot', 'combo-max');
-                updateUI();
+                scheduleUI();
             }, COMBO_TIMEOUT);
 
             var shown = Math.min(combo, COMBO_MAX);
@@ -1301,8 +1440,9 @@
                 comboCounter.classList.add('show');
                 comboCounter.classList.toggle('hot', combo >= 10);
                 comboCounter.classList.remove('pulse');
-                void comboCounter.offsetWidth;
-                comboCounter.classList.add('pulse');
+                requestAnimationFrame(function() {
+                    comboCounter.classList.add('pulse');
+                });
             }
             if (comboBar) {
                 comboBar.classList.add('show');
@@ -1312,6 +1452,12 @@
                 pahomHitbox.classList.toggle('combo-hot', combo >= 10 && combo < COMBO_MAX);
                 pahomHitbox.classList.toggle('combo-max', combo >= COMBO_MAX);
             }
+        }
+
+        if (comboCounter) {
+            comboCounter.addEventListener('animationend', function() {
+                comboCounter.classList.remove('pulse');
+            });
         }
 
         function getExpRequired(level) { return 1200 + (level - 1) * 600; }
@@ -1327,14 +1473,12 @@
         }
 
         function handleClick() {
-            syncSexpahFromStorage();
             if (isCooldown) return;
 
             var now = Date.now();
             if (now - lastHandledClick < 60) return;
             lastHandledClick = now;
 
-            // ЗВУК
             try {
                 if (window.pahomSound && typeof window.pahomSound.playRandom === 'function') {
                     window.pahomSound.playRandom();
@@ -1345,35 +1489,39 @@
             totalClicks++;
             bumpCombo();
 
-            try {
-                var lastExpClick = parseInt(localStorage.getItem('pahomLastExpClick') || '0', 10) || 0;
-                if (totalClicks - lastExpClick >= 10) {
-                    var steps = Math.floor((totalClicks - lastExpClick) / 10);
-                    lastExpClick += steps * 10;
-                    localStorage.setItem('pahomLastExpClick', String(lastExpClick));
-                    addPlayerExp(steps * 20);
-                }
-            } catch(e) {}
+            if (totalClicks % 10 === 0) {
+                try { addPlayerExp(20); } catch(e) {}
+            }
 
             var gained = getClickPower();
             sexpah += gained;
+            markDirty();
 
             var maxLove = getMaxLove();
             love = Math.min(maxLove, love + getLoveAdd());
 
-            if (pahomHitbox) {
-                var rect = pahomHitbox.getBoundingClientRect();
-                var cx = rect.left + rect.width / 2 + (Math.random() - 0.5) * rect.width * 0.7;
-                var cy = rect.top + rect.height / 2 + (Math.random() - 0.5) * rect.height * 0.7;
-                spawnRipple(cx, cy);
-                spawnFloatText(cx, cy, '+' + gained);
+            if (now - lastFloatSpawn >= SPAWN_INTERVAL || now - lastRippleSpawn >= SPAWN_INTERVAL) {
+                if (pahomHitbox) {
+                    if (!pahomRect) pahomRect = pahomHitbox.getBoundingClientRect();
+                    var cx = pahomRect.left + pahomRect.width / 2 + (Math.random() - 0.5) * pahomRect.width * 0.7;
+                    var cy = pahomRect.top + pahomRect.height / 2 + (Math.random() - 0.5) * pahomRect.height * 0.7;
+
+                    if (now - lastRippleSpawn >= SPAWN_INTERVAL) {
+                        lastRippleSpawn = now;
+                        spawnRipple(cx, cy);
+                    }
+                    if (now - lastFloatSpawn >= SPAWN_INTERVAL) {
+                        lastFloatSpawn = now;
+                        spawnFloatText(cx, cy, '+' + gained);
+                    }
+                }
             }
 
             if (love > maxLove * 0.9 && !isCooldown && pahomHitbox) {
-                pahomHitbox.classList.remove('shake');
-                void pahomHitbox.offsetWidth;
-                pahomHitbox.classList.add('shake');
-                setTimeout(function() { pahomHitbox.classList.remove('shake'); }, 250);
+                if (!pahomHitbox.classList.contains('shake')) {
+                    pahomHitbox.classList.add('shake');
+                    setTimeout(function() { pahomHitbox.classList.remove('shake'); }, 250);
+                }
             }
 
             if (love >= maxLove) {
@@ -1381,7 +1529,7 @@
                 startCooldown();
             }
 
-            updateUI();
+            scheduleQuickUI();
         }
 
         function startDecayCheck() {
@@ -1389,7 +1537,7 @@
             decayInterval = setInterval(function() {
                 if (!isCooldown && love > 0 && Date.now() - lastClickTime >= 500) {
                     love = Math.max(0, love - 5);
-                    updateUI();
+                    scheduleUI();
                 }
             }, 500);
         }
@@ -1406,17 +1554,19 @@
                     changed = true;
                 }
                 ensureBuffsTop();
-                if (changed) { saveData(); updateUI(); }
+                if (changed) { markDirty(); scheduleUI(); }
             }, 1000);
         }
 
         function startTicker() {
             if (tickerInterval) clearInterval(tickerInterval);
             tickerInterval = setInterval(function() {
+                if (dirtySave) saveData();
+
                 ensureBuffsTop();
                 syncSexpahFromStorage();
                 ensureValidTool();
-                updateUI();
+                scheduleUI();
                 if (currentShopTab === 'items' && shopPanel && !shopPanel.classList.contains('hidden')) {
                     refreshItemsAvailability();
                 }
@@ -1596,15 +1746,16 @@
             if (shopInventoryTab) shopInventoryTab.onclick = function() { switchShopTab('inventory'); };
         }
 
+        function invalidatePahomRect() { pahomRect = null; }
+        window.addEventListener('resize', invalidatePahomRect);
+        window.addEventListener('scroll', invalidatePahomRect, { passive: true });
+        window.addEventListener('orientationchange', invalidatePahomRect);
+
         function init() {
             try { initBottomTabs(); } catch(e) {}
             try {
                 if (pahomHitbox) {
                     pahomHitbox.addEventListener('click', handleClick);
-                    pahomHitbox.addEventListener('touchstart', function(e) {
-                        e.preventDefault();
-                        handleClick();
-                    }, { passive: false });
                 }
             } catch(e) {}
             try { initSoundButton(); } catch(e) {}
@@ -1639,22 +1790,11 @@
                     });
                 }
             } catch(e) {}
-            try {
-                if (!sessionStorage.getItem('pahomLoaded')) {
-                    setTimeout(function() {
-                        if (loadingScreen) loadingScreen.style.display = 'none';
-                        sessionStorage.setItem('pahomLoaded', 'true');
-                    }, 3000);
-                } else {
-                    if (loadingScreen) loadingScreen.style.display = 'none';
-                    var container = document.querySelector('.game-container');
-                    if (container) {
-                        container.style.animation = 'none';
-                        container.style.opacity = '1';
-                    }
-                }
-            } catch(e) {}
         }
+
+        window.addEventListener('beforeunload', function() {
+            if (dirtySave) saveData();
+        });
 
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);
