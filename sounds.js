@@ -1,4 +1,4 @@
-// sounds.js — случайный звук клика через Web Audio API
+// sounds.js — звук клика через Web Audio API (A3.m4a, без рандома)
 (function() {
   'use strict';
 
@@ -8,25 +8,8 @@
   var activeCount = 0;
   var MASTER_VOLUME = 0.35;
 
-  // ВАЖНО: A??.m4a — не имя файла (символ ? запрещён).
-  // Если у тебя реально называется по-другому — поменяй здесь.
-  var SOUND_SOURCES = [
-    'A3.m4a',
-    'Aikakoi.m4a',
-    'Aimolodca.m4a',
-    'Awhopizdih.m4a',
-    'Dada.m4a',
-    'Dadadada.m4a',
-    'Gavnotapi.m4a',
-    'Grahou.m4a',
-    'Ihmatoov.m4a',
-    'Iwhopotom.m4a',
-    'ZakrivaiSVO.m4a'
-  ];
-
-  var buffers = new Array(SOUND_SOURCES.length);
-  var loadedCount = 0;
-  var failedList = [];
+  var SOUND_URL = 'A3.m4a';
+  var buffer = null;
 
   function log(t) { try { console.log('[Sounds] ' + t); } catch(e) {} }
   function warn(t) { try { console.warn('[Sounds] ' + t); } catch(e) {} }
@@ -42,44 +25,39 @@
     return ctx;
   }
 
-  function loadOne(url, index) {
+  function loadOne() {
     var c = getCtx();
     if (!c) return;
 
-    fetch(url)
+    log('Начинаю загрузку: ' + SOUND_URL);
+
+    fetch(SOUND_URL)
       .then(function(resp) {
+        log('HTTP ' + resp.status);
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         return resp.arrayBuffer();
       })
       .then(function(arrayBuffer) {
-        // Пробуем Promise-версию (совр. браузеры)
+        log('Получено ' + arrayBuffer.byteLength + ' байт. Декодирую...');
         var p = c.decodeAudioData(arrayBuffer);
-        if (p && typeof p.then === 'function') {
-          return p;
-        }
-        // Fallback для старых браузеров — оборачиваем колбэки в Promise
+        if (p && typeof p.then === 'function') return p;
         return new Promise(function(resolve, reject) {
           c.decodeAudioData(arrayBuffer, resolve, reject);
         });
       })
       .then(function(buf) {
-        buffers[index] = buf;
-        loadedCount++;
-        log('OK ' + url + ' (' + buf.duration.toFixed(2) + 'с) — загружено ' + loadedCount + '/' + SOUND_SOURCES.length);
+        buffer = buf;
+        log('OK ' + SOUND_URL + ' (' + buf.duration.toFixed(2) + 'с)');
       })
       .catch(function(err) {
-        failedList.push(url + ' (' + (err && err.message ? err.message : 'fail') + ')');
-        warn('FAIL ' + url + ' — ' + (err && err.message ? err.message : err));
+        warn('FAIL ' + SOUND_URL + ' — ' + (err && err.message ? err.message : err));
       });
   }
 
   function init() {
     var c = getCtx();
     if (!c) return;
-    log('Начинаю загрузку ' + SOUND_SOURCES.length + ' звуков...');
-    for (var i = 0; i < SOUND_SOURCES.length; i++) {
-      loadOne(SOUND_SOURCES[i], i);
-    }
+    loadOne();
   }
 
   function unlock() {
@@ -92,36 +70,18 @@
     }
   }
 
-  function hasAnyBuffer() {
-    for (var i = 0; i < buffers.length; i++) {
-      if (buffers[i]) return true;
-    }
-    return false;
-  }
-
   function playRandom() {
     if (isMuted) return false;
-    if (!hasAnyBuffer()) return false;
+    if (!buffer) { warn('playRandom: буфер не загружен'); return false; }
     if (activeCount >= MAX_CONCURRENT) return false;
 
     var c = getCtx();
     if (!c) return false;
-    // Всегда пытаемся разбудить контекст
     if (c.state === 'suspended') c.resume().catch(function(){});
-
-    var available = [];
-    for (var i = 0; i < buffers.length; i++) {
-      if (buffers[i]) available.push(i);
-    }
-    if (available.length === 0) return false;
-
-    var idx = available[Math.floor(Math.random() * available.length)];
-    var buf = buffers[idx];
 
     try {
       var src = c.createBufferSource();
-      src.buffer = buf;
-      src.playbackRate.value = 1 + (Math.random() * 0.08 - 0.04);
+      src.buffer = buffer;
 
       var gain = c.createGain();
       gain.gain.value = MASTER_VOLUME;
@@ -176,10 +136,10 @@
     setMuted: setMuted,
     toggleMute: toggleMute,
     isMuted: function() { return isMuted; },
-    ready: function() { return hasAnyBuffer(); },
-    loadedCount: function() { return loadedCount; },
-    total: function() { return SOUND_SOURCES.length; },
-    failed: function() { return failedList.slice(); }
+    ready: function() { return !!buffer; },
+    loadedCount: function() { return buffer ? 1 : 0; },
+    total: function() { return 1; },
+    failed: function() { return []; }
   };
 
   log('Модуль загружен. Mute: ' + isMuted);
