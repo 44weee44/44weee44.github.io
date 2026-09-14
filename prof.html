@@ -713,7 +713,6 @@
 <body>
     <!-- Скрипты синхронизации — ДО основного кода, чтобы tgSyncReady был доступен -->
     <script src="income.js"></script>
-    <script src="telegram-sync.js"></script>
 
     <div class="loading-screen" id="loadingScreen">
         <div class="loading-circle"></div>
@@ -813,7 +812,8 @@
                 <div class="profile-avatar" id="profileAvatar">👤</div>
             </div>
             <div class="profile-nickname" id="profileNickname">Игрок</div>
-            <div class="profile-ip" id="profileIP">0.0.0.0</div>
+<div class="profile-ip" id="profileIP">0.0.0.0</div>
+            <div class="profile-ip" id="profileServerID" style="color:#6a4a9a;font-size:0.7rem;margin-top:2px;">ID: ...</div>
 
             <!-- Выслуга и опыт -->
             <div class="player-level-block">
@@ -1188,5 +1188,6 @@
             }
         })();
     </script>
+<script src="server-sync.js"></script>
 </body>
 </html>
