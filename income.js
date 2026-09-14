@@ -11,7 +11,8 @@
   var INCOMES = {
     medic: 2,
     seimur: 10,
-    dodonov: 1
+    dodonov: 1,
+    ishmatov: 12
   };
 
   function getCraftState() {
@@ -67,6 +68,12 @@
     try { localStorage.setItem(PENDING, '0'); } catch(e) {}
 
     window.dispatchEvent(new CustomEvent('pahomPendingChanged', { detail: { pending: 0 } }));
+
+    // Форсируем сохранение на сервер
+    try {
+      if (window.tgSyncSave) window.tgSyncSave(true);
+    } catch(e) {}
+
     return pending;
   }
 

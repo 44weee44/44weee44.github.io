@@ -12,7 +12,7 @@
 
   .game-container {
     background:#1a1a1a;
-    background-image:linear-gradient(rgba(10,10,10,0.85), rgba(10,10,10,0.95)), url('Fon.jpeg');
+    background-image:linear-gradient(rgba(10,10,10,0.88), rgba(10,10,10,0.96)), url('Fon.jpeg');
     background-size:cover; background-position:center;
     width:100%; height:100vh; height:100dvh; display:flex; flex-direction:column;
     position:relative; min-height:0; overflow:hidden;
@@ -20,15 +20,18 @@
   }
   @keyframes fadeInSoft { from { opacity: 0.6; } to { opacity: 1; } }
 
-  .header { display:flex; align-items:center; justify-content:center; padding:10px 15px; flex-shrink:0; border-bottom:1px solid #4a4a2a; background:rgba(42,42,26,0.85); z-index:10; }
-  .header-title { font-size:1.2rem; font-weight:800; letter-spacing:3px; color:#c4b08a; text-transform:uppercase; }
-  .score-board { display:flex; justify-content:space-between; align-items:center; padding:8px 15px; flex-shrink:0; border-bottom:1px solid #4a4a2a; background:rgba(28,28,14,0.7); z-index:10; }
+  /* ==== ШАПКА ==== */
+  .header { display:flex; align-items:center; justify-content:center; padding:12px 15px; flex-shrink:0; border-bottom:1px solid #4a4a2a; background:linear-gradient(180deg, rgba(50,30,30,0.9), rgba(30,15,15,0.85)); z-index:10; }
+  .header-title { font-size:1.25rem; font-weight:900; letter-spacing:5px; color:#c4b08a; text-transform:uppercase; text-shadow:0 2px 4px rgba(0,0,0,0.9), 0 0 18px rgba(200,60,60,0.4); display:flex; align-items:center; gap:10px; }
+  .header-title svg { width:26px; height:26px; filter:drop-shadow(0 0 10px rgba(200,60,60,0.9)); }
+
+  .score-board { display:flex; justify-content:space-between; align-items:center; padding:8px 15px; flex-shrink:0; border-bottom:1px solid #4a4a2a; background:rgba(28,28,14,0.85); z-index:10; }
   .sexpah { background:rgba(37,37,21,0.9); padding:5px 15px; border-radius:8px; border:1px solid #4a4a2a; font-size:0.9rem; font-weight:700; color:#c4b08a; transition:transform 0.25s ease, box-shadow 0.25s ease; }
   .sexpah.bump { transform:scale(1.08); box-shadow:0 0 20px rgba(184,150,46,0.7); }
 
-  .notify-bar { display:flex; flex-direction:column; gap:6px; padding:0 15px; flex-shrink:0; z-index:100; pointer-events:none; }
+  .notify-bar { display:flex; flex-direction:column; gap:6px; padding:0 15px; flex-shrink:0; z-index:100; pointer-events:none; position:relative; }
   .notify-bar:empty { padding:0; }
-  .notify-chip { display:flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(184,150,46,0.18); border:1px solid #b8962e; border-radius:20px; font-size:0.85rem; font-weight:700; color:#b8962e; font-family:'Courier New',monospace; align-self:flex-start; box-shadow:0 0 20px rgba(184,150,46,0.4); animation:chipIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+  .notify-chip { display:flex; align-items:center; gap:8px; padding:10px 16px; background:linear-gradient(135deg, rgba(184,150,46,0.3), rgba(139,105,20,0.2)); border:1px solid #b8962e; border-radius:20px; font-size:0.85rem; font-weight:700; color:#ffd76b; font-family:'Courier New',monospace; align-self:flex-start; box-shadow:0 0 25px rgba(184,150,46,0.5); animation:chipIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
   .notify-chip.leaving { animation:chipOut 0.4s ease forwards; }
   .notify-chip .notify-icon img { width:1.2rem; height:1.2rem; object-fit:contain; border-radius:3px; vertical-align:middle; }
   @keyframes chipIn { from { opacity:0; transform:translateY(-20px) scale(0.8); } to { opacity:1; transform:translateY(0) scale(1); } }
@@ -37,122 +40,361 @@
   .hidden { display:none !important; }
 
   /* ==== ТАБЫ БОССОВ ==== */
-  .boss-tabs {
-    display: flex;
-    gap: 8px;
-    padding: 10px 15px;
-    flex-shrink: 0;
-    z-index: 20;
-  }
+  .boss-tabs { display: flex; gap: 10px; padding: 12px 15px; flex-shrink: 0; z-index: 20; }
   .boss-tab {
     flex: 1;
-    background: rgba(30, 30, 14, 0.6);
-    backdrop-filter: blur(4px);
+    background: linear-gradient(135deg, rgba(40, 30, 15, 0.7), rgba(25, 20, 10, 0.7));
     border: 1px solid #4a4a2a;
     color: #c4b08a;
-    padding: 10px 6px;
-    border-radius: 6px;
+    padding: 11px 6px;
+    border-radius: 8px;
     cursor: pointer;
-    font-weight: 700;
+    font-weight: 800;
     font-size: 0.8rem;
-    transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-    letter-spacing: 1px;
+    transition: all 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    letter-spacing: 1.5px;
     text-transform: uppercase;
-    white-space: nowrap;
+    position: relative;
     overflow: hidden;
-    text-overflow: ellipsis;
+  }
+  .boss-tab::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 30%, rgba(255, 215, 107, 0.15) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
   }
   .boss-tab.active {
     border-color: #b8962e;
-    background: rgba(184, 150, 46, 0.25);
+    background: linear-gradient(135deg, rgba(184, 150, 46, 0.35), rgba(139, 105, 20, 0.25));
     color: #ffd76b;
-    box-shadow: 0 0 15px rgba(184,150,46,0.4);
+    box-shadow: 0 0 20px rgba(184,150,46,0.5), inset 0 0 15px rgba(255,215,107,0.1);
+    transform: translateY(-2px);
   }
+  .boss-tab.active::before { transform: translateX(100%); }
 
+  /* ==== СПИСОК БОССОВ ==== */
   .boss-list { flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:0 15px 5px; display:flex; flex-direction:column; gap:12px; scrollbar-width:thin; scrollbar-color:#4a4a2a transparent; transition:opacity 0.4s ease, transform 0.4s ease; }
   .boss-list.fade-out { opacity:0; transform:translateX(-20px); pointer-events:none; }
   .boss-list::-webkit-scrollbar { width:5px; }
   .boss-list::-webkit-scrollbar-track { background:transparent; }
   .boss-list::-webkit-scrollbar-thumb { background:#4a4a2a; border-radius:3px; }
 
-  .boss-card { display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid #4a4a2a; border-radius:8px; background:rgba(30,30,14,0.9); cursor:pointer; flex-shrink:0; transition:transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94), border-color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease; animation:cardSlide 0.4s cubic-bezier(0.25,0.46,0.45,0.94); }
-  @keyframes cardSlide { from { transform:translateX(-15px); } to { transform:translateX(0); } }
-  .boss-card:hover:not(.locked) { border-color:#b8962e; transform:translateX(4px); background:rgba(45,45,26,0.95); box-shadow:0 0 20px rgba(184,150,46,0.3); }
-  .boss-card:active:not(.locked) { transform:translateX(4px) scale(0.98); }
-  .boss-card.locked { opacity:0.5; }
-  .boss-card.in-progress { border-color:#ff8c3c; box-shadow:0 0 20px rgba(255,140,60,0.4); }
+  .boss-card {
+    display:flex; align-items:center; gap:14px;
+    padding:12px 14px;
+    border:1px solid #4a4a2a;
+    border-radius:14px;
+    background: linear-gradient(135deg, rgba(35,25,20,0.95), rgba(20,15,12,0.95));
+    cursor:pointer; flex-shrink:0;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 0.4s ease,
+                background 0.4s ease,
+                box-shadow 0.4s ease;
+    animation: cardSlide 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .boss-card:nth-child(1) { animation-delay: 0.05s; }
+  .boss-card:nth-child(2) { animation-delay: 0.12s; }
+  .boss-card:nth-child(3) { animation-delay: 0.19s; }
+  .boss-card:nth-child(4) { animation-delay: 0.26s; }
+  .boss-card:nth-child(5) { animation-delay: 0.33s; }
+  .boss-card:nth-child(6) { animation-delay: 0.40s; }
 
-  .boss-avatar { width:44px; height:44px; border-radius:6px; border:1px solid #b8962e; background:rgba(60,40,20,0.7); display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0; box-shadow:0 0 12px rgba(184,150,46,0.3); transition:transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.4s ease; overflow:hidden; }
-  .boss-avatar img { width:100%; height:100%; object-fit:contain; border-radius:5px; }
-  .boss-card:hover:not(.locked) .boss-avatar { box-shadow:0 0 20px rgba(184,150,46,0.7); transform:scale(1.08); }
+  @keyframes cardSlide {
+    from { opacity: 0; transform: translateX(-20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  /* Светящаяся полоса слева у карточки */
+  .boss-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 15%;
+    bottom: 15%;
+    width: 3px;
+    background: linear-gradient(180deg, transparent, #b8962e, transparent);
+    border-radius: 3px;
+    opacity: 0.5;
+    transition: opacity 0.4s ease, width 0.4s ease;
+  }
+  .boss-card:hover:not(.locked)::before {
+    width: 5px;
+    opacity: 1;
+    box-shadow: 0 0 15px #ffd76b;
+  }
+
+  .boss-card:hover:not(.locked) {
+    border-color: #b8962e;
+    transform: translateX(6px);
+    background: linear-gradient(135deg, rgba(50,40,20,0.95), rgba(30,20,15,0.95));
+    box-shadow: 0 8px 25px rgba(0,0,0,0.5), 0 0 25px rgba(184,150,46,0.25);
+  }
+  .boss-card:active:not(.locked) { transform: translateX(6px) scale(0.98); }
+  .boss-card.locked { opacity: 0.5; filter: grayscale(0.5); }
+  .boss-card.in-progress {
+    border-color: #ff8c3c;
+    box-shadow: 0 0 25px rgba(255,140,60,0.4), inset 0 0 15px rgba(255,140,60,0.1);
+  }
+  .boss-card.in-progress::before {
+    width: 5px;
+    opacity: 1;
+    background: linear-gradient(180deg, transparent, #ff8c3c, transparent);
+    box-shadow: 0 0 15px #ff8c3c;
+    animation: sidebarPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes sidebarPulse {
+    0%, 100% { opacity: 0.6; }
+    50%      { opacity: 1; }
+  }
+
+  /* ==== АВАТАР БОССА ==== */
+  .boss-avatar-wrap { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
+  .boss-avatar-ring {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, transparent 0deg, rgba(255, 215, 107, 0.8) 60deg, transparent 120deg, transparent 360deg);
+    animation: avatarSpin 4s linear infinite;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+  .boss-card:hover:not(.locked) .boss-avatar-ring,
+  .boss-card.in-progress .boss-avatar-ring { opacity: 1; }
+  @keyframes avatarSpin { to { transform: rotate(360deg); } }
+
+  .boss-avatar {
+    width:56px; height:56px;
+    border-radius:50%;
+    border:2px solid #b8962e;
+    background: linear-gradient(135deg, rgba(60,40,20,0.9), rgba(30,20,10,0.9));
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.8rem;
+    box-shadow:0 0 15px rgba(184,150,46,0.4), inset 0 0 15px rgba(0,0,0,0.5);
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
+    overflow:hidden;
+    position: relative;
+    z-index: 1;
+  }
+  .boss-avatar img { width:100%; height:100%; object-fit:contain; border-radius:50%; }
+  .boss-card:hover:not(.locked) .boss-avatar {
+    box-shadow:0 0 25px rgba(184,150,46,0.8), inset 0 0 15px rgba(0,0,0,0.5);
+    transform: scale(1.08);
+  }
 
   .boss-info { flex:1; min-width:0; }
-  .boss-name { font-size:1rem; font-weight:700; color:#c4b08a; margin-bottom:3px; }
-  .boss-meta { display:flex; flex-direction:column; gap:2px; font-size:0.75rem; color:#b0a070; }
-  .boss-reward { color:#b8962e; font-weight:700; }
+  .boss-name { font-size:1.05rem; font-weight:800; color:#c4b08a; margin-bottom:4px; letter-spacing:0.5px; }
+  .boss-card.in-progress .boss-name { color: #ff9b5c; text-shadow: 0 0 10px rgba(255,140,60,0.5); }
+  .boss-meta { display:flex; flex-direction:column; gap:3px; font-size:0.75rem; color:#b0a070; }
+  .boss-reward { color:#ffd76b; font-weight:700; display: flex; align-items: center; gap: 4px; }
   .boss-lvl { color:#ffd76b; font-weight:700; }
-  .boss-loot { color:#8fd4b0; font-size:0.7rem; display:flex; flex-direction:column; gap:2px; }
+  .boss-loot { color:#8fd4b0; font-size:0.7rem; display:flex; flex-direction:column; gap:2px; margin-top: 2px; }
   .boss-loot .loot-line { display:flex; align-items:center; gap:4px; }
   .boss-loot img { width:0.95rem; height:0.95rem; object-fit:contain; border-radius:2px; vertical-align:middle; }
   .boss-timer { font-family:'Courier New',monospace; font-size:0.72rem; color:#ff9b5c; font-weight:700; }
-  .boss-status { padding:4px 10px; border-radius:20px; font-size:0.7rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; flex-shrink:0; transition:background 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
-  .boss-status.ready { background:rgba(60,180,80,0.25); color:#4cd964; border:1px solid #4cd964; animation:readyPulse 1.5s ease-in-out infinite; }
-  @keyframes readyPulse { 0%,100% { box-shadow:0 0 5px rgba(76,217,100,0.5); } 50% { box-shadow:0 0 20px rgba(76,217,100,0.9); } }
-  .boss-status.cooldown { background:rgba(180,40,40,0.25); color:#ff5a5a; border:1px solid #ff5a5a; }
-  .boss-status.in-progress { background:rgba(255,140,60,0.3); color:#ff8c3c; border:1px solid #ff8c3c; animation:readyPulse 1.2s ease-in-out infinite; }
+  .boss-card.in-progress .boss-timer { color: #ff8c3c; animation: textPulse 1.5s ease-in-out infinite; }
+  @keyframes textPulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.7; }
+  }
 
-  .arena { flex:1 1 auto; min-height:0; display:none; flex-direction:column; overflow:hidden; padding-bottom:80px; padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px)); }
+  /* ==== HP-полоса в карточке ==== */
+  .boss-hp-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(15, 15, 5, 0.8);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 6px;
+    position: relative;
+    display: none;
+  }
+  .boss-card.in-progress .boss-hp-bar { display: block; }
+  .boss-hp-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #8b1a1a, #ff3b3b, #ff6a3b);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+    box-shadow: 0 0 8px rgba(255,60,60,0.8);
+    position: relative;
+    overflow: hidden;
+  }
+  .boss-hp-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: hpShine 2s ease-in-out infinite;
+  }
+  @keyframes hpShine {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* ==== СТАТУС ==== */
+  .boss-status {
+    padding:5px 12px;
+    border-radius:20px;
+    font-size:0.7rem;
+    font-weight:900;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    flex-shrink:0;
+    transition:all 0.3s ease;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+  .boss-status.ready {
+    background: linear-gradient(135deg, rgba(60,180,80,0.3), rgba(30,100,40,0.3));
+    color:#4cd964;
+    border:1px solid #4cd964;
+    animation:readyPulse 2s ease-in-out infinite;
+  }
+  @keyframes readyPulse {
+    0%,100% { box-shadow:0 0 8px rgba(76,217,100,0.5); }
+    50%     { box-shadow:0 0 20px rgba(76,217,100,1); }
+  }
+  .boss-status.cooldown {
+    background: linear-gradient(135deg, rgba(180,40,40,0.3), rgba(90,20,20,0.3));
+    color:#ff5a5a;
+    border:1px solid #ff5a5a;
+  }
+  .boss-status.in-progress {
+    background: linear-gradient(135deg, rgba(255,140,60,0.35), rgba(180,80,20,0.35));
+    color:#ff8c3c;
+    border:1px solid #ff8c3c;
+    animation:readyPulse 1.5s ease-in-out infinite;
+  }
+
+  /* ==== АРЕНА ==== */
+  .arena { flex:1 1 auto; min-height:0; display:none; flex-direction:column; overflow:hidden; padding-bottom:80px; padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px)); position: relative; }
   .arena.active { display:flex; animation:arenaIn 0.6s cubic-bezier(0.25,0.46,0.45,0.94) forwards; }
   @keyframes arenaIn { from { opacity:0; transform:translateY(30px) scale(0.98); } to { opacity:1; transform:translateY(0) scale(1); } }
 
-  .arena-top { display:flex; align-items:center; justify-content:space-between; padding:10px 15px; flex-shrink:0; background:rgba(28,14,14,0.85); border-bottom:1px solid #c0392b; gap:10px; }
-  .arena-back { background:transparent; border:1px solid #4a4a2a; color:#c4b08a; width:34px; height:34px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:transform 0.3s ease, background 0.3s ease, border-color 0.3s ease; }
+  /* Виньетка арены */
+  .arena::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 55%, transparent 30%, rgba(80,10,10,0.35) 80%, rgba(20,0,0,0.6) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .arena > * { position: relative; z-index: 1; }
+
+  .arena-top { display:flex; align-items:center; justify-content:space-between; padding:12px 15px; flex-shrink:0; background:linear-gradient(180deg, rgba(50,15,15,0.9), rgba(28,14,14,0.85)); border-bottom:1px solid #c0392b; gap:10px; box-shadow: 0 4px 15px rgba(200, 40, 40, 0.3); }
+  .arena-back { background:transparent; border:1px solid #4a4a2a; color:#c4b08a; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:transform 0.3s ease, background 0.3s ease, border-color 0.3s ease; }
   .arena-back:hover { background:rgba(180,150,90,0.15); transform:scale(1.1); border-color:#b8962e; }
   .arena-back:active { transform:scale(0.95); }
   .arena-back svg { width:16px; height:16px; }
 
-  .arena-boss-name { font-size:1.1rem; font-weight:800; color:#ff8c8c; letter-spacing:2px; flex:1; text-align:center; text-shadow:0 0 10px rgba(255,60,60,0.7); animation:nameGlow 2.5s ease-in-out infinite; }
-  @keyframes nameGlow { 0%,100% { text-shadow:0 0 10px rgba(255,60,60,0.7); } 50% { text-shadow:0 0 22px rgba(255,60,60,1); } }
+  .arena-boss-name { font-size:1.1rem; font-weight:900; color:#ff8c8c; letter-spacing:3px; flex:1; text-align:center; text-shadow:0 0 15px rgba(255,60,60,0.8); animation:nameGlow 2.5s ease-in-out infinite; }
+  @keyframes nameGlow { 0%,100% { text-shadow:0 0 15px rgba(255,60,60,0.7); } 50% { text-shadow:0 0 30px rgba(255,60,60,1), 0 0 45px rgba(255,60,60,0.6); } }
 
-  .arena-timer { font-family:'Courier New',monospace; font-size:1.2rem; font-weight:800; color:#b8962e; letter-spacing:2px; flex-shrink:0; transition:color 0.3s ease; }
-  .arena-timer.danger { color:#ff3b3b; animation:timerDanger 0.6s ease-in-out infinite; }
+  .arena-timer { font-family:'Courier New',monospace; font-size:1.15rem; font-weight:900; color:#ffd76b; letter-spacing:2px; flex-shrink:0; transition:color 0.3s ease; text-shadow: 0 0 10px rgba(255,215,107,0.5); }
+  .arena-timer.danger { color:#ff3b3b; text-shadow: 0 0 15px rgba(255,59,59,1); animation:timerDanger 0.6s ease-in-out infinite; }
   @keyframes timerDanger { 0%,100% { transform:scale(1); } 50% { transform:scale(1.08); } }
+
+  /* HP-полоса босса над ареной */
+  .arena-hp {
+    padding: 8px 15px;
+    flex-shrink: 0;
+    background: rgba(28,14,14,0.7);
+    border-bottom: 1px solid #4a2020;
+  }
+  .arena-hp-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: #ff9b9b;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .arena-hp-bar {
+    width: 100%;
+    height: 12px;
+    background: #0f0f00;
+    border-radius: 8px;
+    border: 1px solid #4a2020;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px black;
+    position: relative;
+  }
+  .arena-hp-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #8b1a1a, #ff3b3b, #ff6a3b);
+    border-radius: 8px;
+    transition: width 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+    box-shadow: 0 0 12px rgba(255,60,60,0.8);
+    position: relative;
+    overflow: hidden;
+  }
+  .arena-hp-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: hpShine 2s ease-in-out infinite;
+  }
 
   .arena-field { flex:1 1 auto; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; padding:10px; }
   .arena-boss-wrap { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:200px; height:200px; pointer-events:none; }
 
-  .boss-hitbox { width:200px; height:200px; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; border:3px solid #c0392b; position:absolute; left:0; top:0; background:rgba(50,20,20,0.8); pointer-events:auto; animation:bossFloat 4s ease-in-out infinite; transition:transform 0.15s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.4s ease, border-color 0.3s ease; will-change:transform; overflow:hidden; }
+  .boss-hitbox {
+    width:200px; height:200px;
+    border-radius:50%;
+    display:flex; justify-content:center; align-items:center;
+    cursor:pointer;
+    border:3px solid #c0392b;
+    position:absolute; left:0; top:0;
+    background: radial-gradient(circle at 40% 30%, rgba(80,20,20,0.9), rgba(30,10,10,0.9));
+    pointer-events:auto;
+    animation:bossFloat 4s ease-in-out infinite;
+    transition:transform 0.15s cubic-bezier(0.25,0.46,0.45,0.94), box-shadow 0.4s ease, border-color 0.3s ease;
+    will-change:transform;
+    overflow:hidden;
+    box-shadow: 0 0 40px rgba(200, 40, 40, 0.6), inset 0 0 30px rgba(0,0,0,0.7);
+  }
   @keyframes bossFloat { 0%,100% { transform:translateY(0) scale(1); } 50% { transform:translateY(-10px) scale(1.02); } }
   .boss-hitbox:active { transform:scale(0.92); }
   .boss-hitbox.shake { animation:bossShake 0.25s cubic-bezier(0.36,0.07,0.19,0.97); }
   @keyframes bossShake { 0% { transform:translate(0,0) rotate(0deg); } 20% { transform:translate(-4px,2px) rotate(-2deg); } 40% { transform:translate(4px,-2px) rotate(2deg); } 60% { transform:translate(-3px,-1px) rotate(-1.5deg); } 80% { transform:translate(3px,1px) rotate(1.5deg); } 100% { transform:translate(0,0) rotate(0deg); } }
-  .boss-hitbox.hot { box-shadow:0 0 60px rgba(255,140,60,0.7), inset 0 0 40px rgba(255,100,40,0.3); border-color:#ff8c3c; }
-  .boss-hitbox.critical { box-shadow:0 0 80px rgba(255,60,60,0.9), inset 0 0 50px rgba(255,60,60,0.4); border-color:#ff3b3b; animation:critPulse 0.8s ease-in-out infinite; }
-  @keyframes critPulse { 0%,100% { box-shadow:0 0 60px rgba(255,60,60,0.7), inset 0 0 40px rgba(255,60,60,0.3); } 50% { box-shadow:0 0 100px rgba(255,60,60,1), inset 0 0 60px rgba(255,60,60,0.5); } }
+  .boss-hitbox.hot { box-shadow:0 0 70px rgba(255,140,60,0.8), inset 0 0 45px rgba(255,100,40,0.4); border-color:#ff8c3c; }
+  .boss-hitbox.critical { box-shadow:0 0 100px rgba(255,60,60,1), inset 0 0 60px rgba(255,60,60,0.5); border-color:#ff3b3b; animation:critPulse 0.8s ease-in-out infinite; }
+  @keyframes critPulse { 0%,100% { box-shadow:0 0 70px rgba(255,60,60,0.7), inset 0 0 45px rgba(255,60,60,0.3); } 50% { box-shadow:0 0 120px rgba(255,60,60,1), inset 0 0 70px rgba(255,60,60,0.6); } }
   .boss-hitbox.blowup { animation:bossBlowup 3.5s cubic-bezier(0.45,0.05,0.55,0.95) forwards; }
   @keyframes bossBlowup { 0% { transform:scale(1) rotate(0deg); } 10% { transform:scale(1.3) rotate(3deg); } 20% { transform:scale(0.95) rotate(-3deg); } 30% { transform:scale(1.25) rotate(4deg); } 40% { transform:scale(1) rotate(-2deg); } 50% { transform:scale(1.2) rotate(3deg); } 60% { transform:scale(1.02) rotate(-3deg); } 70% { transform:scale(1.15) rotate(2deg); } 80% { transform:scale(1.03) rotate(-1deg); } 90% { transform:scale(1.08) rotate(1deg); } 100% { transform:scale(1) rotate(0deg); } }
 
-  .boss-face { font-size:5rem; pointer-events:none; filter:drop-shadow(0 0 20px rgba(255,60,60,0.8)); transition:transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94); animation:faceGlow 3s ease-in-out infinite; display:flex; justify-content:center; align-items:center; width:100%; height:100%; }
-  @keyframes faceGlow { 0%,100% { filter:drop-shadow(0 0 15px rgba(255,60,60,0.6)); } 50% { filter:drop-shadow(0 0 30px rgba(255,60,60,1)); } }
+  .boss-face { font-size:5rem; pointer-events:none; filter:drop-shadow(0 0 25px rgba(255,60,60,0.9)); transition:transform 0.25s cubic-bezier(0.25,0.46,0.45,0.94); animation:faceGlow 3s ease-in-out infinite; display:flex; justify-content:center; align-items:center; width:100%; height:100%; }
+  @keyframes faceGlow { 0%,100% { filter:drop-shadow(0 0 20px rgba(255,60,60,0.7)); } 50% { filter:drop-shadow(0 0 40px rgba(255,60,60,1)); } }
   .boss-face img { width:11rem; height:11rem; object-fit:contain; border-radius:50%; }
   .boss-hitbox:active .boss-face { transform:scale(0.85); }
 
-  .boss-click-power { position:absolute; bottom:-30px; left:50%; transform:translateX(-50%); color:#ff9b9b; font-size:0.85rem; font-weight:700; white-space:nowrap; text-shadow:0 2px 4px rgba(0,0,0,0.9); }
+  .boss-click-power { position:absolute; bottom:-32px; left:50%; transform:translateX(-50%); color:#ff9b9b; font-size:0.85rem; font-weight:800; white-space:nowrap; text-shadow:0 2px 6px rgba(0,0,0,1), 0 0 10px rgba(255,100,100,0.5); letter-spacing: 1px; }
 
-  .arena-stats { display:flex; justify-content:space-between; padding:6px 15px; font-size:0.75rem; color:#b0a070; flex-shrink:0; background:rgba(28,14,14,0.7); }
-  .arena-stats b { color:#ff9b9b; display:inline-block; transition:transform 0.2s ease, color 0.2s ease; }
-  .arena-stats b.bump { transform:scale(1.2); color:#ffcc44; }
+  .arena-stats { display:flex; justify-content:space-between; padding:8px 15px; font-size:0.75rem; color:#b0a070; flex-shrink:0; background:rgba(28,14,14,0.8); border-top: 1px solid #4a2020; }
+  .arena-stats b { color:#ff9b9b; display:inline-block; transition:transform 0.2s ease, color 0.2s ease; font-family: 'Courier New', monospace; }
+  .arena-stats b.bump { transform:scale(1.25); color:#ffcc44; text-shadow: 0 0 10px rgba(255,200,60,0.8); }
 
-  .excite-panel { padding:8px 15px 10px; flex-shrink:0; background:rgba(28,14,14,0.85); border-top:1px solid #4a4a2a; }
-  .excite-label { display:flex; justify-content:space-between; font-size:0.75rem; font-weight:800; color:#ff9b9b; letter-spacing:1px; margin-bottom:5px; text-transform:uppercase; }
+  .excite-panel { padding:10px 15px 12px; flex-shrink:0; background:rgba(28,14,14,0.9); border-top:1px solid #4a2020; }
+  .excite-label { display:flex; justify-content:space-between; font-size:0.75rem; font-weight:800; color:#ff9b9b; letter-spacing:1px; margin-bottom:6px; text-transform:uppercase; }
   .excite-label span:last-child { transition:transform 0.25s ease, color 0.25s ease; }
-  .excite-label span:last-child.bump { transform:scale(1.12); color:#ffcc44; }
+  .excite-label span:last-child.bump { transform:scale(1.15); color:#ffcc44; }
 
-  .excite-bar-bg { width:100%; height:24px; background:#0f0f00; border-radius:12px; border:1px solid #4a2020; overflow:hidden; position:relative; box-shadow:inset 0 2px 6px black; }
-  .excite-bar-fill { height:100%; width:0%; background:linear-gradient(90deg,#8b1a1a,#ff3b3b,#ff6a3b); border-radius:12px; transition:width 0.35s cubic-bezier(0.25,0.46,0.45,0.94); box-shadow:0 0 15px rgba(255,60,60,0.7); position:relative; overflow:hidden; }
-  .excite-bar-fill::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transform:translateX(-100%); animation:barShine 2.5s ease-in-out infinite; }
+  .excite-bar-bg { width:100%; height:24px; background:#0f0f00; border-radius:12px; border:1px solid #4a2020; overflow:hidden; position:relative; box-shadow:inset 0 2px 6px black, 0 0 15px rgba(255,60,60,0.2); }
+  .excite-bar-fill { height:100%; width:0%; background:linear-gradient(90deg,#8b1a1a,#ff3b3b,#ff6a3b); border-radius:12px; transition:width 0.35s cubic-bezier(0.25,0.46,0.45,0.94); box-shadow:0 0 20px rgba(255,60,60,0.8); position:relative; overflow:hidden; }
+  .excite-bar-fill::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent); transform:translateX(-100%); animation:barShine 2.5s ease-in-out infinite; }
   @keyframes barShine { 0% { transform:translateX(-100%); } 50% { transform:translateX(100%); } 100% { transform:translateX(100%); } }
 
+  /* ==== НИЖНИЕ ТАБЫ ==== */
   .tabs-bar { display:flex; justify-content:space-around; align-items:center; padding:0 30px 80px; padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px)); flex-shrink:0; z-index:20; gap:10px; }
   .tabs-bar.hidden { display:none; }
   .tab-btn { background:transparent; border:none; cursor:pointer; color:#8a7a5a; opacity:0.6; padding:5px; text-decoration:none; display:flex; align-items:center; justify-content:center; transition:all 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
@@ -178,37 +420,94 @@
   .boss-skull-glow { animation:skullGlow 3s ease-in-out infinite; transform-origin:center; }
   @keyframes skullGlow { 0%,100% { filter:drop-shadow(0 0 3px rgba(200,60,60,0.4)); } 50% { filter:drop-shadow(0 0 12px rgba(200,60,60,1)); } }
 
-  .result-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(6px); }
+  /* ==== РЕЗУЛЬТАТ ==== */
+  .result-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(8px); }
   .result-overlay.show { display:flex; animation:overlayIn 0.4s ease; }
   @keyframes overlayIn { from { opacity:0; } to { opacity:1; } }
-  .result-box { background:#2d2d1a; border:2px solid #b8962e; border-radius:20px; padding:30px 40px; text-align:center; max-width:360px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.9); animation:boxIn 0.55s cubic-bezier(0.34,1.56,0.64,1); }
-  @keyframes boxIn { from { opacity:0; transform:scale(0.7); } to { opacity:1; transform:scale(1); } }
-  .result-title { font-size:1.8rem; font-weight:900; letter-spacing:3px; margin-bottom:15px; text-transform:uppercase; }
-  .result-title.win { color:#4cd964; text-shadow:0 0 20px rgba(76,217,100,0.8); }
-  .result-title.lose { color:#ff3b3b; text-shadow:0 0 20px rgba(255,59,59,0.8); }
-  .result-text { color:#c4b08a; font-size:1rem; margin-bottom:15px; }
-  .result-reward { font-size:1.5rem; font-weight:800; color:#b8962e; margin-bottom:10px; text-shadow:0 0 15px rgba(184,150,46,0.8); animation:rewardPulse 1.2s ease-in-out infinite; }
-  @keyframes rewardPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.06); } }
-  .result-loot { font-size:0.95rem; font-weight:700; color:#8fd4b0; margin-bottom:20px; padding:10px; background:rgba(143,212,176,0.1); border:1px solid #8fd4b0; border-radius:10px; line-height:1.7; animation:lootIn 0.6s 0.3s both cubic-bezier(0.34,1.56,0.64,1); }
-  .result-loot .loot-row { display:flex; align-items:center; justify-content:center; gap:6px; }
-  .result-loot img { width:1.4rem; height:1.4rem; object-fit:contain; border-radius:4px; }
-  @keyframes lootIn { from { opacity:0; transform:scale(0.6); } to { opacity:1; transform:scale(1); } }
-  .result-btn { background:rgba(184,150,46,0.2); border:2px solid #b8962e; color:#c4b08a; padding:12px 30px; border-radius:12px; cursor:pointer; font-weight:800; font-size:1rem; letter-spacing:2px; text-transform:uppercase; transition:all 0.3s ease; }
-  .result-btn:hover { background:rgba(184,150,46,0.4); transform:scale(1.05); box-shadow:0 0 20px rgba(184,150,46,0.5); }
+  .result-box { background: linear-gradient(160deg, #2d2d1a, #1a1a10); border:2px solid #b8962e; border-radius:24px; padding:36px 40px; text-align:center; max-width:380px; width:90%; box-shadow:0 25px 80px rgba(0,0,0,0.95), 0 0 60px rgba(184,150,46,0.3); animation:boxIn 0.6s cubic-bezier(0.34,1.56,0.64,1); position: relative; overflow: hidden; }
+  @keyframes boxIn { from { opacity:0; transform:scale(0.7) translateY(30px); } to { opacity:1; transform:scale(1) translateY(0); } }
+  .result-box::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, rgba(255,215,107,0.15), transparent 60%);
+    pointer-events: none;
+  }
+  .result-medal { font-size: 4rem; margin-bottom: 8px; display: block; animation: medalFloat 2.5s ease-in-out infinite; filter: drop-shadow(0 0 25px currentColor); }
+  @keyframes medalFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+    50%      { transform: translateY(-8px) rotate(5deg) scale(1.05); }
+  }
+  .result-box .result-medal.win { color: #ffd76b; }
+  .result-box .result-medal.lose { color: #ff3b3b; filter: drop-shadow(0 0 25px rgba(255,59,59,0.8)); }
+  .result-title { font-size:1.9rem; font-weight:900; letter-spacing:4px; margin-bottom:15px; text-transform:uppercase; }
+  .result-title.win { color:#4cd964; text-shadow:0 0 25px rgba(76,217,100,0.9); }
+  .result-title.lose { color:#ff3b3b; text-shadow:0 0 25px rgba(255,59,59,0.9); }
+  .result-text { color:#c4b08a; font-size:1rem; margin-bottom:18px; }
+  .result-reward { font-size:1.6rem; font-weight:900; color:#ffd76b; margin-bottom:14px; text-shadow:0 0 20px rgba(255,215,107,0.9); animation:rewardPulse 1.4s ease-in-out infinite; line-height: 1.4; }
+  @keyframes rewardPulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
+  .result-loot { font-size:0.95rem; font-weight:700; color:#8fd4b0; margin-bottom:22px; padding:12px; background:linear-gradient(135deg, rgba(143,212,176,0.15), rgba(60,120,90,0.1)); border:1px solid #8fd4b0; border-radius:12px; line-height:1.8; animation:lootIn 0.6s 0.3s both cubic-bezier(0.34,1.56,0.64,1); }
+  .result-loot .loot-row { display:flex; align-items:center; justify-content:center; gap:8px; }
+  .result-loot img { width:1.4rem; height:1.4rem; object-fit:contain; border-radius:4px; filter: drop-shadow(0 0 6px rgba(143,212,176,0.6)); }
+  @keyframes lootIn { from { opacity:0; transform:scale(0.6) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+  .result-btn { background: linear-gradient(135deg, rgba(184,150,46,0.3), rgba(139,105,20,0.2)); border:2px solid #b8962e; color:#ffd76b; padding:14px 34px; border-radius:14px; cursor:pointer; font-weight:900; font-size:1rem; letter-spacing:3px; text-transform:uppercase; transition:all 0.3s ease; position: relative; overflow: hidden; }
+  .result-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+  }
+  .result-btn:hover::before { transform: translateX(100%); }
+  .result-btn:hover { background: linear-gradient(135deg, rgba(184,150,46,0.5), rgba(139,105,20,0.4)); transform:scale(1.05); box-shadow:0 0 25px rgba(184,150,46,0.7); }
   .result-btn:active { transform:scale(0.96); }
 
+  /* ==== ЭФФЕКТЫ ==== */
   .flying-emoji { position:fixed; font-size:2rem; pointer-events:none; z-index:100; transform:translate(-50%,-50%); will-change:transform, opacity; }
-  .float-text { position:fixed; pointer-events:none; font-weight:900; color:#b8962e; font-size:1.3rem; z-index:500; white-space:nowrap; transform:translate(-50%,-50%); text-shadow:0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(184,150,46,0.7); will-change:transform, opacity; }
+  .float-text { position:fixed; pointer-events:none; font-weight:900; color:#ffd76b; font-size:1.3rem; z-index:500; white-space:nowrap; transform:translate(-50%,-50%); text-shadow:0 2px 4px rgba(0,0,0,0.9), 0 0 15px rgba(255,215,107,0.9); will-change:transform, opacity; }
   .click-ripple { position:fixed; border-radius:50%; border:2px solid #b8962e; pointer-events:none; z-index:90; transform:translate(-50%,-50%); will-change:width, height, opacity; }
 
-  @media (max-width:400px) { .boss-hitbox { width:170px; height:170px; } .arena-boss-wrap { width:170px; height:170px; } .boss-face { font-size:4rem; } .boss-face img { width:9rem; height:9rem; } .tabs-bar { padding-left:15px; padding-right:15px; } }
-  @media (max-height:700px) { .tabs-bar { padding-bottom:40px; padding-bottom:calc(40px + env(safe-area-inset-bottom, 0px)); } .arena { padding-bottom:40px; padding-bottom:calc(40px + env(safe-area-inset-bottom, 0px)); } }
-  @media (max-height:600px) { .boss-hitbox { width:150px; height:150px; } .arena-boss-wrap { width:150px; height:150px; } .boss-face { font-size:3.5rem; } .boss-face img { width:8rem; height:8rem; } .tabs-bar { padding-bottom:15px; padding-bottom:calc(15px + env(safe-area-inset-bottom, 0px)); } .arena { padding-bottom:15px; padding-bottom:calc(15px + env(safe-area-inset-bottom, 0px)); } .excite-panel { padding:5px 12px 6px; } .excite-bar-bg { height:18px; } .arena-stats { padding:4px 12px; font-size:0.7rem; } }
+  @media (max-width:400px) {
+    .boss-hitbox { width:170px; height:170px; }
+    .arena-boss-wrap { width:170px; height:170px; }
+    .boss-face { font-size:4rem; }
+    .boss-face img { width:9rem; height:9rem; }
+    .tabs-bar { padding-left:15px; padding-right:15px; }
+    .boss-avatar-wrap { width: 48px; height: 48px; }
+    .boss-avatar { width: 48px; height: 48px; font-size: 1.5rem; }
+    .boss-name { font-size: 0.95rem; }
+  }
+  @media (max-height:700px) {
+    .tabs-bar { padding-bottom:40px; padding-bottom:calc(40px + env(safe-area-inset-bottom, 0px)); }
+    .arena { padding-bottom:40px; padding-bottom:calc(40px + env(safe-area-inset-bottom, 0px)); }
+  }
+  @media (max-height:600px) {
+    .boss-hitbox { width:150px; height:150px; }
+    .arena-boss-wrap { width:150px; height:150px; }
+    .boss-face { font-size:3.5rem; }
+    .boss-face img { width:8rem; height:8rem; }
+    .tabs-bar { padding-bottom:15px; padding-bottom:calc(15px + env(safe-area-inset-bottom, 0px)); }
+    .arena { padding-bottom:15px; padding-bottom:calc(15px + env(safe-area-inset-bottom, 0px)); }
+    .excite-panel { padding:5px 12px 6px; }
+    .excite-bar-bg { height:18px; }
+    .arena-stats { padding:4px 12px; font-size:0.7rem; }
+  }
 </style>
 </head>
 <body>
 <div class="game-container" id="gameContainer">
-  <div class="header"><div class="header-title" id="headerTitle">БОССЫ</div></div>
+  <div class="header">
+    <div class="header-title" id="headerTitle">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="boss-skull-glow">
+        <path d="M12 2C7.6 2 4 5.6 4 10c0 2.4 1 4.5 2.7 5.9V19c0 .6.4 1 1 1h1.3v-2h1.4v2h1.2v-2h1.4v2H14v-2h1.4v2H16.7c.6 0 1-.4 1-1v-3.1C19.4 14.5 20 12.4 20 10c0-4.4-3.6-8-8-8z"/>
+        <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+        <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+        <path d="M12 13.5l-1.2 2.5h2.4z" fill="currentColor"/>
+      </svg>
+      БОССЫ
+    </div>
+  </div>
 
   <div class="score-board" id="scoreBoard">
     <div class="sexpah">🔞 <span id="sexpahCount">0</span> секспахомов</div>
@@ -231,6 +530,17 @@
       <div class="arena-boss-name" id="arenaBossName">МИЛЛИРУТ</div>
       <div class="arena-timer" id="arenaTimer">05:00</div>
     </div>
+
+    <div class="arena-hp">
+      <div class="arena-hp-label">
+<span>🗒️ Прогресс</span>
+        <span id="arenaHpPercent">0%</span>
+      </div>
+      <div class="arena-hp-bar">
+        <div class="arena-hp-fill" id="arenaHpFill"></div>
+      </div>
+    </div>
+
     <div class="arena-field">
       <div class="arena-boss-wrap">
         <div class="boss-hitbox" id="bossHitbox">
@@ -281,6 +591,7 @@
 
 <div class="result-overlay" id="resultOverlay">
   <div class="result-box">
+    <span class="result-medal win" id="resultMedal">🏆</span>
     <div class="result-title" id="resultTitle">ПОБЕДА!</div>
     <div class="result-text" id="resultText"></div>
     <div class="result-reward" id="resultReward">+50 000</div>
@@ -299,8 +610,10 @@
   var arenaBossName=$('arenaBossName'), arenaTimer=$('arenaTimer'), arenaClicks=$('arenaClicks'), arenaLove=$('arenaLove');
   var bossHitbox=$('bossHitbox'), bossFace=$('bossFace'), bossClickPower=$('bossClickPower');
   var exciteBarFill=$('exciteBarFill'), exciteValue=$('exciteValue');
+  var arenaHpFill=$('arenaHpFill'), arenaHpPercent=$('arenaHpPercent');
   var resultOverlay=$('resultOverlay'), resultTitle=$('resultTitle'), resultText=$('resultText');
   var resultReward=$('resultReward'), resultLoot=$('resultLoot'), resultBtn=$('resultBtn');
+  var resultMedal=$('resultMedal');
   var arenaBack=$('arenaBack'), tabsBar=$('tabsBar');
   var bossTabs=$('bossTabs'), tabSrokany=$('tabSrokany'), tabKontr=$('tabKontr');
 
@@ -310,22 +623,19 @@
   try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) { bossInventory = {}; }
 
   var BOSSES = [
-    {
-      id:'kasalapov', name:'Касалапов', face:'🪖', group:'srokany',
+    { id:'kasalapov', name:'Касалапов', face:'🪖', group:'srokany',
       reward:15000, exciteMax:1200, clickPower:3,
       fightDuration:5*60*1000, cooldownDuration:15*60*1000,
       lvl:500,
       loot:[
         {id:'ishmatov_info', name:'Информация по Ишматову', icon:'📋', chance:25},
         {id:'tvn', name:'ТВН', icon:null, image:'Tvn.png', chance:20}
-      ]
-    },
+      ] },
     { id:'dodonov', name:'Додонов', face:'👶', group:'kontrslony',
       reward:25000, exciteMax:1500, clickPower:3,
       fightDuration:5*60*1000, cooldownDuration:15*60*1000,
       lvl:500,
       loot:[{id:'sextoy',name:'Секс игрушка',icon:'🍆',image:'Penis.png',chance:20}] },
-
     { id:'seimur', name:'Сеймур', face:'🦧', image:'Seimur.png', group:'kontrslony',
       reward:25000, exciteMax:1500, clickPower:3,
       fightDuration:5*60*1000, cooldownDuration:15*60*1000,
@@ -334,19 +644,16 @@
         {id:'rotten',name:'Гнилой зубик',icon:'🦷',chance:20},
         {id:'tapik',name:'Тапик',icon:'🩴',chance:5}
       ] },
-
     { id:'millirut', name:'Миллирут', face:'👨‍🦲', group:'kontrslony',
       reward:50000, exciteMax:2000, clickPower:3,
       fightDuration:5*60*1000, cooldownDuration:60*60*1000,
       lvl:500,
       loot:[{id:'ladder',name:'Пиздец дорогая лестница',icon:'🪜',chance:25}] },
-
     { id:'galyamov', name:'Галямов', face:'🧑‍🦲', group:'kontrslony',
       reward:500000, exciteMax:5000, clickPower:3,
       fightDuration:10*60*1000, cooldownDuration:120*60*1000,
       lvl:500,
       loot:[{id:'medphone',name:'Телефон медика',icon:'📱',chance:20}] },
-
     { id:'gorin', name:'Горин', face:'👨‍🦲', group:'kontrslony',
       reward:1000000, exciteMax:10000, clickPower:3,
       fightDuration:15*60*1000, cooldownDuration:180*60*1000,
@@ -380,7 +687,10 @@
     }
     saveState();
   }
-  function saveState() { try { localStorage.setItem(STATE_KEY, JSON.stringify(bossState)); } catch(e) {} }
+  function saveState() {
+    try { localStorage.setItem(STATE_KEY, JSON.stringify(bossState)); } catch(e) {}
+    try { if (window.tgSyncSave) window.tgSyncSave(true); } catch(e) {}
+  }
 
   var currentBoss=null, fightInterval=null, tickerInterval=null, isFightActive=false, lastClick=0, lastSave=0, cardRefs={};
 
@@ -465,20 +775,31 @@
         }).join('');
         var lootBlockHTML = '<span class="boss-loot">' + lootLinesHTML + '</span>';
 
-        card.innerHTML = '<div class="boss-avatar">'+avatarHTML+'</div>' +
-          '<div class="boss-info"><div class="boss-name">'+boss.name+'</div>' +
-          '<div class="boss-meta">' +
-            '<span class="boss-reward">💰 '+fmt(boss.reward)+' секспахомов</span>' +
-            '<span class="boss-lvl">🌟'+boss.lvl+'</span>' +
-            '<span>🎯 Перевозбуждение: '+fmt(boss.exciteMax)+'</span>' +
-            '<span>⏳ КД: '+fmtTime(boss.cooldownDuration)+'</span>' +
-            lootBlockHTML +
-            '<span class="boss-timer">—</span>' +
-          '</div></div>' +
+        card.innerHTML =
+          '<div class="boss-avatar-wrap">' +
+            '<div class="boss-avatar-ring"></div>' +
+            '<div class="boss-avatar">' + avatarHTML + '</div>' +
+          '</div>' +
+          '<div class="boss-info">' +
+            '<div class="boss-name">' + boss.name + '</div>' +
+            '<div class="boss-meta">' +
+              '<span class="boss-reward">💰 ' + fmt(boss.reward) + ' секспахомов</span>' +
+              '<span class="boss-lvl">🌟 ' + boss.lvl + '</span>' +
+              lootBlockHTML +
+              '<span class="boss-timer">—</span>' +
+            '</div>' +
+            '<div class="boss-hp-bar"><div class="boss-hp-fill"></div></div>' +
+          '</div>' +
           '<div class="boss-status">—</div>';
+
         card.addEventListener('click', function(){ onCard(boss); });
         bossList.appendChild(card);
-        cardRefs[boss.id] = { card:card, timer:card.querySelector('.boss-timer'), status:card.querySelector('.boss-status') };
+        cardRefs[boss.id] = {
+          card: card,
+          timer: card.querySelector('.boss-timer'),
+          status: card.querySelector('.boss-status'),
+          hpFill: card.querySelector('.boss-hp-fill')
+        };
       })(list[i]);
     }
   }
@@ -499,6 +820,7 @@
         ref.status.textContent = 'В БОЮ';
         var pct = Math.floor((st.fight.excite/boss.exciteMax)*100);
         ref.timer.textContent = 'Прогресс ' + pct + '% · ' + fmtTime(st.fight.endAt - now);
+        if (ref.hpFill) ref.hpFill.style.width = pct + '%';
       } else if (otherInProgress) {
         ref.card.classList.add('locked');
         ref.status.className = 'boss-status cooldown';
@@ -534,7 +856,10 @@
     for (var i=0;i<BOSSES.length;i++) { if (BOSSES[i].id !== boss.id && getSt(BOSSES[i].id).fight) return; }
     if (st.cooldownUntil > now) return;
     if (st.fight && st.fight.endAt && st.fight.endAt <= now) st.fight = null;
-    if (!st.fight) { st.fight = { endAt: now + boss.fightDuration, clicks:0, damage:0, excite:0, startedAt: now }; saveState(); }
+    if (!st.fight) {
+      st.fight = { endAt: now + boss.fightDuration, clicks:0, damage:0, excite:0, startedAt: now };
+      saveState();
+    }
 
     currentBoss = boss; isFightActive = true; lastClick = 0; lastSave = 0;
     bossList.style.display = 'none';
@@ -575,6 +900,8 @@
     if (!st.fight) return;
     var pct = Math.min(100, (st.fight.excite/currentBoss.exciteMax)*100);
     exciteBarFill.style.width = pct + '%';
+    if (arenaHpFill) arenaHpFill.style.width = pct + '%';
+    if (arenaHpPercent) arenaHpPercent.textContent = Math.round(pct) + '%';
   }
   function updateHitbox() {
     if (!currentBoss) return;
@@ -612,7 +939,10 @@
     st.fight.clicks++; st.fight.damage += power; st.fight.excite += power;
     if (st.fight.excite >= currentBoss.exciteMax) st.fight.excite = currentBoss.exciteMax;
 
-    if (now - lastSave > 300) { lastSave = now; saveState(); }
+    if (now - lastSave > 3000) {
+      lastSave = now;
+      saveState();
+    }
 
     arenaClicks.textContent = String(st.fight.clicks);
     arenaLove.textContent = String(Math.floor(st.fight.damage));
@@ -750,6 +1080,8 @@
     headerTitle.textContent = 'БОССЫ';
     bossHitbox.classList.remove('hot', 'critical', 'shake', 'blowup');
     exciteBarFill.style.width = '0%';
+    if (arenaHpFill) arenaHpFill.style.width = '0%';
+    if (arenaHpPercent) arenaHpPercent.textContent = '0%';
     arenaClicks.textContent = '0';
     arenaLove.textContent = '0';
     arenaTimer.textContent = '00:00';
@@ -829,9 +1161,12 @@
   function showResult(win, reward, lvl, lootArr) {
     resultTitle.textContent = win ? 'ПОБЕДА!' : 'ПОРАЖЕНИЕ';
     resultTitle.className = 'result-title ' + (win ? 'win' : 'lose');
+    resultMedal.textContent = win ? '🏆' : '💀';
+    resultMedal.className = 'result-medal ' + (win ? 'win' : 'lose');
+
     if (win) {
       resultText.textContent = 'Ты завалил босса!';
-      resultReward.innerHTML = '+' + fmt(reward) + ' секспахомов<br>🌟' + lvl;
+      resultReward.innerHTML = '+' + fmt(reward) + ' секспахомов<br>🌟 ' + lvl;
       resultReward.style.display = 'block';
       if (lootArr && lootArr.length) {
         var html = lootArr.map(function(l) {
@@ -855,7 +1190,6 @@
     if (tickerInterval) clearInterval(tickerInterval);
     tickerInterval = setInterval(function() {
       if (bossList.style.display !== 'none') refreshList();
-      if (isFightActive) saveState();
       sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
       updateScore();
     }, 1000);
@@ -885,14 +1219,22 @@
   tabSrokany.addEventListener('click', function(){ switchBossGroup('srokany'); });
   tabKontr.addEventListener('click', function(){ switchBossGroup('kontrslony'); });
 
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden && isFightActive) saveState();
+  });
+  window.addEventListener('pagehide', function() {
+    if (isFightActive) saveState();
+  });
+  window.addEventListener('beforeunload', function() {
+    if (isFightActive) saveState();
+  });
+
   function init() {
     updateScore(); loadState(); buildList(); refreshList();
     bossHitbox.addEventListener('click', hitBoss);
     bossHitbox.addEventListener('touchstart', function(e){ e.preventDefault(); hitBoss(); }, { passive:false });
     arenaBack.addEventListener('click', exitToBossList);
     resultBtn.addEventListener('click', closeResult);
-    window.addEventListener('beforeunload', function(){ if (isFightActive) saveState(); });
-    document.addEventListener('visibilitychange', function(){ if (document.hidden && isFightActive) saveState(); });
     startTicker(); autoEnter();
 
     if (window.tgSyncReady) {
