@@ -36,6 +36,7 @@
 
   .hidden { display:none !important; }
 
+  /* ==== ТАБЫ БОССОВ ==== */
   .boss-tabs {
     display: flex;
     gap: 8px;
@@ -54,7 +55,7 @@
     cursor: pointer;
     font-weight: 700;
     font-size: 0.8rem;
-    transition: all 0.3s;
+    transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
     letter-spacing: 1px;
     text-transform: uppercase;
     white-space: nowrap;
@@ -154,11 +155,26 @@
 
   .tabs-bar { display:flex; justify-content:space-around; align-items:center; padding:0 30px 80px; padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px)); flex-shrink:0; z-index:20; gap:10px; }
   .tabs-bar.hidden { display:none; }
-  .tab-btn { background:transparent; border:none; cursor:pointer; color:#8a7a5a; opacity:0.6; padding:5px; text-decoration:none; display:flex; align-items:center; justify-content:center; transition:all 0.3s ease; }
-  .tab-btn.active { opacity:1; color:#c4b08a; transform:scale(1.1); filter:drop-shadow(0 0 8px rgba(180,150,90,0.6)); }
-  .tab-btn svg { width:28px; height:28px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
+  .tab-btn { background:transparent; border:none; cursor:pointer; color:#8a7a5a; opacity:0.6; padding:5px; text-decoration:none; display:flex; align-items:center; justify-content:center; transition:all 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
+  .tab-btn.active { opacity:1; color:#c4b08a; transform:scale(1.12); filter:drop-shadow(0 0 10px rgba(180,150,90,0.7)); }
+  .tab-btn:hover { opacity:0.95; transform:scale(1.08); }
+  .tab-btn:active { transform:scale(0.93); }
+  .tab-btn svg { width:28px; height:28px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8)); transition:filter 0.55s cubic-bezier(0.22, 1, 0.36, 1), transform 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
   .tab-btn.home-btn svg { width:36px; height:36px; }
   .tab-btn.boss-btn svg { width:30px; height:30px; }
+
+  .tab-btn.boss-btn:hover svg { filter:drop-shadow(0 0 10px rgba(200,60,60,0.9)); transform:scale(1.15); }
+  .tab-btn.boss-btn:hover { color:#c0392b; }
+
+  .tab-btn.rating-btn:hover svg {
+    filter: drop-shadow(0 0 12px rgba(255, 215, 107, 1));
+    transform: scale(1.15);
+  }
+  .tab-btn.rating-btn:hover { color: #ffd76b; }
+  .tab-btn.rating-btn.active svg {
+    filter: drop-shadow(0 0 10px rgba(255, 215, 107, 0.9));
+  }
+
   .boss-skull-glow { animation:skullGlow 3s ease-in-out infinite; transform-origin:center; }
   @keyframes skullGlow { 0%,100% { filter:drop-shadow(0 0 3px rgba(200,60,60,0.4)); } 50% { filter:drop-shadow(0 0 12px rgba(200,60,60,1)); } }
 
@@ -242,11 +258,20 @@
         <path d="M12 13.5l-1.2 2.5h2.4z" fill="currentColor"/>
       </svg>
     </a>
-    <a href="seks.html" class="tab-btn" title="Магазин">
+    <a href="seks.html#shop" class="tab-btn" title="Магазин">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
     </a>
     <a href="seks.html" class="tab-btn home-btn" title="Главная">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </a>
+    <a href="rating.html" class="tab-btn rating-btn" title="Рейтинг">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 21h8"/>
+        <path d="M12 17v4"/>
+        <path d="M7 4h10v5a5 5 0 01-10 0V4z"/>
+        <path d="M17 5h2a2 2 0 012 2v1a3 3 0 01-3 3"/>
+        <path d="M7 5H5a2 2 0 00-2 2v1a3 3 0 003 3"/>
+      </svg>
     </a>
     <a href="prof.html" class="tab-btn" title="Профиль">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -748,7 +773,6 @@
       updateScore();
       bumpEl(sexpahBox);
 
-      // === ВЫСЛУГА +500 (пишем в exp игрока) ===
       try {
         var exp = parseInt(localStorage.getItem('pahomPlayerExp') || '0', 10) || 0;
         var lv = parseInt(localStorage.getItem('pahomPlayerLevel') || '1', 10) || 1;

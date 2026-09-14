@@ -184,6 +184,15 @@
             letter-spacing: 1px;
             margin-bottom: 14px;
         }
+        .profile-server-id {
+            font-size: 0.7rem;
+            color: #6a4a9a;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+            margin-top: -12px;
+            margin-bottom: 14px;
+            opacity: 0.85;
+        }
 
         /* ==== БЛОК ВЫСЛУГИ ==== */
         .player-level-block {
@@ -429,7 +438,7 @@
             cursor: pointer;
             color: var(--accent);
             opacity: 0.6;
-            transition: all 0.3s;
+            transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
             padding: 5px;
             text-decoration: none;
             display: flex;
@@ -440,13 +449,17 @@
         .tab-btn.active {
             opacity: 1;
             color: var(--text);
-            transform: scale(1.1);
-            filter: drop-shadow(0 0 8px rgba(180,150,90,0.6));
+            transform: scale(1.12);
+            filter: drop-shadow(0 0 10px rgba(180,150,90,0.7));
         }
+        .tab-btn:hover { opacity: 0.95; transform: scale(1.08); }
+        .tab-btn:active { transform: scale(0.93); }
         .tab-btn svg {
             width: 28px;
             height: 28px;
             filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+            transition: filter 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+                        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .tab-btn.home-btn svg { width: 36px; height: 36px; }
         .tab-btn.boss-btn svg { width: 30px; height: 30px; }
@@ -455,6 +468,16 @@
             transform: scale(1.15);
         }
         .tab-btn.boss-btn:hover { color: #c0392b; }
+
+        .tab-btn.rating-btn:hover svg {
+            filter: drop-shadow(0 0 12px rgba(255, 215, 107, 1));
+            transform: scale(1.15);
+        }
+        .tab-btn.rating-btn:hover { color: #ffd76b; }
+        .tab-btn.rating-btn.active svg {
+            filter: drop-shadow(0 0 10px rgba(255, 215, 107, 0.9));
+        }
+
         .boss-skull-glow {
             animation: skullGlow 3s ease-in-out infinite;
             transform-origin: center;
@@ -711,7 +734,6 @@
     </style>
 </head>
 <body>
-    <!-- Скрипты синхронизации — ДО основного кода, чтобы tgSyncReady был доступен -->
     <script src="income.js"></script>
 
     <div class="loading-screen" id="loadingScreen">
@@ -759,7 +781,6 @@
         </div>
     </div>
 
-    <!-- Статистика: только прокачки -->
     <div id="statsModal" class="settings-overlay">
         <div class="settings-box stats-box">
             <div class="settings-title">ПРОКАЧКИ</div>
@@ -812,10 +833,9 @@
                 <div class="profile-avatar" id="profileAvatar">👤</div>
             </div>
             <div class="profile-nickname" id="profileNickname">Игрок</div>
-<div class="profile-ip" id="profileIP">0.0.0.0</div>
-            <div class="profile-ip" id="profileServerID" style="color:#6a4a9a;font-size:0.7rem;margin-top:2px;">ID: ...</div>
+            <div class="profile-ip" id="profileIP">0.0.0.0</div>
+            <div class="profile-server-id" id="profileServerID">ID: ...</div>
 
-            <!-- Выслуга и опыт -->
             <div class="player-level-block">
                 <div class="player-level">Выслуга <span id="playerLevel">1</span> лет</div>
                 <div class="exp-bar-bg">
@@ -824,7 +844,6 @@
                 <div class="exp-text">Прославился на всю дивизию: <span id="expCurrent">0</span> / <span id="expRequired">1200</span></div>
             </div>
 
-            <!-- БОЕВАЯ СЛАВА (боссы) -->
             <div class="battle-glory-title">
                 ⚔️ Боевая слава
             </div>
@@ -846,7 +865,6 @@
                 </div>
             </div>
 
-            <!-- Основные статы -->
             <div class="profile-stats">
                 <div class="stat-item">
                     <span class="stat-item-label"><span class="icon">👆</span> Кликов всего</span>
@@ -872,11 +890,20 @@
                     <path d="M12 13.5l-1.2 2.5h2.4z" fill="currentColor"/>
                 </svg>
             </a>
-            <a href="seks.html" class="tab-btn" title="Магазин">
+            <a href="seks.html#shop" class="tab-btn" title="Магазин">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
             </a>
             <a href="seks.html" class="tab-btn home-btn" title="Главная">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            </a>
+            <a href="rating.html" class="tab-btn rating-btn" title="Рейтинг">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 21h8"/>
+                    <path d="M12 17v4"/>
+                    <path d="M7 4h10v5a5 5 0 01-10 0V4z"/>
+                    <path d="M17 5h2a2 2 0 012 2v1a3 3 0 01-3 3"/>
+                    <path d="M7 5H5a2 2 0 00-2 2v1a3 3 0 003 3"/>
+                </svg>
             </a>
             <a href="prof.html" class="tab-btn active" title="Профиль">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -910,6 +937,7 @@
             const closeStats = $('closeStats');
             const profileNickname = $('profileNickname');
             const profileIP = $('profileIP');
+            const profileServerID = $('profileServerID');
             const profileAvatar = $('profileAvatar');
             const totalClicksSpan = $('totalClicks');
             const profileSexpah = $('profileSexpah');
@@ -943,6 +971,12 @@
                 return Number(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
             }
 
+            function updateServerID() {
+                if (!profileServerID) return;
+                var sid = window.tgSyncUserId || '—';
+                profileServerID.textContent = 'ID: ' + sid;
+            }
+
             function updateProfile() {
                 const totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0', 10) || 0;
                 const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
@@ -973,7 +1007,6 @@
                     profileAvatar.textContent = '👤';
                 }
 
-                // Стата боссов
                 let bossStats = { wins: 0, losses: 0, earned: 0 };
                 try {
                     const raw = JSON.parse(localStorage.getItem('pahomBossStats') || 'null');
@@ -984,6 +1017,8 @@
                 bossWinsEl.textContent = formatNumber(bossStats.wins);
                 bossLossesEl.textContent = formatNumber(bossStats.losses);
                 bossEarnedEl.textContent = formatNumber(bossStats.earned);
+
+                updateServerID();
             }
 
             function renderSegments(containerId, current, max) {
@@ -1176,18 +1211,18 @@
 
             setInterval(updateProfile, 1500);
 
-            // === TELEGRAM SYNC ===
-            // Скрипт telegram-sync.js уже загружен выше, так что tgSyncReady доступен сразу
+            // === SERVER SYNC ===
             if (window.tgSyncReady) {
                 window.tgSyncLoad(function(loaded) {
                     if (loaded) {
                         updateProfile();
                         if (typeof updateStatsPanel === 'function') updateStatsPanel();
                     }
+                    updateServerID();
                 });
             }
         })();
     </script>
-<script src="server-sync.js"></script>
+    <script src="server-sync.js"></script>
 </body>
 </html>

@@ -1,1810 +1,1958 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ГЛАВНАЯ — кликер Пахома</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-
-        :root {
-            --bg: #0a0a0a;
-            --panel: #1a1a1a;
-            --border: #4a4a2a;
-            --text: #c4b08a;
-            --accent: #8a7a5a;
-            --gold: #b8962e;
-            --red: #c0392b;
-        }
-
-        body {
-            background: #0a0a0a;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            touch-action: manipulation;
-            overflow: hidden;
-        }
-
-        .game-container {
-            background-color: #1a1a1a;
-            background-image: 
-                linear-gradient(rgba(10,10,10,0.82), rgba(10,10,10,0.92)),
-                url('Fon.jpeg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            opacity: 0;
-            animation: containerFadeIn 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.05s forwards;
-        }
-        @keyframes containerFadeIn {
-            0%   { opacity: 0; transform: scale(0.985); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        .header {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 10px 15px;
-            flex-shrink: 0;
-            border-bottom: 1px solid var(--border);
-            background: rgba(42, 42, 26, 0.7);
-            backdrop-filter: blur(4px);
-            z-index: 10;
-            position: relative;
-            min-height: 52px;
-        }
-
-        .header-title {
-            font-size: 1.2rem;
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: var(--text);
-            text-transform: uppercase;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-        }
-
-        .sound-btn {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, rgba(60, 50, 20, 0.6), rgba(40, 35, 15, 0.4));
-            border: 1px solid var(--border);
-            color: var(--gold);
-            cursor: pointer;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                        background 0.35s ease,
-                        border-color 0.35s ease,
-                        box-shadow 0.35s ease;
-            z-index: 20;
-            overflow: hidden;
-        }
-
-        .sound-btn svg {
-            width: 22px;
-            height: 22px;
-            display: block;
-            transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                        opacity 0.35s ease;
-            filter: drop-shadow(0 0 4px rgba(184, 150, 46, 0.5));
-        }
-
-        .sound-btn .sound-slash {
-            stroke-dasharray: 30;
-            stroke-dashoffset: 30;
-            transition: stroke-dashoffset 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        .sound-btn.muted .sound-slash { stroke-dashoffset: 0; }
-        .sound-btn.muted svg { opacity: 0.55; filter: drop-shadow(0 0 3px rgba(120, 120, 120, 0.5)); }
-        .sound-btn.muted { background: rgba(40, 40, 40, 0.5); border-color: rgba(74, 74, 42, 0.5); color: #8a7a5a; }
-        .sound-btn:hover {
-            transform: translateY(-50%) scale(1.08);
-            background: linear-gradient(135deg, rgba(184, 150, 46, 0.25), rgba(139, 105, 20, 0.15));
-            border-color: var(--gold);
-            box-shadow: 0 0 15px rgba(184, 150, 46, 0.4);
-        }
-        .sound-btn:active { transform: translateY(-50%) scale(0.92); }
-        .sound-btn.pulse { animation: soundPulse 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-        @keyframes soundPulse {
-            0% { transform: translateY(-50%) scale(1); }
-            40% { transform: translateY(-50%) scale(1.25); }
-            100% { transform: translateY(-50%) scale(1); }
-        }
-
-        .score-board {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 15px;
-            flex-shrink: 0;
-            border-bottom: 1px solid var(--border);
-            background: rgba(28, 28, 14, 0.6);
-            backdrop-filter: blur(4px);
-            z-index: 10;
-        }
-
-        .sexpah, .current-tool {
-            background: rgba(37, 37, 21, 0.8);
-            padding: 5px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--text);
-            transition: all 0.3s;
-        }
-
-        .current-tool {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: 600;
-            color: #b0a070;
-        }
-
-        .buffs-top {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            padding: 6px 15px;
-            flex-shrink: 0;
-            background: rgba(28, 28, 14, 0.4);
-            backdrop-filter: blur(4px);
-            border-bottom: 1px solid var(--border);
-            transition: all 0.3s;
-        }
-
-        .buffs-top.hidden { display: none; }
-
-        .buff-chip {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            background: rgba(184, 150, 46, 0.15);
-            border: 1px solid var(--gold);
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--gold);
-            font-family: 'Courier New', monospace;
-        }
-
-        .buff-chip .buff-icon { font-size: 1rem; }
-        .buff-chip .buff-timer { letter-spacing: 1px; }
-
-        .content-area {
-            flex: 1;
-            min-height: 0;
-            position: relative;
-            overflow: hidden;
-            perspective: 1200px;
-        }
-
-        .page {
-            display: none;
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            backface-visibility: hidden;
-            transform-style: preserve-3d;
-        }
-
-        .page.active {
-            display: block;
-            animation: pageInRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-        }
-        .page.exit-right { display: block; animation: pageOutRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-        .page.exit-left { display: block; animation: pageOutLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-        .page.active-left { display: block; animation: pageInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-
-        @keyframes pageInRight { 0% { opacity: 0; transform: translateX(100%); } 100% { opacity: 1; transform: translateX(0); } }
-        @keyframes pageOutRight { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(-100%); } }
-        @keyframes pageInLeft { 0% { opacity: 0; transform: translateX(-100%); } 100% { opacity: 1; transform: translateX(0); } }
-        @keyframes pageOutLeft { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(100%); } }
-
-        .main-area {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            gap: 8px;
-            position: relative;
-            padding: 10px;
-        }
-
-        .love-panel { display: flex; flex: 0 0 50px; flex-shrink: 0; }
-
-        .love-scale-vertical {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 8px 6px;
-            width: 100%;
-            background: rgba(30, 30, 14, 0.5);
-            backdrop-filter: blur(4px);
-        }
-
-        .love-vertical-bg {
-            width: 20px;
-            flex: 1;
-            background: #0f0f00;
-            border-radius: 8px;
-            overflow: hidden;
-            display: flex;
-            align-items: flex-end;
-        }
-
-        .love-vertical-fill {
-            width: 100%;
-            height: 0%;
-            background: linear-gradient(0deg, #8b1a1a, #c0392b);
-            transition: height 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            box-shadow: 0 0 15px #c0392b;
-        }
-
-        .love-vertical-label {
-            font-size: 0.7rem;
-            font-weight: 800;
-            color: var(--text);
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            letter-spacing: 1px;
-        }
-
-        .pahom-wrap {
-            position: absolute;
-            left: calc(50% + 10px);
-            top: 50%;
-            transform: translate(-50%, -50%);
-            width: 200px;
-            height: 200px;
-            pointer-events: none;
-        }
-
-        .pahom-hitbox {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            border: 2px solid var(--gold);
-            position: absolute;
-            left: 0;
-            top: 0;
-            box-shadow: 0 0 30px rgba(180, 150, 60, 0.3);
-            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.5s ease, border-color 0.4s;
-            will-change: transform;
-            pointer-events: auto;
-            z-index: 15;
-            background: rgba(30, 20, 15, 0.5);
-            backdrop-filter: blur(3px);
-        }
-
-        .pahom-hitbox.float { animation: floatAnimation 6s ease-in-out infinite; }
-        @keyframes floatAnimation { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-8px) scale(1.02); } }
-        .pahom-hitbox:hover { box-shadow: 0 0 50px rgba(180, 150, 60, 0.6), 0 0 0 3px rgba(140, 110, 60, 0.4); }
-        .pahom-hitbox:active { transform: scale(0.92); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-        .pahom-hitbox.shake { animation: shakeAnimation 0.2s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
-        @keyframes shakeAnimation { 0% { transform: translate(0, 0); } 20% { transform: translate(-2px, 1px); } 40% { transform: translate(2px, -1px); } 60% { transform: translate(-1px, -1px); } 80% { transform: translate(1px, 1px); } 100% { transform: translate(0, 0); } }
-        .pahom-hitbox.blowup { animation: blowupAnimation 4.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
-        @keyframes blowupAnimation { 0% { transform: scale(1); } 6% { transform: scale(1.15); } 13% { transform: scale(1.05); } 20% { transform: scale(1.18); } 27% { transform: scale(1.06); } 34% { transform: scale(1.16); } 41% { transform: scale(1.07); } 48% { transform: scale(1.14); } 55% { transform: scale(1.08); } 62% { transform: scale(1.12); } 69% { transform: scale(1.08); } 76% { transform: scale(1.1); } 83% { transform: scale(1.06); } 90% { transform: scale(1.04); } 100% { transform: scale(1); } }
-
-        .pahom-face {
-            font-size: 5rem;
-            pointer-events: none;
-            animation: glowPulse 3s ease-in-out infinite;
-            transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-        @keyframes glowPulse { 0%, 100% { filter: drop-shadow(0 0 10px rgba(140, 110, 60, 0.6)); } 50% { filter: drop-shadow(0 0 25px rgba(180, 150, 90, 0.9)); } }
-        .pahom-hitbox:active .pahom-face { transform: scale(0.88); transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-
-        .click-power {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: var(--accent);
-            font-size: 0.85rem;
-            font-weight: 700;
-            white-space: nowrap;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-        }
-
-        .cooldown-indicator {
-            text-align: center;
-            padding: 6px;
-            color: #b0a070;
-            font-size: 0.85rem;
-            flex-shrink: 0;
-            background: rgba(30, 30, 14, 0.5);
-            backdrop-filter: blur(4px);
-        }
-
-        .notification {
-            background: #6b1a1a;
-            color: #fff;
-            text-align: center;
-            padding: 8px;
-            flex-shrink: 0;
-            animation: pulseGlow 0.7s infinite alternate;
-        }
-        @keyframes pulseGlow { from { box-shadow: 0 0 15px #c0392b; } to { box-shadow: 0 0 35px #e67e22; } }
-
-        .flying-emoji {
-            position: fixed;
-            font-size: 2rem;
-            pointer-events: none;
-            z-index: 100;
-            transform: translate(-50%, -50%);
-            will-change: transform, opacity;
-        }
-
-        .hidden { display: none !important; }
-
-        .tabs-bar {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 0 30px 80px;
-            flex-shrink: 0;
-            background: transparent;
-            border-top: none;
-            z-index: 20;
-            gap: 10px;
-        }
-
-        .tab-btn {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: var(--accent);
-            opacity: 0.6;
-            transition: all 0.3s;
-            padding: 5px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .tab-btn.active {
-            opacity: 1;
-            color: var(--text);
-            transform: scale(1.1);
-            filter: drop-shadow(0 0 8px rgba(180, 150, 90, 0.6));
-        }
-
-        .tab-btn svg { width: 28px; height: 28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
-        .tab-btn.home-btn svg { width: 36px; height: 36px; }
-        .tab-btn.boss-btn svg { width: 30px; height: 30px; }
-
-        .tab-btn.boss-btn:hover svg { filter: drop-shadow(0 0 10px rgba(200, 60, 60, 0.9)); transform: scale(1.15); }
-        .tab-btn.boss-btn:hover { color: #c0392b; }
-
-        .boss-skull-glow { animation: skullGlow 3s ease-in-out infinite; transform-origin: center; }
-        @keyframes skullGlow { 0%, 100% { filter: drop-shadow(0 0 3px rgba(200, 60, 60, 0.4)); } 50% { filter: drop-shadow(0 0 9px rgba(200, 60, 60, 0.9)); } }
-
-        .tab-btn.boss-btn { animation: bossIconAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-        @keyframes bossIconAppear { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 0.6; transform: scale(1); } }
-
-        .shop-tabs { display: flex; gap: 8px; padding: 10px; flex-shrink: 0; }
-
-        .shop-tab {
-            flex: 1;
-            background: rgba(30, 30, 14, 0.6);
-            backdrop-filter: blur(4px);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.8rem;
-            transition: all 0.3s;
-        }
-
-        .shop-tab.active { border-color: var(--gold); background: rgba(184, 150, 46, 0.25); }
-
-        .shop-content-area {
-            flex: 1;
-            min-height: 0;
-            position: relative;
-            overflow: hidden;
-            perspective: 1200px;
-        }
-
-        .shop-page {
-            display: none;
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-            backface-visibility: hidden;
-            transform-style: preserve-3d;
-        }
-
-        .shop-page.active { display: block; animation: pageInRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-        .shop-page.exit-left { display: block; animation: pageOutLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-        .shop-page.exit-right { display: block; animation: pageOutRight 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-        .shop-page.enter-left { display: block; animation: pageInLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
-
-        .shop-panel {
-            padding: 10px;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            height: 100%;
-            max-height: 100%;
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
-        }
-
-        .shop-panel::-webkit-scrollbar { width: 6px; }
-        .shop-panel::-webkit-scrollbar-track { background: transparent; }
-        .shop-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-
-        .shop-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 10px 12px;
-            margin-bottom: 8px;
-            background: rgba(30, 30, 14, 0.6);
-            backdrop-filter: blur(4px);
-            transition: all 0.4s;
-            cursor: pointer;
-        }
-
-        .shop-item:hover { border-color: #6a6a3a; transform: translateX(4px); background: rgba(45, 45, 26, 0.7); }
-        .shop-item:active { transform: scale(0.98); }
-        .shop-item.selected { border-color: var(--gold); background: rgba(184, 150, 46, 0.2); }
-        .shop-item.locked { opacity: 0.45; cursor: not-allowed; }
-        .shop-item.locked:hover { transform: none; border-color: var(--border); background: rgba(30, 30, 14, 0.6); }
-
-        .shop-item-info { display: flex; align-items: center; gap: 10px; flex: 1; }
-        .item-info { flex: 1; }
-        .item-name { font-weight: 700; font-size: 1rem; color: var(--text); }
-        .item-desc { font-size: 0.75rem; color: #b0a070; }
-
-        .inventory-panel { padding: 10px; overflow-y: auto; -webkit-overflow-scrolling: touch; height: 100%; }
-
-        .inventory-title {
-            color: var(--text);
-            font-size: 0.9rem;
-            font-weight: 800;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 15px;
-            text-align: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 8px;
-        }
-
-        .kraft-btn {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            padding: 12px 14px;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, rgba(184, 150, 46, 0.22), rgba(139, 105, 20, 0.15));
-            border: 2px solid var(--gold);
-            border-radius: 8px;
-            color: var(--gold);
-            text-decoration: none;
-            font-weight: 800;
-            font-size: 1rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            cursor: pointer;
-        }
-
-        .kraft-btn:hover { background: linear-gradient(135deg, rgba(184, 150, 46, 0.35), rgba(139, 105, 20, 0.25)); box-shadow: 0 0 25px rgba(184, 150, 46, 0.6); transform: translateY(-2px); }
-        .kraft-btn:active { transform: translateY(0) scale(0.98); }
-        .kraft-btn-icon { font-size: 1.6rem; filter: drop-shadow(0 0 8px rgba(184, 150, 46, 0.7)); flex-shrink: 0; }
-        .kraft-btn-text { flex: 1; color: var(--gold); }
-        .kraft-btn-arrow { font-size: 1.2rem; opacity: 0.7; transition: transform 0.3s ease; }
-        .kraft-btn:hover .kraft-btn-arrow { transform: translateX(4px); opacity: 1; }
-
-        .inventory-section { margin-bottom: 20px; }
-        .inventory-section-title { font-size: 0.75rem; font-weight: 800; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; padding-left: 5px; opacity: 0.8; }
-
-        .inventory-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            border: 1px solid var(--gold);
-            border-radius: 6px;
-            padding: 12px;
-            margin-bottom: 8px;
-            background: rgba(184, 150, 46, 0.15);
-            backdrop-filter: blur(4px);
-        }
-
-        .inventory-item-info { display: flex; align-items: center; gap: 10px; flex: 1; }
-
-        .inventory-item-icon {
-            font-size: 1.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 1.8rem;
-            min-height: 1.8rem;
-        }
-        .inventory-item-icon img { width: 2rem; height: 2rem; object-fit: contain; vertical-align: middle; }
-
-        .inventory-item-name { font-weight: 700; font-size: 0.95rem; color: var(--gold); }
-        .inventory-item-count { font-size: 1.2rem; font-weight: 800; color: var(--text); font-family: 'Courier New', monospace; letter-spacing: 1px; }
-        .inventory-item-count.max { color: #ff8c3c; text-shadow: 0 0 10px rgba(255, 140, 60, 0.7); }
-        .inventory-empty { text-align: center; color: var(--accent); font-size: 0.9rem; padding: 20px; }
-
-        .float-text {
-            position: fixed;
-            pointer-events: none;
-            font-weight: 800;
-            font-size: 1.2rem;
-            color: var(--gold);
-            text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(184,150,46,0.6);
-            z-index: 200;
-            white-space: nowrap;
-            transform: translate(-50%, -50%);
-        }
-
-        .combo-counter {
-            position: fixed;
-            top: 160px;
-            left: 50%;
-            transform: translateX(-50%) scale(0.6);
-            font-size: 2.2rem;
-            font-weight: 900;
-            color: var(--gold);
-            text-shadow: 0 3px 6px rgba(0,0,0,0.9), 0 0 20px rgba(184,150,46,0.8);
-            opacity: 0;
-            pointer-events: none;
-            z-index: 150;
-            transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), color 0.3s;
-            letter-spacing: 2px;
-        }
-        .combo-counter.show { opacity: 1; transform: translateX(-50%) scale(1); }
-        .combo-counter.hot { color: #ff6a3b; text-shadow: 0 3px 6px rgba(0,0,0,0.9), 0 0 28px rgba(255,106,59,0.9); }
-        .combo-counter.pulse { animation: comboPulse 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-        @keyframes comboPulse { 0% { transform: translateX(-50%) scale(1); } 40% { transform: translateX(-50%) scale(1.28); } 100% { transform: translateX(-50%) scale(1); } }
-
-        .combo-bar {
-            position: fixed;
-            top: 0; left: 0;
-            height: 4px; width: 0%;
-            background: linear-gradient(90deg, #8b1a1a, var(--gold));
-            box-shadow: 0 0 12px rgba(184,150,46,0.8);
-            z-index: 300;
-            transition: width 0.12s linear, opacity 0.3s;
-            opacity: 0;
-        }
-        .combo-bar.show { opacity: 1; }
-
-        .click-ripple {
-            position: fixed;
-            border-radius: 50%;
-            border: 2px solid var(--gold);
-            pointer-events: none;
-            z-index: 90;
-            transform: translate(-50%, -50%);
-            opacity: 0.9;
-        }
-
-        .combo-bonus {
-            position: fixed;
-            top: 210px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-10px);
-            font-size: 1rem;
-            font-weight: 800;
-            color: #ff8c3c;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 14px rgba(255,140,60,0.7);
-            opacity: 0;
-            pointer-events: none;
-            z-index: 150;
-            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            letter-spacing: 1px;
-            white-space: nowrap;
-        }
-        .combo-bonus.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-        .pahom-hitbox.combo-hot { box-shadow: 0 0 60px rgba(255,140,60,0.7), 0 0 0 4px rgba(255,140,60,0.3); border-color: #ff8c3c; }
-        .pahom-hitbox.combo-max { box-shadow: 0 0 80px rgba(255,60,60,0.9), 0 0 0 6px rgba(255,60,60,0.4); border-color: #ff3b3b; animation: maxComboPulse 0.8s ease-in-out infinite; }
-        @keyframes maxComboPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
-
-        @media (max-width: 400px) {
-            .pahom-hitbox { width: 170px; height: 170px; }
-            .pahom-wrap { width: 170px; height: 170px; }
-            .pahom-face { font-size: 4rem; }
-            .combo-counter { font-size: 1.8rem; }
-            .combo-bonus { font-size: 0.9rem; top: 200px; }
-            .tabs-bar { padding: 0 15px 80px; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>ГЛАВНАЯ — кликер Пахома</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
+
+:root {
+  --bg: #0a0a0a;
+  --panel: #1a1a1a;
+  --border: #4a4a2a;
+  --text: #c4b08a;
+  --accent: #8a7a5a;
+  --gold: #b8962e;
+  --red: #c0392b;
+}
+
+body {
+  background: #0a0a0a;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+
+.game-container {
+  background-color: #1a1a1a;
+  background-image:
+    linear-gradient(rgba(10,10,10,0.82), rgba(10,10,10,0.92)),
+    url('Fon.jpeg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  opacity: 0;
+  animation: containerFadeIn 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.05s forwards;
+}
+@keyframes containerFadeIn {
+  0%   { opacity: 0; transform: scale(0.985); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 15px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: rgba(42, 42, 26, 0.85);
+  z-index: 10;
+  position: relative;
+  min-height: 52px;
+}
+
+.header-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: var(--text);
+  text-transform: uppercase;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  transition: text-shadow 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.header:hover .header-title {
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 18px rgba(184, 150, 46, 0.55);
+}
+
+.sound-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(60, 50, 20, 0.6), rgba(40, 35, 15, 0.4));
+  border: 1px solid var(--border);
+  color: var(--gold);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              background 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.sound-btn svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  filter: drop-shadow(0 0 4px rgba(184, 150, 46, 0.5));
+}
+
+.sound-btn .sound-slash {
+  stroke-dasharray: 30;
+  stroke-dashoffset: 30;
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sound-btn.muted .sound-slash { stroke-dashoffset: 0; }
+.sound-btn.muted svg { opacity: 0.55; filter: drop-shadow(0 0 3px rgba(120, 120, 120, 0.5)); }
+.sound-btn.muted { background: rgba(40, 40, 40, 0.5); border-color: rgba(74, 74, 42, 0.5); color: #8a7a5a; }
+.sound-btn:hover {
+  transform: translateY(-50%) scale(1.12);
+  background: linear-gradient(135deg, rgba(184, 150, 46, 0.25), rgba(139, 105, 20, 0.15));
+  border-color: var(--gold);
+  box-shadow: 0 0 22px rgba(184, 150, 46, 0.5);
+}
+.sound-btn:active { transform: translateY(-50%) scale(0.94); }
+.sound-btn.pulse { animation: soundPulse 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes soundPulse {
+  0% { transform: translateY(-50%) scale(1); }
+  40% { transform: translateY(-50%) scale(1.22); }
+  100% { transform: translateY(-50%) scale(1); }
+}
+
+.score-board {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 15px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: rgba(28, 28, 14, 0.85);
+  z-index: 10;
+}
+
+.sexpah, .current-tool {
+  background: rgba(37, 37, 21, 0.8);
+  padding: 5px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sexpah:hover, .current-tool:hover {
+  border-color: rgba(184, 150, 46, 0.55);
+  box-shadow: 0 0 15px rgba(184, 150, 46, 0.2);
+}
+
+.current-tool {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  color: #b0a070;
+}
+.current-tool span {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.buffs-top {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 15px;
+  flex-shrink: 0;
+  background: rgba(28, 28, 14, 0.7);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.buffs-top.hidden { display: none; }
+
+.buff-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(184, 150, 46, 0.15);
+  border: 1px solid var(--gold);
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gold);
+  font-family: 'Courier New', monospace;
+  transition: box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 0 8px rgba(184, 150, 46, 0.4);
+}
+.buff-chip .buff-icon { font-size: 1rem; }
+.buff-chip .buff-timer { letter-spacing: 1px; }
+
+.content-area {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.page {
+  display: none;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.page.active {
+  display: block;
+  animation: pageInRight 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.page.exit-right { display: block; animation: pageOutRight 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.page.exit-left { display: block; animation: pageOutLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.page.active-left { display: block; animation: pageInLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+@keyframes pageInRight { 0% { opacity: 0; transform: translateX(100%); } 100% { opacity: 1; transform: translateX(0); } }
+@keyframes pageOutRight { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(-100%); } }
+@keyframes pageInLeft { 0% { opacity: 0; transform: translateX(-100%); } 100% { opacity: 1; transform: translateX(0); } }
+@keyframes pageOutLeft { 0% { opacity: 1; transform: translateX(0); } 100% { opacity: 0; transform: translateX(100%); } }
+
+.main-area {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  gap: 8px;
+  position: relative;
+  padding: 10px;
+}
+
+.love-panel { display: flex; flex: 0 0 50px; flex-shrink: 0; }
+
+.love-scale-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 6px;
+  width: 100%;
+  background: rgba(30, 30, 14, 0.7);
+  transition: box-shadow 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.love-scale-vertical:hover {
+  box-shadow: 0 0 20px rgba(192, 57, 43, 0.35);
+  border-color: rgba(192, 57, 43, 0.55);
+}
+
+.love-vertical-bg {
+  width: 20px;
+  flex: 1;
+  background: #0f0f00;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.love-vertical-fill {
+  width: 100%;
+  height: 0%;
+  background: linear-gradient(0deg, #8b1a1a, #c0392b);
+  transition: height 1s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 0 15px #c0392b;
+}
+
+.love-vertical-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  letter-spacing: 1px;
+}
+
+.pahom-wrap {
+  position: absolute;
+  left: calc(50% + 10px);
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+}
+
+.pahom-hitbox {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border: 2px solid var(--gold);
+  position: absolute;
+  left: 0;
+  top: 0;
+  box-shadow: 0 0 30px rgba(180, 150, 60, 0.3);
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+  pointer-events: auto;
+  z-index: 15;
+  background: rgba(30, 20, 15, 0.7);
+}
+
+.pahom-hitbox.float { animation: floatAnimation 7s ease-in-out infinite; }
+@keyframes floatAnimation {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%      { transform: translateY(-10px) scale(1.03); }
+}
+
+.pahom-hitbox:hover {
+  box-shadow: 0 0 70px rgba(180, 150, 60, 0.7), 0 0 0 4px rgba(140, 110, 60, 0.35);
+  border-color: #ffd76b;
+}
+.pahom-hitbox:active {
+  transform: scale(0.93);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pahom-hitbox.shake { animation: shakeAnimation 0.25s cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+@keyframes shakeAnimation {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(2px, -1px); }
+  60% { transform: translate(-1px, -1px); }
+  80% { transform: translate(1px, 1px); }
+  100% { transform: translate(0, 0); }
+}
+.pahom-hitbox.blowup { animation: blowupAnimation 4.5s cubic-bezier(0.45, 0.05, 0.55, 0.95) forwards; }
+@keyframes blowupAnimation {
+  0% { transform: scale(1); }
+  6% { transform: scale(1.15); }
+  13% { transform: scale(1.05); }
+  20% { transform: scale(1.18); }
+  27% { transform: scale(1.06); }
+  34% { transform: scale(1.16); }
+  41% { transform: scale(1.07); }
+  48% { transform: scale(1.14); }
+  55% { transform: scale(1.08); }
+  62% { transform: scale(1.12); }
+  69% { transform: scale(1.08); }
+  76% { transform: scale(1.1); }
+  83% { transform: scale(1.06); }
+  90% { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+.pahom-face {
+  font-size: 5rem;
+  pointer-events: none;
+  animation: glowPulse 3.5s ease-in-out infinite;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes glowPulse {
+  0%, 100% { filter: drop-shadow(0 0 12px rgba(140, 110, 60, 0.6)); }
+  50%      { filter: drop-shadow(0 0 30px rgba(180, 150, 90, 1)); }
+}
+.pahom-hitbox:active .pahom-face {
+  transform: scale(0.87);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.click-power {
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  transition: color 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+              text-shadow 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pahom-hitbox:hover .click-power {
+  color: #ffd76b;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.9), 0 0 10px rgba(255, 215, 107, 0.6);
+}
+
+.cooldown-indicator {
+  text-align: center;
+  padding: 6px;
+  color: #b0a070;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  background: rgba(30, 30, 14, 0.85);
+  transition: color 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+              text-shadow 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.cooldown-indicator:hover {
+  color: #ffd76b;
+  text-shadow: 0 0 10px rgba(255, 215, 107, 0.6);
+}
+
+.notification {
+  background: #6b1a1a;
+  color: #fff;
+  text-align: center;
+  padding: 8px;
+  flex-shrink: 0;
+  animation: pulseGlow 0.7s infinite alternate;
+}
+@keyframes pulseGlow { from { box-shadow: 0 0 15px #c0392b; } to { box-shadow: 0 0 35px #e67e22; } }
+
+.flying-emoji {
+  position: fixed;
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 100;
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
+}
+
+.hidden { display: none !important; }
+
+.tabs-bar {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 30px 80px;
+  flex-shrink: 0;
+  background: transparent;
+  border-top: none;
+  z-index: 20;
+  gap: 10px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  opacity: 0.6;
+  transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  padding: 5px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-btn.active {
+  opacity: 1;
+  color: var(--text);
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 10px rgba(180, 150, 90, 0.7));
+}
+.tab-btn:hover {
+  opacity: 0.95;
+  transform: scale(1.08);
+}
+.tab-btn:active {
+  transform: scale(0.93);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tab-btn svg {
+  width: 28px;
+  height: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+  transition: filter 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tab-btn.home-btn svg { width: 36px; height: 36px; }
+.tab-btn.boss-btn svg { width: 30px; height: 30px; }
+
+.tab-btn:hover svg {
+  filter: drop-shadow(0 0 10px rgba(184, 150, 46, 0.5));
+}
+.tab-btn.boss-btn:hover svg { filter: drop-shadow(0 0 12px rgba(200, 60, 60, 0.9)); transform: scale(1.15); }
+.tab-btn.boss-btn:hover { color: #c0392b; }
+
+.tab-btn.rating-btn:hover svg {
+  filter: drop-shadow(0 0 12px rgba(255, 215, 107, 1));
+  transform: scale(1.15);
+}
+.tab-btn.rating-btn:hover { color: #ffd76b; }
+.tab-btn.rating-btn.active svg {
+  filter: drop-shadow(0 0 10px rgba(255, 215, 107, 0.9));
+}
+
+.tab-btn.active svg {
+  animation: activePulse 3.5s ease-in-out infinite;
+}
+@keyframes activePulse {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(180, 150, 90, 0.5)); }
+  50%      { filter: drop-shadow(0 0 14px rgba(255, 215, 107, 0.9)); }
+}
+
+.boss-skull-glow { animation: skullGlow 3s ease-in-out infinite; transform-origin: center; }
+@keyframes skullGlow {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(200, 60, 60, 0.4)); }
+  50%      { filter: drop-shadow(0 0 9px rgba(200, 60, 60, 0.9)); }
+}
+
+.tab-btn.boss-btn { animation: bossIconAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+@keyframes bossIconAppear {
+  0% { opacity: 0; transform: scale(0.5); }
+  100% { opacity: 0.6; transform: scale(1); }
+}
+
+.shop-tabs { display: flex; gap: 8px; padding: 10px; flex-shrink: 0; }
+
+.shop-tab {
+  flex: 1;
+  background: rgba(30, 30, 14, 0.8);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.shop-tab:hover {
+  border-color: rgba(184, 150, 46, 0.6);
+  transform: translateY(-1px);
+}
+.shop-tab:active {
+  transform: translateY(0) scale(0.97);
+}
+.shop-tab.active {
+  border-color: var(--gold);
+  background: rgba(184, 150, 46, 0.25);
+  box-shadow: 0 0 15px rgba(184, 150, 46, 0.35);
+}
+
+.shop-content-area {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.shop-page {
+  display: none;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.shop-page.active { display: block; animation: pageInRight 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.shop-page.exit-left { display: block; animation: pageOutLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.shop-page.exit-right { display: block; animation: pageOutRight 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.shop-page.enter-left { display: block; animation: pageInLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+.shop-panel {
+  padding: 10px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  height: 100%;
+  max-height: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.shop-panel::-webkit-scrollbar { width: 6px; }
+.shop-panel::-webkit-scrollbar-track { background: transparent; }
+.shop-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: rgba(30, 30, 14, 0.75);
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              background 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: pointer;
+  animation: itemFadeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.shop-item:nth-child(1) { animation-delay: 0.03s; }
+.shop-item:nth-child(2) { animation-delay: 0.06s; }
+.shop-item:nth-child(3) { animation-delay: 0.09s; }
+.shop-item:nth-child(4) { animation-delay: 0.12s; }
+.shop-item:nth-child(5) { animation-delay: 0.15s; }
+.shop-item:nth-child(6) { animation-delay: 0.18s; }
+.shop-item:nth-child(7) { animation-delay: 0.21s; }
+.shop-item:nth-child(8) { animation-delay: 0.24s; }
+.shop-item:nth-child(9) { animation-delay: 0.27s; }
+.shop-item:nth-child(10) { animation-delay: 0.30s; }
+
+@keyframes itemFadeIn {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.shop-item:hover {
+  border-color: #6a6a3a;
+  transform: translateX(6px);
+  background: rgba(45, 45, 26, 0.75);
+  box-shadow: 0 0 15px rgba(184, 150, 46, 0.2);
+}
+.shop-item:active { transform: scale(0.97); }
+.shop-item.selected { border-color: var(--gold); background: rgba(184, 150, 46, 0.2); }
+.shop-item.locked { opacity: 0.45; cursor: not-allowed; }
+.shop-item.locked:hover { transform: none; border-color: var(--border); background: rgba(30, 30, 14, 0.6); box-shadow: none; }
+
+.shop-item-info { display: flex; align-items: center; gap: 10px; flex: 1; }
+.shop-item-info > div:first-child {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.shop-item:hover .shop-item-info > div:first-child {
+  transform: scale(1.08);
+  box-shadow: 0 0 15px rgba(184, 150, 46, 0.4);
+}
+
+.item-info { flex: 1; }
+.item-name { font-weight: 700; font-size: 1rem; color: var(--text); }
+.item-desc { font-size: 0.75rem; color: #b0a070; }
+
+.inventory-panel { padding: 10px; overflow-y: auto; -webkit-overflow-scrolling: touch; height: 100%; }
+
+.inventory-title {
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 8px;
+}
+
+.kraft-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, rgba(184, 150, 46, 0.22), rgba(139, 105, 20, 0.15));
+  border: 2px solid var(--gold);
+  border-radius: 8px;
+  color: var(--gold);
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: pointer;
+}
+
+.kraft-btn:hover {
+  background: linear-gradient(135deg, rgba(184, 150, 46, 0.4), rgba(139, 105, 20, 0.3));
+  box-shadow: 0 0 35px rgba(184, 150, 46, 0.7);
+  transform: translateY(-3px);
+}
+.kraft-btn:active { transform: translateY(0) scale(0.97); }
+.kraft-btn-icon {
+  font-size: 1.6rem;
+  filter: drop-shadow(0 0 8px rgba(184, 150, 46, 0.7));
+  flex-shrink: 0;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.kraft-btn:hover .kraft-btn-icon {
+  transform: scale(1.12) rotate(-6deg);
+  filter: drop-shadow(0 0 16px rgba(184, 150, 46, 1));
+}
+.kraft-btn-text { flex: 1; color: var(--gold); }
+.kraft-btn-arrow {
+  font-size: 1.2rem;
+  opacity: 0.7;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.kraft-btn:hover .kraft-btn-arrow { transform: translateX(6px); opacity: 1; }
+
+.inventory-section { margin-bottom: 20px; }
+.inventory-section-title {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding-left: 5px;
+  opacity: 0.8;
+}
+
+.inventory-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: rgba(184, 150, 46, 0.15);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              background 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: itemFadeIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.inventory-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 0 18px rgba(184, 150, 46, 0.35);
+  background: rgba(184, 150, 46, 0.22);
+}
+
+.inventory-item-info { display: flex; align-items: center; gap: 10px; flex: 1; }
+.inventory-item-icon {
+  font-size: 1.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.8rem;
+  min-height: 1.8rem;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.inventory-item:hover .inventory-item-icon { transform: scale(1.12); }
+.inventory-item-icon img { width: 2rem; height: 2rem; object-fit: contain; vertical-align: middle; }
+
+.inventory-item-name { font-weight: 700; font-size: 0.95rem; color: var(--gold); }
+.inventory-item-count { font-size: 1.2rem; font-weight: 800; color: var(--text); font-family: 'Courier New', monospace; letter-spacing: 1px; }
+.inventory-item-count.max { color: #ff8c3c; text-shadow: 0 0 10px rgba(255, 140, 60, 0.7); }
+.inventory-empty { text-align: center; color: var(--accent); font-size: 0.9rem; padding: 20px; }
+
+.float-text {
+  position: fixed;
+  pointer-events: none;
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--gold);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 12px rgba(184,150,46,0.6);
+  z-index: 200;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
+.combo-counter {
+  position: fixed;
+  top: 160px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.5);
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 3px 6px rgba(0,0,0,0.9), 0 0 20px rgba(184,150,46,0.8);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 150;
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  letter-spacing: 2px;
+}
+.combo-counter.show {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+.combo-counter.hot { color: #ff6a3b; text-shadow: 0 3px 6px rgba(0,0,0,0.9), 0 0 28px rgba(255,106,59,0.9); }
+.combo-counter.pulse { animation: comboPulse 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes comboPulse {
+  0% { transform: translateX(-50%) scale(1); }
+  45% { transform: translateX(-50%) scale(1.22); }
+  100% { transform: translateX(-50%) scale(1); }
+}
+
+.combo-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 4px; width: 0%;
+  background: linear-gradient(90deg, #8b1a1a, var(--gold));
+  box-shadow: 0 0 12px rgba(184,150,46,0.8);
+  z-index: 300;
+  transition: width 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  opacity: 0;
+}
+.combo-bar.show { opacity: 1; }
+
+.click-ripple {
+  position: fixed;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  pointer-events: none;
+  z-index: 90;
+  transform: translate(-50%, -50%);
+  opacity: 0.9;
+}
+
+.combo-bonus {
+  position: fixed;
+  top: 210px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ff8c3c;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.9), 0 0 14px rgba(255,140,60,0.7);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 150;
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.combo-bonus.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.pahom-hitbox.combo-hot { box-shadow: 0 0 60px rgba(255,140,60,0.7), 0 0 0 4px rgba(255,140,60,0.3); border-color: #ff8c3c; }
+.pahom-hitbox.combo-max { box-shadow: 0 0 80px rgba(255,60,60,0.9), 0 0 0 6px rgba(255,60,60,0.4); border-color: #ff3b3b; animation: maxComboPulse 0.8s ease-in-out infinite; }
+@keyframes maxComboPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+
+@media (max-width: 400px) {
+  .pahom-hitbox { width: 170px; height: 170px; }
+  .pahom-wrap { width: 170px; height: 170px; }
+  .pahom-face { font-size: 4rem; }
+  .combo-counter { font-size: 1.8rem; }
+  .combo-bonus { font-size: 0.9rem; top: 200px; }
+  .tabs-bar { padding: 0 15px 80px; }
+}
+</style>
 </head>
 <body>
-    <div class="game-container">
-        <div class="header">
-            <div class="header-title" id="headerTitle">ГЛАВНАЯ</div>
-            <button class="sound-btn" id="soundBtn" title="Звук вкл/выкл" aria-label="Звук">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="4 9 8 9 13 5 13 19 8 15 4 15 4 9" fill="currentColor" stroke="currentColor"/>
-                    <path class="sound-wave-1" d="M16 9 C17.5 10.5, 17.5 13.5, 16 15" stroke="currentColor" fill="none"/>
-                    <path class="sound-wave-2" d="M18.5 7 C21 9.5, 21 14.5, 18.5 17" stroke="currentColor" fill="none"/>
-                    <line class="sound-slash" x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.5"/>
-                </svg>
-            </button>
-        </div>
+<div class="game-container">
+  <div class="header">
+    <div class="header-title" id="headerTitle">ГЛАВНАЯ</div>
+    <button class="sound-btn" id="soundBtn" title="Звук вкл/выкл">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="4 9 8 9 13 5 13 19 8 15 4 15 4 9" fill="currentColor" stroke="currentColor"/>
+        <path d="M16 9 C17.5 10.5, 17.5 13.5, 16 15" stroke="currentColor" fill="none"/>
+        <path d="M18.5 7 C21 9.5, 21 14.5, 18.5 17" stroke="currentColor" fill="none"/>
+        <line class="sound-slash" x1="3" y1="3" x2="21" y2="21" stroke="currentColor" stroke-width="2.5"/>
+      </svg>
+    </button>
+  </div>
 
-        <div class="score-board" id="scoreBoard">
-            <div class="sexpah">🔞 <span id="sexpahCount">0</span> секспахомов</div>
-            <div class="current-tool">
-                <span id="currentToolIcon">✋</span> <span id="currentToolName">Рука</span>
+  <div class="score-board" id="scoreBoard">
+    <div class="sexpah">🔞 <span id="sexpahCount">0</span> секспахомов</div>
+    <div class="current-tool">
+      <span id="currentToolIcon">✋</span> <span id="currentToolName">Рука</span>
+    </div>
+  </div>
+
+  <div class="buffs-top hidden" id="buffsTop"></div>
+
+  <div class="content-area">
+    <div id="homePanel" class="page active">
+      <div class="main-area">
+        <div class="love-panel">
+          <div class="love-scale-vertical">
+            <div class="love-vertical-bg">
+              <div id="loveVerticalFill" class="love-vertical-fill"></div>
             </div>
+            <span class="love-vertical-label">ЛЮБОВЬ</span>
+          </div>
         </div>
-
-        <div class="buffs-top hidden" id="buffsTop"></div>
-
-        <div class="content-area">
-            <div id="homePanel" class="page active">
-                <div class="main-area">
-                    <div class="love-panel">
-                        <div class="love-scale-vertical">
-                            <div class="love-vertical-bg">
-                                <div id="loveVerticalFill" class="love-vertical-fill"></div>
-                            </div>
-                            <span class="love-vertical-label">ЛЮБОВЬ</span>
-                        </div>
-                    </div>
-                    <div class="pahom-wrap">
-                        <div id="pahomHitbox" class="pahom-hitbox float">
-                            <div class="pahom-face">👴</div>
-                            <div class="click-power" id="clickPowerLabel">+1 за клик</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="shopPanel" class="page hidden">
-                <div style="display:flex; flex-direction:column; height:100%;">
-                    <div class="shop-tabs">
-                        <button id="shopItemsTab" class="shop-tab active">Предметы</button>
-                        <button id="shopBuffsTab" class="shop-tab">Баффы</button>
-                        <button id="shopInventoryTab" class="shop-tab">Инвентарь</button>
-                    </div>
-                    <div class="shop-content-area">
-                        <div id="shopItemsContent" class="shop-page active">
-                            <div class="shop-panel"></div>
-                        </div>
-                        <div id="shopBuffsContent" class="shop-page">
-                            <div class="shop-panel"></div>
-                        </div>
-                        <div id="shopInventoryContent" class="shop-page">
-                            <div class="inventory-panel">
-                                <a href="kraft.html" class="kraft-btn">
-                                    <span class="kraft-btn-icon">🛠️</span>
-                                    <span class="kraft-btn-text">Верстак Пахома</span>
-                                    <span class="kraft-btn-arrow">→</span>
-                                </a>
-                                <div class="inventory-title">Инвентарь</div>
-                                <div id="inventoryList"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="pahom-wrap">
+          <div id="pahomHitbox" class="pahom-hitbox float">
+            <div class="pahom-face">👴</div>
+            <div class="click-power" id="clickPowerLabel">+1 за клик</div>
+          </div>
         </div>
-
-        <div id="cooldownMessage" class="cooldown-indicator">Давануть Пахома😍</div>
-        <div id="excitedNotification" class="notification hidden">🚨 ПАХОМ ПЕРЕВОЗБУДИЛСЯ!</div>
-
-        <div class="tabs-bar">
-            <a href="boss.html" class="tab-btn boss-btn" title="Боссы">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="boss-skull-glow">
-                    <path d="M12 2C7.6 2 4 5.6 4 10c0 2.4 1 4.5 2.7 5.9V19c0 .6.4 1 1 1h1.3v-2h1.4v2h1.2v-2h1.4v2H14v-2h1.4v2H16.7c.6 0 1-.4 1-1v-3.1C19.4 14.5 20 12.4 20 10c0-4.4-3.6-8-8-8z"/>
-                    <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
-                    <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
-                    <path d="M12 13.5l-1.2 2.5h2.4z" fill="currentColor"/>
-                </svg>
-            </a>
-            <button id="shopTab" class="tab-btn" title="Магазин">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-            </button>
-            <button id="homeTab" class="tab-btn home-btn active" title="Главная">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            </button>
-            <a href="prof.html" class="tab-btn" title="Профиль">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </a>
-        </div>
+      </div>
     </div>
 
-    <div class="combo-bar" id="comboBar"></div>
-    <div class="combo-counter" id="comboCounter">x1</div>
-    <div class="combo-bonus" id="comboBonus">БОНУС КОМБО: +1</div>
+    <div id="shopPanel" class="page hidden">
+      <div style="display:flex; flex-direction:column; height:100%;">
+        <div class="shop-tabs">
+          <button id="shopItemsTab" class="shop-tab active">Предметы</button>
+          <button id="shopBuffsTab" class="shop-tab">Баффы</button>
+          <button id="shopInventoryTab" class="shop-tab">Инвентарь</button>
+        </div>
+        <div class="shop-content-area">
+          <div id="shopItemsContent" class="shop-page active">
+            <div class="shop-panel"></div>
+          </div>
+          <div id="shopBuffsContent" class="shop-page">
+            <div class="shop-panel"></div>
+          </div>
+          <div id="shopInventoryContent" class="shop-page">
+            <div class="inventory-panel">
+              <a href="kraft.html" class="kraft-btn">
+                <span class="kraft-btn-icon">🛠️</span>
+                <span class="kraft-btn-text">Верстак Пахома</span>
+                <span class="kraft-btn-arrow">→</span>
+              </a>
+              <div class="inventory-title">Инвентарь</div>
+              <div id="inventoryList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <!-- ВСТРОЕННЫЙ ЗВУК -->
-    <script>
-    (function() {
-      'use strict';
+  <div id="cooldownMessage" class="cooldown-indicator">Давануть Пахома😍</div>
+  <div id="excitedNotification" class="notification hidden">🚨 ПАХОМ ПЕРЕВОЗБУДИЛСЯ!</div>
 
-      var SOUND_URLS = ['A3.m4a', 'Grahou.m4a', 'Ihmatoov.m4a', 'Dada.m4a'];
-      var EXCITE_URL = 'Aimolodca.m4a';
-      var VOLUME = 1.0;
-      var MIN_INTERVAL = 60;
+  <div class="tabs-bar">
+    <a href="boss.html" class="tab-btn boss-btn" title="Боссы">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="boss-skull-glow">
+        <path d="M12 2C7.6 2 4 5.6 4 10c0 2.4 1 4.5 2.7 5.9V19c0 .6.4 1 1 1h1.3v-2h1.4v2h1.2v-2h1.4v2H14v-2h1.4v2H16.7c.6 0 1-.4 1-1v-3.1C19.4 14.5 20 12.4 20 10c0-4.4-3.6-8-8-8z"/>
+        <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+        <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+        <path d="M12 13.5l-1.2 2.5h2.4z" fill="currentColor"/>
+      </svg>
+    </a>
+    <button id="shopTab" class="tab-btn" title="Магазин">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    </button>
+    <button id="homeTab" class="tab-btn home-btn active" title="Главная">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </button>
+    <a href="rating.html" class="tab-btn rating-btn" title="Рейтинг">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 21h8"/>
+        <path d="M12 17v4"/>
+        <path d="M7 4h10v5a5 5 0 01-10 0V4z"/>
+        <path d="M17 5h2a2 2 0 012 2v1a3 3 0 01-3 3"/>
+        <path d="M7 5H5a2 2 0 00-2 2v1a3 3 0 003 3"/>
+      </svg>
+    </a>
+    <a href="prof.html" class="tab-btn" title="Профиль">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </a>
+  </div>
+</div>
 
-      var audios = [];
-      var exciteAudio = null;
-      var lastPlay = 0;
-      var lastIdx = -1;
-      var isMuted = false;
+<div class="combo-bar" id="comboBar"></div>
+<div class="combo-counter" id="comboCounter">x1</div>
+<div class="combo-bonus" id="comboBonus">БОНУС КОМБО: +1</div>
 
-      function init() {
-        for (var i = 0; i < SOUND_URLS.length; i++) {
-          var a = new Audio(SOUND_URLS[i]);
-          a.preload = 'auto';
-          a.volume = VOLUME;
-          try { a.load(); } catch(e) {}
-          audios.push(a);
+<script>
+(function() {
+  'use strict';
+
+  var SOUND_URLS = ['A3.m4a', 'Grahou.m4a', 'Ihmatoov.m4a', 'Dada.m4a'];
+  var EXCITE_URL = 'Aimolodca.m4a';
+  var VOLUME = 1.0;
+  var MIN_INTERVAL = 60;
+
+  var audios = [];
+  var exciteAudio = null;
+  var lastPlay = 0;
+  var lastIdx = -1;
+  var isMuted = false;
+
+  function initSound() {
+    for (var i = 0; i < SOUND_URLS.length; i++) {
+      var a = new Audio(SOUND_URLS[i]);
+      a.preload = 'auto';
+      a.volume = VOLUME;
+      try { a.load(); } catch(e) {}
+      audios.push(a);
+    }
+    exciteAudio = new Audio(EXCITE_URL);
+    exciteAudio.preload = 'auto';
+    exciteAudio.volume = VOLUME;
+    try { exciteAudio.load(); } catch(e) {}
+  }
+
+  function playRandom() {
+    if (isMuted) return false;
+    if (audios.length === 0) return false;
+    var now = Date.now();
+    if (now - lastPlay < MIN_INTERVAL) return false;
+    lastPlay = now;
+    var idx;
+    if (audios.length === 1) idx = 0;
+    else {
+      do { idx = Math.floor(Math.random() * audios.length); } while (idx === lastIdx);
+    }
+    lastIdx = idx;
+    var a = audios[idx];
+    try {
+      a.pause();
+      a.currentTime = 0;
+      var p = a.play();
+      if (p && typeof p.then === 'function') p.catch(function(){});
+      return true;
+    } catch(e) { return false; }
+  }
+
+  function playExcite() {
+    if (isMuted) return false;
+    if (!exciteAudio) return false;
+    try {
+      exciteAudio.pause();
+      exciteAudio.currentTime = 0;
+      var p = exciteAudio.play();
+      if (p && typeof p.then === 'function') p.catch(function(){});
+      return true;
+    } catch(e) { return false; }
+  }
+
+  function setMuted(m) {
+    isMuted = !!m;
+    try { localStorage.setItem('pahomSoundMuted', isMuted ? '1' : '0'); } catch(e) {}
+    try { window.dispatchEvent(new CustomEvent('pahomSoundMutedChanged', { detail: { muted: isMuted } })); } catch(e) {}
+  }
+  function toggleMute() { setMuted(!isMuted); return isMuted; }
+
+  try { if (localStorage.getItem('pahomSoundMuted') === '1') isMuted = true; } catch(e) {}
+
+  initSound();
+
+  window.pahomSound = {
+    play: playRandom, playRandom: playRandom, playExcite: playExcite,
+    setMuted: setMuted, toggleMute: toggleMute,
+    isMuted: function() { return isMuted; },
+    ready: function() { return audios.length > 0; },
+    loadedCount: function() { return audios.length + (exciteAudio ? 1 : 0); },
+    total: function() { return SOUND_URLS.length + 1; },
+    failed: function() { return []; }
+  };
+
+  function $(id) { return document.getElementById(id); }
+
+  var sexpahSpan = $('sexpahCount');
+  var loveVerticalFill = $('loveVerticalFill');
+  var pahomHitbox = $('pahomHitbox');
+  var cooldownDiv = $('cooldownMessage');
+  var excitedDiv = $('excitedNotification');
+  var currentToolIconSpan = $('currentToolIcon');
+  var currentToolNameSpan = $('currentToolName');
+  var clickPowerLabel = $('clickPowerLabel');
+  var headerTitle = $('headerTitle');
+  var comboCounter = $('comboCounter');
+  var comboBar = $('comboBar');
+  var comboBonus = $('comboBonus');
+  var buffsTop = $('buffsTop');
+  var soundBtn = $('soundBtn');
+
+  var homePanel = $('homePanel');
+  var shopPanel = $('shopPanel');
+  var homeTab = $('homeTab');
+  var shopTab = $('shopTab');
+
+  var shopItemsTab = $('shopItemsTab');
+  var shopBuffsTab = $('shopBuffsTab');
+  var shopInventoryTab = $('shopInventoryTab');
+  var shopItemsContent = $('shopItemsContent');
+  var shopBuffsContent = $('shopBuffsContent');
+  var shopInventoryContent = $('shopInventoryContent');
+  var inventoryList = $('inventoryList');
+
+  var sexpah = 0;
+  try { sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0; } catch(e) {}
+  var love = 0;
+  var BASE_MAX_LOVE = 300;
+  var CIGS_MAX_LOVE = 500;
+  var totalClicks = 0;
+  try { totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0', 10) || 0; } catch(e) {}
+  var totalOverexcites = 0;
+  try { totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0', 10) || 0; } catch(e) {}
+  var currentTool = 'hand';
+  try { currentTool = localStorage.getItem('pahomTool') || 'hand'; } catch(e) {}
+  var activeBuffs = {};
+  try { activeBuffs = JSON.parse(localStorage.getItem('pahomBuffs') || '{}') || {}; } catch(e) { activeBuffs = {}; }
+  var bossInventory = {};
+  try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) { bossInventory = {}; }
+
+  var LOOT_MAX = 200;
+  var TOOLS_ORDER = ['hand', 'whip', 'stick', 'shank', 'shovel', 'commissar', 'drin', 'tyrchik', 'napilnik', 'srochnik'];
+
+  var tools = {
+    hand: { name: 'Рука', icon: '✋', clickPower: 1, requirement: 0 },
+    whip: { name: 'Плетка', icon: '🐍', clickPower: 2, requirement: 500 },
+    stick: { name: 'Палка', icon: '🥢', clickPower: 3, requirement: 3500 },
+    shank: { name: 'Черенок', icon: '🔧', clickPower: 4, requirement: 25000 },
+    shovel: { name: 'Лопата', icon: '🪏', clickPower: 5, requirement: 55000 },
+    commissar: { name: 'Замполит', icon: '🎖️', clickPower: 6, requirement: 85000 },
+    drin: { name: 'Дрын', icon: '🌲', clickPower: 10, requirement: 100000 },
+    tyrchik: { name: 'Тырчик', icon: '⚡', clickPower: 12, requirement: 250000 },
+    napilnik: { name: 'Напильник', icon: '🔩', clickPower: 13, requirement: 500000 },
+    srochnik: { name: 'Срочник', icon: '🪖', clickPower: 14, requirement: 1000000 }
+  };
+
+  var buffs = {
+    viagra: { name: 'Виагра', icon: '💊', price: 5000, duration: 5 * 60 * 1000 },
+    cigs:   { name: 'Пачка сигарет', icon: '🚬', price: 10000, duration: 5 * 60 * 1000 }
+  };
+
+  var LOOT_META = {
+    ladder:        { name: 'Пиздец дорогая лестница', icon: '🪜' },
+    medphone:      { name: 'Телефон медика', icon: '📱' },
+    dern:          { name: 'Дёрн', icon: '🌿' },
+    sextoy:        { name: 'Секс игрушка', icon: '<img src="Penis.png" alt="">' },
+    rotten:        { name: 'Гнилой зубик', icon: '🦷' },
+    tapik:         { name: 'Тапик', icon: '🩴' },
+    wholetooth:    { name: 'Целый зубик', icon: '🦷' },
+    ishmatov_info: { name: 'Информация по Ишматову', icon: '📋' },
+    tvn:           { name: 'ТВН', icon: '<img src="Tvn.png" alt="">' }
+  };
+
+  var isCooldown = false;
+  var cooldownRemaining = 0;
+  var cooldownInterval = null;
+  var lastClickTime = Date.now();
+  var decayInterval = null;
+  var buffInterval = null;
+  var tickerInterval = null;
+  var isAnimating = false;
+  var currentShopTab = 'items';
+  var isShopTabAnimating = false;
+
+  var combo = 0;
+  var comboTimer = null;
+  var COMBO_TIMEOUT = 1500;
+  var COMBO_MAX = 20;
+
+  var lastHandledClick = 0;
+  var invRefs = {};
+  var shopRendered = false;
+
+  var pahomRect = null;
+  var uiRafPending = false;
+  var dirtySave = false;
+  var lastFloatSpawn = 0;
+  var lastRippleSpawn = 0;
+  var SPAWN_INTERVAL = 60;
+  var MAX_EFFECTS = 10;
+  var activeEffects = 0;
+
+  function formatSexpah(n) {
+    if (n >= 1000000000) { var v = n / 1000000000; return (v < 10 ? v.toFixed(1) : Math.floor(v)) + 'B'; }
+    if (n >= 1000000) { var v = n / 1000000; return (v < 10 ? v.toFixed(1) : Math.floor(v)) + 'M'; }
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  function formatTime(ms) {
+    var totalSec = Math.floor(ms / 1000);
+    var min = Math.floor(totalSec / 60);
+    var sec = totalSec % 60;
+    return (min < 10 ? '0' : '') + min + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+
+  function saveData() {
+    try {
+      localStorage.setItem('pahomSexpah', sexpah);
+      localStorage.setItem('pahomClicks', totalClicks);
+      localStorage.setItem('pahomOverexcites', totalOverexcites);
+      localStorage.setItem('pahomTool', currentTool);
+      localStorage.setItem('pahomBuffs', JSON.stringify(activeBuffs));
+    } catch(e) {}
+    dirtySave = false;
+  }
+
+  function markDirty() { dirtySave = true; }
+
+  function syncSexpahFromStorage() {
+    try {
+      var v = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
+      if (v !== sexpah) sexpah = v;
+    } catch(e) {}
+  }
+
+  function getBestAvailableTool() {
+    var best = 'hand';
+    for (var i = 0; i < TOOLS_ORDER.length; i++) {
+      if (tools[TOOLS_ORDER[i]].requirement <= sexpah) best = TOOLS_ORDER[i];
+      else break;
+    }
+    return best;
+  }
+
+  function ensureValidTool() {
+    var req = tools[currentTool].requirement;
+    if (sexpah >= req) return false;
+    var newTool = getBestAvailableTool();
+    if (newTool !== currentTool) {
+      currentTool = newTool;
+      try { localStorage.setItem('pahomTool', currentTool); } catch(e) {}
+      if (shopItemsContent) {
+        var items = shopItemsContent.querySelectorAll('.shop-item');
+        for (var i = 0; i < items.length; i++) {
+          items[i].classList.toggle('selected', items[i].dataset.tool === currentTool);
         }
-        exciteAudio = new Audio(EXCITE_URL);
-        exciteAudio.preload = 'auto';
-        exciteAudio.volume = VOLUME;
-        try { exciteAudio.load(); } catch(e) {}
       }
+      return true;
+    }
+    return false;
+  }
 
-      function playRandom() {
-        if (isMuted) return false;
-        if (audios.length === 0) return false;
+  function isViagraActive() { return activeBuffs.viagra && activeBuffs.viagra > Date.now(); }
+  function isCigsActive() { return activeBuffs.cigs && activeBuffs.cigs > Date.now(); }
+  function getMaxLove() { return isCigsActive() ? CIGS_MAX_LOVE : BASE_MAX_LOVE; }
+  function getBaseClickPower() { return tools[currentTool].clickPower; }
+  function getComboBonus() {
+    if (combo >= 20) return 4;
+    if (combo >= 15) return 3;
+    if (combo >= 10) return 2;
+    if (combo >= 5) return 1;
+    return 0;
+  }
+  function getClickPower() { return getBaseClickPower() + getComboBonus(); }
+  function getLoveAdd() { return isViagraActive() ? 2 : 5; }
 
-        var now = Date.now();
-        if (now - lastPlay < MIN_INTERVAL) return false;
-        lastPlay = now;
+  function ensureBuffsTop() {
+    if (!buffsTop) return;
+    var now = Date.now();
+    var hasViagra = activeBuffs.viagra && activeBuffs.viagra > now;
+    var hasCigs = activeBuffs.cigs && activeBuffs.cigs > now;
+    buffsTop.innerHTML = '';
+    if (!hasViagra && !hasCigs) {
+      buffsTop.classList.add('hidden');
+      return;
+    }
+    buffsTop.classList.remove('hidden');
+    if (hasViagra) {
+      var chip1 = document.createElement('div');
+      chip1.className = 'buff-chip';
+      chip1.innerHTML = '<span class="buff-icon">💊</span><span class="buff-timer">' + formatTime(activeBuffs.viagra - now) + '</span>';
+      buffsTop.appendChild(chip1);
+    }
+    if (hasCigs) {
+      var chip2 = document.createElement('div');
+      chip2.className = 'buff-chip';
+      chip2.innerHTML = '<span class="buff-icon">🚬</span><span class="buff-timer">' + formatTime(activeBuffs.cigs - now) + '</span>';
+      buffsTop.appendChild(chip2);
+    }
+  }
 
-        var idx;
-        if (audios.length === 1) {
-          idx = 0;
-        } else {
-          do {
-            idx = Math.floor(Math.random() * audios.length);
-          } while (idx === lastIdx);
-        }
-        lastIdx = idx;
+  function renderShopOnce() {
+    if (shopRendered) return;
+    if (!shopItemsContent || !shopBuffsContent || !inventoryList) return;
+    shopRendered = true;
 
-        var a = audios[idx];
+    var itemsPanel = shopItemsContent.querySelector('.shop-panel');
+    if (!itemsPanel) return;
+    itemsPanel.innerHTML = '';
+    Object.keys(tools).forEach(function(key) {
+      var tool = tools[key];
+      var item = document.createElement('div');
+      item.className = 'shop-item';
+      item.dataset.tool = key;
+      item.innerHTML =
+        '<div class="shop-item-info">' +
+          '<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:#111;border-radius:6px;">' + tool.icon + '</div>' +
+          '<div class="item-info">' +
+            '<div class="item-name">' + tool.name + '</div>' +
+            '<div class="item-desc">+' + tool.clickPower + ' за клик' + (tool.requirement > 0 ? ' · ' + formatSexpah(tool.requirement) + ' секспахомов' : '') + '</div>' +
+          '</div>' +
+        '</div>';
+      item.addEventListener('click', function() { selectTool(key); });
+      itemsPanel.appendChild(item);
+    });
 
-        try {
-          a.pause();
-          a.currentTime = 0;
-          var p = a.play();
-          if (p && typeof p.then === 'function') {
-            p.catch(function(){});
-          }
-          return true;
-        } catch(e) {
-          return false;
-        }
-      }
+    var buffsPanel = shopBuffsContent.querySelector('.shop-panel');
+    if (!buffsPanel) return;
+    buffsPanel.innerHTML = '';
+    Object.keys(buffs).forEach(function(key) {
+      var buff = buffs[key];
+      var item = document.createElement('div');
+      item.className = 'shop-item';
+      var desc = '';
+      if (key === 'viagra') desc = 'Пахом возбуждается медленнее · ' + formatSexpah(buff.price) + ' секспахомов · 5 мин';
+      else if (key === 'cigs') desc = 'Максимальная любовь 500 единиц · ' + formatSexpah(buff.price) + ' секспахомов · 5 мин';
 
-      function playExcite() {
-        if (isMuted) return false;
-        if (!exciteAudio) return false;
-        try {
-          exciteAudio.pause();
-          exciteAudio.currentTime = 0;
-          var p = exciteAudio.play();
-          if (p && typeof p.then === 'function') {
-            p.catch(function(){});
-          }
-          return true;
-        } catch(e) {
-          return false;
-        }
-      }
+      item.innerHTML =
+        '<div class="shop-item-info">' +
+          '<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:#111;border-radius:6px;">' + buff.icon + '</div>' +
+          '<div class="item-info">' +
+            '<div class="item-name">' + buff.name + '</div>' +
+            '<div class="item-desc">' + desc + '</div>' +
+          '</div>' +
+        '</div>';
+      item.addEventListener('click', function() { buyBuff(key); });
+      buffsPanel.appendChild(item);
+    });
 
-      function setMuted(m) {
-        isMuted = !!m;
-        try { localStorage.setItem('pahomSoundMuted', isMuted ? '1' : '0'); } catch(e) {}
-        try {
-          window.dispatchEvent(new CustomEvent('pahomSoundMutedChanged', { detail: { muted: isMuted } }));
-        } catch(e) {}
-      }
-      function toggleMute() { setMuted(!isMuted); return isMuted; }
+    inventoryList.innerHTML = '';
+    var section = document.createElement('div');
+    section.className = 'inventory-section';
+    section.innerHTML = '<div class="inventory-section-title">Трофеи с боссов</div>';
+    inventoryList.appendChild(section);
 
-      try {
-        if (localStorage.getItem('pahomSoundMuted') === '1') isMuted = true;
-      } catch(e) {}
+    var empty = document.createElement('div');
+    empty.className = 'inventory-empty';
+    empty.textContent = 'Пусто';
+    section.appendChild(empty);
+    invRefs.empty = empty;
 
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+    Object.keys(LOOT_META).forEach(function(id) {
+      var meta = LOOT_META[id];
+      var row = document.createElement('div');
+      row.className = 'inventory-item';
+      row.style.display = 'none';
+      row.innerHTML =
+        '<div class="inventory-item-info">' +
+          '<span class="inventory-item-icon">' + meta.icon + '</span>' +
+          '<div class="inventory-item-name">' + meta.name + '</div>' +
+        '</div>' +
+        '<div class="inventory-item-count">0 / ' + LOOT_MAX + '</div>';
+      section.appendChild(row);
+      invRefs[id] = { row: row, count: row.querySelector('.inventory-item-count') };
+    });
+
+    refreshItemsAvailability();
+  }
+
+  function refreshItemsAvailability() {
+    if (!shopItemsContent) return;
+    var items = shopItemsContent.querySelectorAll('.shop-item');
+    for (var i = 0; i < items.length; i++) {
+      var el = items[i];
+      var key = el.dataset.tool;
+      if (!key || !tools[key]) continue;
+      var canUse = sexpah >= tools[key].requirement;
+      el.classList.toggle('locked', !canUse);
+      el.classList.toggle('selected', key === currentTool);
+    }
+  }
+
+  function refreshInventoryValues() {
+    var any = false;
+    Object.keys(LOOT_META).forEach(function(id) {
+      var ref = invRefs[id];
+      if (!ref) return;
+      var c = bossInventory[id] || 0;
+      if (c > 0) {
+        ref.row.style.display = 'flex';
+        ref.count.textContent = c + ' / ' + LOOT_MAX;
+        ref.count.classList.toggle('max', c >= LOOT_MAX);
+        any = true;
       } else {
-        init();
+        ref.row.style.display = 'none';
       }
+    });
+    if (invRefs.empty) invRefs.empty.style.display = any ? 'none' : 'block';
+  }
 
-      window.pahomSound = {
-        play: playRandom,
-        playRandom: playRandom,
-        playExcite: playExcite,
-        setMuted: setMuted,
-        toggleMute: toggleMute,
-        isMuted: function() { return isMuted; },
-        ready: function() { return audios.length > 0; },
-        loadedCount: function() { return audios.length + (exciteAudio ? 1 : 0); },
-        total: function() { return SOUND_URLS.length + 1; },
-        failed: function() { return []; }
-      };
-    })();
-    </script>
-
-    <!-- ОСНОВНОЙ СКРИПТ -->
-    <script>
-    (function() {
-        'use strict';
-
-        function $(id) { return document.getElementById(id); }
-
-        var sexpahSpan = $('sexpahCount');
-        var loveVerticalFill = $('loveVerticalFill');
-        var pahomHitbox = $('pahomHitbox');
-        var cooldownDiv = $('cooldownMessage');
-        var excitedDiv = $('excitedNotification');
-        var currentToolIconSpan = $('currentToolIcon');
-        var currentToolNameSpan = $('currentToolName');
-        var clickPowerLabel = $('clickPowerLabel');
-        var headerTitle = $('headerTitle');
-        var comboCounter = $('comboCounter');
-        var comboBar = $('comboBar');
-        var comboBonus = $('comboBonus');
-        var buffsTop = $('buffsTop');
-        var soundBtn = $('soundBtn');
-
-        var homePanel = $('homePanel');
-        var shopPanel = $('shopPanel');
-        var homeTab = $('homeTab');
-        var shopTab = $('shopTab');
-
-        var shopItemsTab = $('shopItemsTab');
-        var shopBuffsTab = $('shopBuffsTab');
-        var shopInventoryTab = $('shopInventoryTab');
-        var shopItemsContent = $('shopItemsContent');
-        var shopBuffsContent = $('shopBuffsContent');
-        var shopInventoryContent = $('shopInventoryContent');
-        var inventoryList = $('inventoryList');
-
-        var sexpah = 0;
-        try { sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0; } catch(e) {}
-        var love = 0;
-        var BASE_MAX_LOVE = 300;
-        var CIGS_MAX_LOVE = 500;
-        var totalClicks = 0;
-        try { totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0', 10) || 0; } catch(e) {}
-        var totalOverexcites = 0;
-        try { totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0', 10) || 0; } catch(e) {}
-        var currentTool = 'hand';
-        try { currentTool = localStorage.getItem('pahomTool') || 'hand'; } catch(e) {}
-        var activeBuffs = {};
-        try { activeBuffs = JSON.parse(localStorage.getItem('pahomBuffs') || '{}') || {}; } catch(e) { activeBuffs = {}; }
-        var bossInventory = {};
-        try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) { bossInventory = {}; }
-
-        var LOOT_MAX = 200;
-        var TOOLS_ORDER = ['hand', 'whip', 'stick', 'shank', 'shovel', 'commissar', 'drin', 'tyrchik', 'napilnik', 'srochnik'];
-
-        var tools = {
-            hand: { name: 'Рука', icon: '✋', clickPower: 1, requirement: 0 },
-            whip: { name: 'Плетка', icon: '🐍', clickPower: 2, requirement: 500 },
-            stick: { name: 'Палка', icon: '🥢', clickPower: 3, requirement: 3500 },
-            shank: { name: 'Черенок', icon: '🔧', clickPower: 4, requirement: 25000 },
-            shovel: { name: 'Лопата', icon: '🪏', clickPower: 5, requirement: 55000 },
-            commissar: { name: 'Замполит', icon: '🎖️', clickPower: 6, requirement: 85000 },
-            drin: { name: 'Дрын', icon: '🌲', clickPower: 10, requirement: 100000 },
-            tyrchik: { name: 'Тырчик', icon: '⚡', clickPower: 12, requirement: 250000 },
-            napilnik: { name: 'Напильник', icon: '🔩', clickPower: 13, requirement: 500000 },
-            srochnik: { name: 'Срочник', icon: '🪖', clickPower: 14, requirement: 1000000 }
-        };
-
-        var buffs = {
-            viagra: { name: 'Виагра', icon: '💊', price: 5000, duration: 5 * 60 * 1000 },
-            cigs:   { name: 'Пачка сигарет', icon: '🚬', price: 10000, duration: 5 * 60 * 1000 }
-        };
-
-        var LOOT_META = {
-            ladder:        { name: 'Пиздец дорогая лестница', icon: '🪜' },
-            medphone:      { name: 'Телефон медика', icon: '📱' },
-            dern:          { name: 'Дёрн', icon: '🌿' },
-            sextoy:        { name: 'Секс игрушка', icon: '<img src="Penis.png" alt="">' },
-            rotten:        { name: 'Гнилой зубик', icon: '🦷' },
-            tapik:         { name: 'Тапик', icon: '🩴' },
-            wholetooth:    { name: 'Целый зубик', icon: '🦷' },
-            ishmatov_info: { name: 'Информация по Ишматову', icon: '📋' },
-            tvn:           { name: 'ТВН', icon: '<img src="Tvn.png" alt="">' }
-        };
-
-        var isCooldown = false;
-        var cooldownRemaining = 0;
-        var cooldownInterval = null;
-        var lastClickTime = Date.now();
-        var decayInterval = null;
-        var buffInterval = null;
-        var tickerInterval = null;
-        var isAnimating = false;
-        var currentShopTab = 'items';
-        var isShopTabAnimating = false;
-
-        var combo = 0;
-        var comboTimer = null;
-        var COMBO_TIMEOUT = 1500;
-        var COMBO_MAX = 20;
-
-        var lastHandledClick = 0;
-        var invRefs = {};
-        var shopRendered = false;
-
-        var pahomRect = null;
-        var uiRafPending = false;
-        var dirtySave = false;
-        var lastFloatSpawn = 0;
-        var lastRippleSpawn = 0;
-        var SPAWN_INTERVAL = 50;
-        var MAX_EFFECTS = 15;
-        var activeEffects = 0;
-
-        function formatSexpah(n) {
-            if (n >= 1000000000) { var v = n / 1000000000; return (v < 10 ? v.toFixed(1) : Math.floor(v)) + 'B'; }
-            if (n >= 1000000) { var v = n / 1000000; return (v < 10 ? v.toFixed(1) : Math.floor(v)) + 'M'; }
-            return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  function selectTool(toolKey) {
+    syncSexpahFromStorage();
+    var tool = tools[toolKey];
+    if (!tool) return;
+    if (sexpah < tool.requirement) return;
+    if (currentTool !== toolKey) {
+      currentTool = toolKey;
+      try { localStorage.setItem('pahomTool', currentTool); } catch(e) {}
+      if (shopItemsContent) {
+        var items = shopItemsContent.querySelectorAll('.shop-item');
+        for (var i = 0; i < items.length; i++) {
+          items[i].classList.toggle('selected', items[i].dataset.tool === currentTool);
         }
+      }
+      scheduleUI();
+    }
+  }
 
-        function formatTime(ms) {
-            var totalSec = Math.floor(ms / 1000);
-            var min = Math.floor(totalSec / 60);
-            var sec = totalSec % 60;
-            return (min < 10 ? '0' : '') + min + ':' + (sec < 10 ? '0' : '') + sec;
+  function buyBuff(buffKey) {
+    syncSexpahFromStorage();
+    var buff = buffs[buffKey];
+    if (!buff) return;
+    if (sexpah < buff.price) return;
+    var now = Date.now();
+    if (activeBuffs[buffKey] && activeBuffs[buffKey] > now) activeBuffs[buffKey] += buff.duration;
+    else activeBuffs[buffKey] = now + buff.duration;
+    sexpah -= buff.price;
+    saveData();
+    ensureValidTool();
+    updateUI();
+    refreshItemsAvailability();
+    ensureBuffsTop();
+  }
+
+  function updateUI() {
+    ensureValidTool();
+    if (sexpahSpan) sexpahSpan.textContent = formatSexpah(sexpah);
+
+    var maxLove = getMaxLove();
+    if (loveVerticalFill) loveVerticalFill.style.height = Math.min(100, (love / maxLove) * 100) + '%';
+    if (excitedDiv) excitedDiv.classList.toggle('hidden', love < maxLove);
+
+    if (cooldownDiv) {
+      if (isCooldown) cooldownDiv.textContent = '⏳ ' + cooldownRemaining + ' сек';
+      else if (love >= maxLove) cooldownDiv.textContent = '💔 Переполнена';
+      else cooldownDiv.textContent = 'Давануть Пахома😍';
+    }
+
+    var tool = tools[currentTool];
+    if (currentToolIconSpan) currentToolIconSpan.textContent = tool.icon;
+    if (currentToolNameSpan) currentToolNameSpan.textContent = tool.name;
+    if (clickPowerLabel) clickPowerLabel.textContent = '+' + getClickPower() + ' за клик';
+
+    var bonus = getComboBonus();
+    if (comboBonus) {
+      if (bonus > 0 && combo > 0) {
+        comboBonus.textContent = 'БОНУС КОМБО: +' + bonus + ' за клик';
+        comboBonus.classList.add('show');
+      } else {
+        comboBonus.classList.remove('show');
+      }
+    }
+  }
+
+  function quickUIUpdate() {
+    if (sexpahSpan) sexpahSpan.textContent = formatSexpah(sexpah);
+    var maxLove = getMaxLove();
+    if (loveVerticalFill) loveVerticalFill.style.height = Math.min(100, (love / maxLove) * 100) + '%';
+    if (clickPowerLabel) clickPowerLabel.textContent = '+' + getClickPower() + ' за клик';
+  }
+
+  function scheduleQuickUI() {
+    if (uiRafPending) return;
+    uiRafPending = true;
+    requestAnimationFrame(function() {
+      uiRafPending = false;
+      quickUIUpdate();
+    });
+  }
+
+  function scheduleUI() {
+    if (uiRafPending) return;
+    uiRafPending = true;
+    requestAnimationFrame(function() {
+      uiRafPending = false;
+      updateUI();
+    });
+  }
+
+  function startCooldown() {
+    if (isCooldown) return;
+    isCooldown = true;
+    cooldownRemaining = 10;
+
+    try { if (window.pahomSound && window.pahomSound.playExcite) window.pahomSound.playExcite(); } catch(e) {}
+
+    triggerBlowup();
+    if (cooldownInterval) clearInterval(cooldownInterval);
+    cooldownInterval = setInterval(function() {
+      cooldownRemaining--;
+      if (cooldownRemaining <= 0) {
+        clearInterval(cooldownInterval);
+        cooldownInterval = null;
+        isCooldown = false;
+      }
+      scheduleUI();
+    }, 1000);
+  }
+
+  function animateEmoji(emoji, startX, startY, burstX, burstY, fallY, rotation, delay) {
+    var duration = 2500;
+    var startTime = performance.now() + delay;
+    function frame(currentTime) {
+      var elapsed = currentTime - startTime;
+      if (elapsed < 0) { requestAnimationFrame(frame); return; }
+      var t = Math.min(elapsed / duration, 1);
+      var x, y, scale, opacity, rotate;
+      if (t < 0.35) {
+        var p = t / 0.35;
+        var easeOut = 1 - Math.pow(1 - p, 3);
+        x = burstX * easeOut; y = burstY * easeOut;
+        scale = 0.6 + 0.6 * easeOut; opacity = easeOut * 0.9 + 0.1; rotate = rotation * easeOut * 0.6;
+      } else {
+        var p2 = (t - 0.35) / 0.65;
+        var e = p2 < 0.5 ? 2 * p2 * p2 : 1 - Math.pow(-2 * p2 + 2, 2) / 2;
+        x = burstX + burstX * 0.15 * e; y = burstY + fallY * e;
+        scale = 1.2 - 0.9 * e; opacity = 1 - e; rotate = rotation * 0.6 + rotation * 0.4 * e;
+      }
+      emoji.style.transform = 'translate(' + (startX + x) + 'px, ' + (startY + y) + 'px) translate(-50%, -50%) scale(' + scale + ') rotate(' + rotate + 'deg)';
+      emoji.style.opacity = opacity;
+      if (t < 1) requestAnimationFrame(frame);
+      else if (emoji.parentNode) emoji.parentNode.removeChild(emoji);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function triggerBlowup() {
+    if (!pahomHitbox) return;
+    var rect = pahomHitbox.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    var radius = rect.width / 2;
+    var screenHeight = window.innerHeight;
+    pahomHitbox.classList.remove('float', 'shake');
+    pahomHitbox.classList.add('blowup');
+    var count = 18;
+    for (var i = 0; i < count; i++) {
+      var emoji = document.createElement('div');
+      emoji.className = 'flying-emoji';
+      emoji.textContent = '🔞';
+      emoji.style.left = '0'; emoji.style.top = '0'; emoji.style.opacity = '0';
+      var angle = (Math.PI * 2 / count) * i + (Math.random() * 0.4 - 0.2);
+      var startX = cx + Math.cos(angle) * radius;
+      var startY = cy + Math.sin(angle) * radius;
+      var burstDist = 70 + Math.random() * 50;
+      var burstX = Math.cos(angle) * burstDist;
+      var burstY = Math.sin(angle) * burstDist;
+      var fallY = (screenHeight - startY) + 100;
+      var rotation = (Math.random() * 540 - 270);
+      var delay = Math.random() * 100;
+      document.body.appendChild(emoji);
+      animateEmoji(emoji, startX, startY, burstX, burstY, fallY, rotation, delay);
+    }
+    setTimeout(function() {
+      pahomHitbox.classList.remove('blowup');
+      pahomHitbox.classList.add('float');
+    }, 4500);
+  }
+
+  function spawnFloatText(x, y, text) {
+    if (activeEffects >= MAX_EFFECTS) return;
+    activeEffects++;
+    var el = document.createElement('div');
+    el.className = 'float-text';
+    el.textContent = text;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.marginLeft = ((Math.random() - 0.5) * 70) + 'px';
+    var size = (1 + Math.min(combo, COMBO_MAX) * 0.07);
+    el.style.fontSize = size + 'rem';
+    document.body.appendChild(el);
+    var startTime = performance.now();
+    var duration = 1100;
+    var driftY = -110 - Math.random() * 40;
+    function frame(now) {
+      var t = Math.min((now - startTime) / duration, 1);
+      var easeOut = 1 - Math.pow(1 - t, 3);
+      var opacity = t < 0.15 ? t / 0.15 : 1 - ((t - 0.15) / 0.85);
+      var scale = t < 0.2 ? 0.6 + (t / 0.2) * 0.7 : 1.3 - ((t - 0.2) / 0.8) * 0.3;
+      el.style.opacity = Math.max(0, opacity);
+      el.style.transform = 'translate(-50%, ' + (driftY * easeOut) + 'px) scale(' + scale + ')';
+      if (t < 1) requestAnimationFrame(frame);
+      else {
+        if (el.parentNode) el.parentNode.removeChild(el);
+        activeEffects--;
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function spawnRipple(x, y) {
+    if (activeEffects >= MAX_EFFECTS) return;
+    activeEffects++;
+    var r = document.createElement('div');
+    r.className = 'click-ripple';
+    r.style.left = x + 'px';
+    r.style.top = y + 'px';
+    r.style.width = '20px';
+    r.style.height = '20px';
+    document.body.appendChild(r);
+    var start = performance.now();
+    var dur = 600;
+    function frame(now) {
+      var t = Math.min((now - start) / dur, 1);
+      var ease = 1 - Math.pow(1 - t, 3);
+      var size = 20 + ease * 90;
+      r.style.width = size + 'px';
+      r.style.height = size + 'px';
+      r.style.opacity = String(0.9 * (1 - t));
+      if (t < 1) requestAnimationFrame(frame);
+      else {
+        if (r.parentNode) r.parentNode.removeChild(r);
+        activeEffects--;
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  function bumpCombo() {
+    combo++;
+    clearTimeout(comboTimer);
+    comboTimer = setTimeout(function() {
+      combo = 0;
+      if (comboCounter) comboCounter.classList.remove('show', 'hot');
+      if (comboBar) { comboBar.classList.remove('show'); comboBar.style.width = '0%'; }
+      if (comboBonus) comboBonus.classList.remove('show');
+      if (pahomHitbox) pahomHitbox.classList.remove('combo-hot', 'combo-max');
+      scheduleUI();
+    }, COMBO_TIMEOUT);
+
+    var shown = Math.min(combo, COMBO_MAX);
+    if (comboCounter) {
+      comboCounter.textContent = 'x' + shown;
+      comboCounter.classList.add('show');
+      comboCounter.classList.toggle('hot', combo >= 10);
+      comboCounter.classList.remove('pulse');
+      requestAnimationFrame(function() {
+        comboCounter.classList.add('pulse');
+      });
+    }
+    if (comboBar) {
+      comboBar.classList.add('show');
+      comboBar.style.width = Math.min((combo / COMBO_MAX) * 100, 100) + '%';
+    }
+    if (pahomHitbox) {
+      pahomHitbox.classList.toggle('combo-hot', combo >= 10 && combo < COMBO_MAX);
+      pahomHitbox.classList.toggle('combo-max', combo >= COMBO_MAX);
+    }
+  }
+
+  if (comboCounter) {
+    comboCounter.addEventListener('animationend', function() {
+      comboCounter.classList.remove('pulse');
+    });
+  }
+
+  function getExpRequired(level) { return 1200 + (level - 1) * 600; }
+  function addPlayerExp(amount) {
+    try {
+      var exp = parseInt(localStorage.getItem('pahomPlayerExp') || '0', 10) || 0;
+      var lv = parseInt(localStorage.getItem('pahomPlayerLevel') || '1', 10) || 1;
+      exp += amount;
+      while (exp >= getExpRequired(lv)) { exp -= getExpRequired(lv); lv++; }
+      localStorage.setItem('pahomPlayerExp', String(exp));
+      localStorage.setItem('pahomPlayerLevel', String(lv));
+    } catch(e) {}
+  }
+
+  function handleClick() {
+    if (isCooldown) return;
+
+    var now = Date.now();
+    if (now - lastHandledClick < 60) return;
+    lastHandledClick = now;
+
+    try { if (window.pahomSound && window.pahomSound.playRandom) window.pahomSound.playRandom(); } catch(e) {}
+
+    lastClickTime = now;
+    totalClicks++;
+    bumpCombo();
+
+    if (totalClicks % 10 === 0) {
+      try { addPlayerExp(20); } catch(e) {}
+    }
+
+    var gained = getClickPower();
+    sexpah += gained;
+    markDirty();
+
+    var maxLove = getMaxLove();
+    love = Math.min(maxLove, love + getLoveAdd());
+
+    if (now - lastFloatSpawn >= SPAWN_INTERVAL || now - lastRippleSpawn >= SPAWN_INTERVAL) {
+      if (pahomHitbox) {
+        if (!pahomRect) pahomRect = pahomHitbox.getBoundingClientRect();
+        var cx = pahomRect.left + pahomRect.width / 2 + (Math.random() - 0.5) * pahomRect.width * 0.7;
+        var cy = pahomRect.top + pahomRect.height / 2 + (Math.random() - 0.5) * pahomRect.height * 0.7;
+
+        if (now - lastRippleSpawn >= SPAWN_INTERVAL) {
+          lastRippleSpawn = now;
+          spawnRipple(cx, cy);
         }
-
-        function saveData() {
-            try {
-                localStorage.setItem('pahomSexpah', sexpah);
-                localStorage.setItem('pahomClicks', totalClicks);
-                localStorage.setItem('pahomOverexcites', totalOverexcites);
-                localStorage.setItem('pahomTool', currentTool);
-                localStorage.setItem('pahomBuffs', JSON.stringify(activeBuffs));
-            } catch(e) {}
-            dirtySave = false;
+        if (now - lastFloatSpawn >= SPAWN_INTERVAL) {
+          lastFloatSpawn = now;
+          spawnFloatText(cx, cy, '+' + gained);
         }
-
-        function markDirty() { dirtySave = true; }
-
-        function syncSexpahFromStorage() {
-            try {
-                var v = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
-                if (v !== sexpah) sexpah = v;
-            } catch(e) {}
-        }
-
-        function getBestAvailableTool() {
-            var best = 'hand';
-            for (var i = 0; i < TOOLS_ORDER.length; i++) {
-                if (tools[TOOLS_ORDER[i]].requirement <= sexpah) best = TOOLS_ORDER[i];
-                else break;
-            }
-            return best;
-        }
-
-        function ensureValidTool() {
-            var req = tools[currentTool].requirement;
-            if (sexpah >= req) return false;
-            var newTool = getBestAvailableTool();
-            if (newTool !== currentTool) {
-                currentTool = newTool;
-                try { localStorage.setItem('pahomTool', currentTool); } catch(e) {}
-                if (shopItemsContent) {
-                    var items = shopItemsContent.querySelectorAll('.shop-item');
-                    for (var i = 0; i < items.length; i++) {
-                        items[i].classList.toggle('selected', items[i].dataset.tool === currentTool);
-                    }
-                }
-                return true;
-            }
-            return false;
-        }
-
-        function isViagraActive() { return activeBuffs.viagra && activeBuffs.viagra > Date.now(); }
-        function isCigsActive() { return activeBuffs.cigs && activeBuffs.cigs > Date.now(); }
-        function getMaxLove() { return isCigsActive() ? CIGS_MAX_LOVE : BASE_MAX_LOVE; }
-        function getBaseClickPower() { return tools[currentTool].clickPower; }
-        function getComboBonus() {
-            if (combo >= 20) return 4;
-            if (combo >= 15) return 3;
-            if (combo >= 10) return 2;
-            if (combo >= 5) return 1;
-            return 0;
-        }
-        function getClickPower() { return getBaseClickPower() + getComboBonus(); }
-        function getLoveAdd() { return isViagraActive() ? 2 : 5; }
-
-        function ensureBuffsTop() {
-            if (!buffsTop) return;
-            var now = Date.now();
-            var hasViagra = activeBuffs.viagra && activeBuffs.viagra > now;
-            var hasCigs = activeBuffs.cigs && activeBuffs.cigs > now;
-            buffsTop.innerHTML = '';
-            if (!hasViagra && !hasCigs) {
-                buffsTop.classList.add('hidden');
-                return;
-            }
-            buffsTop.classList.remove('hidden');
-            if (hasViagra) {
-                var chip1 = document.createElement('div');
-                chip1.className = 'buff-chip';
-                chip1.innerHTML = '<span class="buff-icon">💊</span><span class="buff-timer">' + formatTime(activeBuffs.viagra - now) + '</span>';
-                buffsTop.appendChild(chip1);
-            }
-            if (hasCigs) {
-                var chip2 = document.createElement('div');
-                chip2.className = 'buff-chip';
-                chip2.innerHTML = '<span class="buff-icon">🚬</span><span class="buff-timer">' + formatTime(activeBuffs.cigs - now) + '</span>';
-                buffsTop.appendChild(chip2);
-            }
-        }
-
-        function renderShopOnce() {
-            if (shopRendered) return;
-            if (!shopItemsContent || !shopBuffsContent || !inventoryList) return;
-            shopRendered = true;
-
-            var itemsPanel = shopItemsContent.querySelector('.shop-panel');
-            if (!itemsPanel) return;
-            itemsPanel.innerHTML = '';
-            Object.keys(tools).forEach(function(key) {
-                var tool = tools[key];
-                var item = document.createElement('div');
-                item.className = 'shop-item';
-                item.dataset.tool = key;
-                item.innerHTML =
-                    '<div class="shop-item-info">' +
-                        '<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:#111;border-radius:6px;">' + tool.icon + '</div>' +
-                        '<div class="item-info">' +
-                            '<div class="item-name">' + tool.name + '</div>' +
-                            '<div class="item-desc">+' + tool.clickPower + ' за клик' + (tool.requirement > 0 ? ' · ' + formatSexpah(tool.requirement) + ' секспахомов' : '') + '</div>' +
-                        '</div>' +
-                    '</div>';
-                item.addEventListener('click', function() { selectTool(key); });
-                itemsPanel.appendChild(item);
-            });
-
-            var buffsPanel = shopBuffsContent.querySelector('.shop-panel');
-            if (!buffsPanel) return;
-            buffsPanel.innerHTML = '';
-            Object.keys(buffs).forEach(function(key) {
-                var buff = buffs[key];
-                var item = document.createElement('div');
-                item.className = 'shop-item';
-                var desc = '';
-                if (key === 'viagra') desc = 'Пахом возбуждается медленнее · ' + formatSexpah(buff.price) + ' секспахомов · 5 мин';
-                else if (key === 'cigs') desc = 'Максимальная любовь 500 единиц · ' + formatSexpah(buff.price) + ' секспахомов · 5 мин';
-
-                item.innerHTML =
-                    '<div class="shop-item-info">' +
-                        '<div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;background:#111;border-radius:6px;">' + buff.icon + '</div>' +
-                        '<div class="item-info">' +
-                            '<div class="item-name">' + buff.name + '</div>' +
-                            '<div class="item-desc">' + desc + '</div>' +
-                        '</div>' +
-                    '</div>';
-                item.addEventListener('click', function() { buyBuff(key); });
-                buffsPanel.appendChild(item);
-            });
-
-            inventoryList.innerHTML = '';
-            var section = document.createElement('div');
-            section.className = 'inventory-section';
-            section.innerHTML = '<div class="inventory-section-title">Трофеи с боссов</div>';
-            inventoryList.appendChild(section);
-
-            var empty = document.createElement('div');
-            empty.className = 'inventory-empty';
-            empty.textContent = 'Пусто';
-            section.appendChild(empty);
-            invRefs.empty = empty;
-
-            Object.keys(LOOT_META).forEach(function(id) {
-                var meta = LOOT_META[id];
-                var row = document.createElement('div');
-                row.className = 'inventory-item';
-                row.style.display = 'none';
-                row.innerHTML =
-                    '<div class="inventory-item-info">' +
-                        '<span class="inventory-item-icon">' + meta.icon + '</span>' +
-                        '<div class="inventory-item-name">' + meta.name + '</div>' +
-                    '</div>' +
-                    '<div class="inventory-item-count">0 / ' + LOOT_MAX + '</div>';
-                section.appendChild(row);
-                invRefs[id] = { row: row, count: row.querySelector('.inventory-item-count') };
-            });
-
-            refreshItemsAvailability();
-        }
-
-        function refreshItemsAvailability() {
-            if (!shopItemsContent) return;
-            var items = shopItemsContent.querySelectorAll('.shop-item');
-            for (var i = 0; i < items.length; i++) {
-                var el = items[i];
-                var key = el.dataset.tool;
-                if (!key || !tools[key]) continue;
-                var canUse = sexpah >= tools[key].requirement;
-                el.classList.toggle('locked', !canUse);
-                el.classList.toggle('selected', key === currentTool);
-            }
-        }
-
-        function refreshInventoryValues() {
-            var any = false;
-            Object.keys(LOOT_META).forEach(function(id) {
-                var ref = invRefs[id];
-                if (!ref) return;
-                var c = bossInventory[id] || 0;
-                if (c > 0) {
-                    ref.row.style.display = 'flex';
-                    ref.count.textContent = c + ' / ' + LOOT_MAX;
-                    ref.count.classList.toggle('max', c >= LOOT_MAX);
-                    any = true;
-                } else {
-                    ref.row.style.display = 'none';
-                }
-            });
-            if (invRefs.empty) invRefs.empty.style.display = any ? 'none' : 'block';
-        }
-
-        function selectTool(toolKey) {
-            syncSexpahFromStorage();
-            var tool = tools[toolKey];
-            if (!tool) return;
-            if (sexpah < tool.requirement) return;
-            if (currentTool !== toolKey) {
-                currentTool = toolKey;
-                try { localStorage.setItem('pahomTool', currentTool); } catch(e) {}
-                if (shopItemsContent) {
-                    var items = shopItemsContent.querySelectorAll('.shop-item');
-                    for (var i = 0; i < items.length; i++) {
-                        items[i].classList.toggle('selected', items[i].dataset.tool === currentTool);
-                    }
-                }
-                scheduleUI();
-            }
-        }
-
-        function buyBuff(buffKey) {
-            syncSexpahFromStorage();
-            var buff = buffs[buffKey];
-            if (!buff) return;
-            if (sexpah < buff.price) return;
-            var now = Date.now();
-            if (activeBuffs[buffKey] && activeBuffs[buffKey] > now) activeBuffs[buffKey] += buff.duration;
-            else activeBuffs[buffKey] = now + buff.duration;
-            sexpah -= buff.price;
-            saveData();
-            ensureValidTool();
-            updateUI();
-            refreshItemsAvailability();
-            ensureBuffsTop();
-        }
-
-        function updateUI() {
-            ensureValidTool();
-            if (sexpahSpan) sexpahSpan.textContent = formatSexpah(sexpah);
-
-            var maxLove = getMaxLove();
-            if (loveVerticalFill) loveVerticalFill.style.height = Math.min(100, (love / maxLove) * 100) + '%';
-            if (excitedDiv) excitedDiv.classList.toggle('hidden', love < maxLove);
-
-            if (cooldownDiv) {
-                if (isCooldown) cooldownDiv.textContent = '⏳ ' + cooldownRemaining + ' сек';
-                else if (love >= maxLove) cooldownDiv.textContent = '💔 Переполнена';
-                else cooldownDiv.textContent = 'Давануть Пахома😍';
-            }
-
-            var tool = tools[currentTool];
-            if (currentToolIconSpan) currentToolIconSpan.textContent = tool.icon;
-            if (currentToolNameSpan) currentToolNameSpan.textContent = tool.name;
-            if (clickPowerLabel) clickPowerLabel.textContent = '+' + getClickPower() + ' за клик';
-
-            var bonus = getComboBonus();
-            if (comboBonus) {
-                if (bonus > 0 && combo > 0) {
-                    comboBonus.textContent = 'БОНУС КОМБО: +' + bonus + ' за клик';
-                    comboBonus.classList.add('show');
-                } else {
-                    comboBonus.classList.remove('show');
-                }
-            }
-        }
-
-        function quickUIUpdate() {
-            if (sexpahSpan) sexpahSpan.textContent = formatSexpah(sexpah);
-            var maxLove = getMaxLove();
-            if (loveVerticalFill) loveVerticalFill.style.height = Math.min(100, (love / maxLove) * 100) + '%';
-            if (clickPowerLabel) clickPowerLabel.textContent = '+' + getClickPower() + ' за клик';
-        }
-
-        function scheduleQuickUI() {
-            if (uiRafPending) return;
-            uiRafPending = true;
-            requestAnimationFrame(function() {
-                uiRafPending = false;
-                quickUIUpdate();
-            });
-        }
-
-        function scheduleUI() {
-            if (uiRafPending) return;
-            uiRafPending = true;
-            requestAnimationFrame(function() {
-                uiRafPending = false;
-                updateUI();
-            });
-        }
-
-        function startCooldown() {
-            if (isCooldown) return;
-            isCooldown = true;
-            cooldownRemaining = 10;
-
-            try {
-                if (window.pahomSound && typeof window.pahomSound.playExcite === 'function') {
-                    window.pahomSound.playExcite();
-                }
-            } catch(e) {}
-
-            triggerBlowup();
-            if (cooldownInterval) clearInterval(cooldownInterval);
-            cooldownInterval = setInterval(function() {
-                cooldownRemaining--;
-                if (cooldownRemaining <= 0) {
-                    clearInterval(cooldownInterval);
-                    cooldownInterval = null;
-                    isCooldown = false;
-                }
-                scheduleUI();
-            }, 1000);
-        }
-
-        function animateEmoji(emoji, startX, startY, burstX, burstY, fallY, rotation, delay) {
-            var duration = 2500;
-            var startTime = performance.now() + delay;
-            function frame(currentTime) {
-                var elapsed = currentTime - startTime;
-                if (elapsed < 0) { requestAnimationFrame(frame); return; }
-                var t = Math.min(elapsed / duration, 1);
-                var x, y, scale, opacity, rotate;
-                if (t < 0.35) {
-                    var p = t / 0.35;
-                    var easeOut = 1 - Math.pow(1 - p, 3);
-                    x = burstX * easeOut; y = burstY * easeOut;
-                    scale = 0.6 + 0.6 * easeOut; opacity = easeOut * 0.9 + 0.1; rotate = rotation * easeOut * 0.6;
-                } else {
-                    var p2 = (t - 0.35) / 0.65;
-                    var e = p2 < 0.5 ? 2 * p2 * p2 : 1 - Math.pow(-2 * p2 + 2, 2) / 2;
-                    x = burstX + burstX * 0.15 * e; y = burstY + fallY * e;
-                    scale = 1.2 - 0.9 * e; opacity = 1 - e; rotate = rotation * 0.6 + rotation * 0.4 * e;
-                }
-                emoji.style.transform = 'translate(' + (startX + x) + 'px, ' + (startY + y) + 'px) translate(-50%, -50%) scale(' + scale + ') rotate(' + rotate + 'deg)';
-                emoji.style.opacity = opacity;
-                if (t < 1) requestAnimationFrame(frame);
-                else if (emoji.parentNode) emoji.parentNode.removeChild(emoji);
-            }
-            requestAnimationFrame(frame);
-        }
-
-        function triggerBlowup() {
-            if (!pahomHitbox) return;
-            var rect = pahomHitbox.getBoundingClientRect();
-            var cx = rect.left + rect.width / 2;
-            var cy = rect.top + rect.height / 2;
-            var radius = rect.width / 2;
-            var screenHeight = window.innerHeight;
-            pahomHitbox.classList.remove('float', 'shake');
-            pahomHitbox.classList.add('blowup');
-            var count = 18;
-            for (var i = 0; i < count; i++) {
-                var emoji = document.createElement('div');
-                emoji.className = 'flying-emoji';
-                emoji.textContent = '🔞';
-                emoji.style.left = '0'; emoji.style.top = '0'; emoji.style.opacity = '0';
-                var angle = (Math.PI * 2 / count) * i + (Math.random() * 0.4 - 0.2);
-                var startX = cx + Math.cos(angle) * radius;
-                var startY = cy + Math.sin(angle) * radius;
-                var burstDist = 70 + Math.random() * 50;
-                var burstX = Math.cos(angle) * burstDist;
-                var burstY = Math.sin(angle) * burstDist;
-                var fallY = (screenHeight - startY) + 100;
-                var rotation = (Math.random() * 540 - 270);
-                var delay = Math.random() * 100;
-                document.body.appendChild(emoji);
-                animateEmoji(emoji, startX, startY, burstX, burstY, fallY, rotation, delay);
-            }
-            setTimeout(function() {
-                pahomHitbox.classList.remove('blowup');
-                pahomHitbox.classList.add('float');
-            }, 4500);
-        }
-
-        function spawnFloatText(x, y, text) {
-            if (activeEffects >= MAX_EFFECTS) return;
-            activeEffects++;
-            var el = document.createElement('div');
-            el.className = 'float-text';
-            el.textContent = text;
-            el.style.left = x + 'px';
-            el.style.top = y + 'px';
-            el.style.marginLeft = ((Math.random() - 0.5) * 70) + 'px';
-            var size = (1 + Math.min(combo, COMBO_MAX) * 0.07);
-            el.style.fontSize = size + 'rem';
-            document.body.appendChild(el);
-            var startTime = performance.now();
-            var duration = 1100;
-            var driftY = -110 - Math.random() * 40;
-            function frame(now) {
-                var t = Math.min((now - startTime) / duration, 1);
-                var easeOut = 1 - Math.pow(1 - t, 3);
-                var opacity = t < 0.15 ? t / 0.15 : 1 - ((t - 0.15) / 0.85);
-                var scale = t < 0.2 ? 0.6 + (t / 0.2) * 0.7 : 1.3 - ((t - 0.2) / 0.8) * 0.3;
-                el.style.opacity = Math.max(0, opacity);
-                el.style.transform = 'translate(-50%, ' + (driftY * easeOut) + 'px) scale(' + scale + ')';
-                if (t < 1) requestAnimationFrame(frame);
-                else {
-                    if (el.parentNode) el.parentNode.removeChild(el);
-                    activeEffects--;
-                }
-            }
-            requestAnimationFrame(frame);
-        }
-
-        function spawnRipple(x, y) {
-            if (activeEffects >= MAX_EFFECTS) return;
-            activeEffects++;
-            var r = document.createElement('div');
-            r.className = 'click-ripple';
-            r.style.left = x + 'px';
-            r.style.top = y + 'px';
-            r.style.width = '20px';
-            r.style.height = '20px';
-            document.body.appendChild(r);
-            var start = performance.now();
-            var dur = 600;
-            function frame(now) {
-                var t = Math.min((now - start) / dur, 1);
-                var ease = 1 - Math.pow(1 - t, 3);
-                var size = 20 + ease * 90;
-                r.style.width = size + 'px';
-                r.style.height = size + 'px';
-                r.style.opacity = String(0.9 * (1 - t));
-                if (t < 1) requestAnimationFrame(frame);
-                else {
-                    if (r.parentNode) r.parentNode.removeChild(r);
-                    activeEffects--;
-                }
-            }
-            requestAnimationFrame(frame);
-        }
-
-        function bumpCombo() {
-            combo++;
-            clearTimeout(comboTimer);
-            comboTimer = setTimeout(function() {
-                combo = 0;
-                if (comboCounter) comboCounter.classList.remove('show', 'hot');
-                if (comboBar) { comboBar.classList.remove('show'); comboBar.style.width = '0%'; }
-                if (comboBonus) comboBonus.classList.remove('show');
-                if (pahomHitbox) pahomHitbox.classList.remove('combo-hot', 'combo-max');
-                scheduleUI();
-            }, COMBO_TIMEOUT);
-
-            var shown = Math.min(combo, COMBO_MAX);
-            if (comboCounter) {
-                comboCounter.textContent = 'x' + shown;
-                comboCounter.classList.add('show');
-                comboCounter.classList.toggle('hot', combo >= 10);
-                comboCounter.classList.remove('pulse');
-                requestAnimationFrame(function() {
-                    comboCounter.classList.add('pulse');
-                });
-            }
-            if (comboBar) {
-                comboBar.classList.add('show');
-                comboBar.style.width = Math.min((combo / COMBO_MAX) * 100, 100) + '%';
-            }
-            if (pahomHitbox) {
-                pahomHitbox.classList.toggle('combo-hot', combo >= 10 && combo < COMBO_MAX);
-                pahomHitbox.classList.toggle('combo-max', combo >= COMBO_MAX);
-            }
-        }
-
-        if (comboCounter) {
-            comboCounter.addEventListener('animationend', function() {
-                comboCounter.classList.remove('pulse');
-            });
-        }
-
-        function getExpRequired(level) { return 1200 + (level - 1) * 600; }
-        function addPlayerExp(amount) {
-            try {
-                var exp = parseInt(localStorage.getItem('pahomPlayerExp') || '0', 10) || 0;
-                var lv = parseInt(localStorage.getItem('pahomPlayerLevel') || '1', 10) || 1;
-                exp += amount;
-                while (exp >= getExpRequired(lv)) { exp -= getExpRequired(lv); lv++; }
-                localStorage.setItem('pahomPlayerExp', String(exp));
-                localStorage.setItem('pahomPlayerLevel', String(lv));
-            } catch(e) {}
-        }
-
-        function handleClick() {
-            if (isCooldown) return;
-
-            var now = Date.now();
-            if (now - lastHandledClick < 60) return;
-            lastHandledClick = now;
-
-            try {
-                if (window.pahomSound && typeof window.pahomSound.playRandom === 'function') {
-                    window.pahomSound.playRandom();
-                }
-            } catch(e) {}
-
-            lastClickTime = now;
-            totalClicks++;
-            bumpCombo();
-
-            if (totalClicks % 10 === 0) {
-                try { addPlayerExp(20); } catch(e) {}
-            }
-
-            var gained = getClickPower();
-            sexpah += gained;
-            markDirty();
-
-            var maxLove = getMaxLove();
-            love = Math.min(maxLove, love + getLoveAdd());
-
-            if (now - lastFloatSpawn >= SPAWN_INTERVAL || now - lastRippleSpawn >= SPAWN_INTERVAL) {
-                if (pahomHitbox) {
-                    if (!pahomRect) pahomRect = pahomHitbox.getBoundingClientRect();
-                    var cx = pahomRect.left + pahomRect.width / 2 + (Math.random() - 0.5) * pahomRect.width * 0.7;
-                    var cy = pahomRect.top + pahomRect.height / 2 + (Math.random() - 0.5) * pahomRect.height * 0.7;
-
-                    if (now - lastRippleSpawn >= SPAWN_INTERVAL) {
-                        lastRippleSpawn = now;
-                        spawnRipple(cx, cy);
-                    }
-                    if (now - lastFloatSpawn >= SPAWN_INTERVAL) {
-                        lastFloatSpawn = now;
-                        spawnFloatText(cx, cy, '+' + gained);
-                    }
-                }
-            }
-
-            if (love > maxLove * 0.9 && !isCooldown && pahomHitbox) {
-                if (!pahomHitbox.classList.contains('shake')) {
-                    pahomHitbox.classList.add('shake');
-                    setTimeout(function() { pahomHitbox.classList.remove('shake'); }, 250);
-                }
-            }
-
-            if (love >= maxLove) {
-                totalOverexcites++;
-                startCooldown();
-            }
-
-            scheduleQuickUI();
-        }
-
-        function startDecayCheck() {
-            if (decayInterval) clearInterval(decayInterval);
-            decayInterval = setInterval(function() {
-                if (!isCooldown && love > 0 && Date.now() - lastClickTime >= 500) {
-                    love = Math.max(0, love - 5);
-                    scheduleUI();
-                }
-            }, 500);
-        }
-
-        function startBuffCheck() {
-            if (buffInterval) clearInterval(buffInterval);
-            buffInterval = setInterval(function() {
-                var now = Date.now();
-                var changed = false;
-                if (activeBuffs.viagra && activeBuffs.viagra <= now) { delete activeBuffs.viagra; changed = true; }
-                if (activeBuffs.cigs && activeBuffs.cigs <= now) {
-                    delete activeBuffs.cigs;
-                    if (love > BASE_MAX_LOVE) love = BASE_MAX_LOVE;
-                    changed = true;
-                }
-                ensureBuffsTop();
-                if (changed) { markDirty(); scheduleUI(); }
-            }, 1000);
-        }
-
-        function startTicker() {
-            if (tickerInterval) clearInterval(tickerInterval);
-            tickerInterval = setInterval(function() {
-                if (dirtySave) saveData();
-
-                ensureBuffsTop();
-                syncSexpahFromStorage();
-                ensureValidTool();
-                scheduleUI();
-                if (currentShopTab === 'items' && shopPanel && !shopPanel.classList.contains('hidden')) {
-                    refreshItemsAvailability();
-                }
-                if (currentShopTab === 'inventory' && shopPanel && !shopPanel.classList.contains('hidden')) {
-                    try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) {}
-                    refreshInventoryValues();
-                }
-            }, 1000);
-        }
-
-        function switchTab(tab) {
-            if (isAnimating) return;
-            if (!homePanel || !shopPanel) return;
-            isAnimating = true;
-
-            var currentPage = tab === 'home' ? shopPanel : homePanel;
-            var targetPage = tab === 'home' ? homePanel : shopPanel;
-
-            if (tab === 'shop') {
-                syncSexpahFromStorage();
-                ensureValidTool();
-                refreshItemsAvailability();
-                currentPage.classList.add('exit-left');
-                currentPage.classList.remove('active');
-                setTimeout(function() {
-                    currentPage.classList.remove('exit-left');
-                    currentPage.classList.add('hidden');
-                    targetPage.classList.remove('hidden');
-                    targetPage.classList.add('active-left');
-                    setTimeout(function() {
-                        targetPage.classList.remove('active-left');
-                        targetPage.classList.add('active');
-                        isAnimating = false;
-                    }, 50);
-                }, 550);
-            } else {
-                currentPage.classList.add('exit-right');
-                currentPage.classList.remove('active');
-                setTimeout(function() {
-                    currentPage.classList.remove('exit-right');
-                    currentPage.classList.add('hidden');
-                    targetPage.classList.remove('hidden');
-                    targetPage.classList.add('active');
-                    isAnimating = false;
-                }, 550);
-            }
-
-            if (homeTab) homeTab.classList.remove('active');
-            if (shopTab) shopTab.classList.remove('active');
-
-            if (tab === 'home') {
-                if (homeTab) homeTab.classList.add('active');
-                if (headerTitle) headerTitle.textContent = 'ГЛАВНАЯ';
-                if (cooldownDiv) cooldownDiv.style.display = 'block';
-            } else {
-                if (shopTab) shopTab.classList.add('active');
-                if (headerTitle) headerTitle.textContent = 'МАГАЗИН';
-                if (cooldownDiv) cooldownDiv.style.display = 'none';
-                renderShopOnce();
-                refreshInventoryValues();
-                refreshItemsAvailability();
-            }
-        }
-
-        function switchShopTab(tab) {
-            if (isShopTabAnimating || tab === currentShopTab) return;
-            if (!shopItemsContent || !shopBuffsContent || !shopInventoryContent) return;
-            isShopTabAnimating = true;
-
-            var tabsMap = { items: shopItemsContent, buffs: shopBuffsContent, inventory: shopInventoryContent };
-            var buttonsMap = { items: shopItemsTab, buffs: shopBuffsTab, inventory: shopInventoryTab };
-
-            var order = ['items', 'buffs', 'inventory'];
-            var fromIndex = order.indexOf(currentShopTab);
-            var toIndex = order.indexOf(tab);
-            var movingRight = toIndex > fromIndex;
-
-            var fromPage = tabsMap[currentShopTab];
-            var toPage = tabsMap[tab];
-
-            if (buttonsMap[currentShopTab]) buttonsMap[currentShopTab].classList.remove('active');
-            if (buttonsMap[tab]) buttonsMap[tab].classList.add('active');
-
-            fromPage.classList.remove('active', 'active-left', 'exit-left', 'exit-right');
-            toPage.classList.remove('active', 'active-left', 'exit-left', 'exit-right');
-
-            if (movingRight) {
-                fromPage.classList.add('exit-left');
-                toPage.classList.add('active');
-            } else {
-                fromPage.classList.add('exit-right');
-                toPage.classList.add('active-left');
-            }
-
-            setTimeout(function() {
-                fromPage.classList.remove('exit-left', 'exit-right');
-                toPage.classList.remove('active', 'active-left');
-                toPage.classList.add('active');
-                isShopTabAnimating = false;
-            }, 620);
-
-            currentShopTab = tab;
-            if (tab === 'items') {
-                syncSexpahFromStorage();
-                ensureValidTool();
-                refreshItemsAvailability();
-            } else if (tab === 'inventory') {
-                try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) {}
-                refreshInventoryValues();
-            }
-        }
-
-        function openInventoryFromHash() {
-            if (window.location.hash !== '#inventory') return;
-            if (!homePanel || !shopPanel) return;
-            homePanel.classList.remove('active');
-            homePanel.classList.add('hidden');
-            shopPanel.classList.remove('hidden');
-            shopPanel.classList.add('active');
-            if (homeTab) homeTab.classList.remove('active');
-            if (shopTab) shopTab.classList.add('active');
-            shopItemsContent.classList.remove('active');
-            shopBuffsContent.classList.remove('active');
-            shopInventoryContent.classList.add('active');
-            shopItemsTab.classList.remove('active');
-            shopBuffsTab.classList.remove('active');
-            shopInventoryTab.classList.add('active');
-            if (headerTitle) headerTitle.textContent = 'МАГАЗИН';
-            if (cooldownDiv) cooldownDiv.style.display = 'none';
-            currentShopTab = 'inventory';
-            renderShopOnce();
-            try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) {}
-            refreshInventoryValues();
-            try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
-        }
-
-        function updateSoundButton() {
-            if (!soundBtn) return;
-            var muted = window.pahomSound ? window.pahomSound.isMuted() : false;
-            soundBtn.classList.toggle('muted', muted);
-            soundBtn.title = muted ? 'Звук выключен' : 'Звук включён';
-            soundBtn.classList.remove('pulse');
-            void soundBtn.offsetWidth;
-            soundBtn.classList.add('pulse');
-            setTimeout(function() { soundBtn.classList.remove('pulse'); }, 500);
-        }
-
-        function initSoundButton() {
-            if (!soundBtn) return;
-            updateSoundButton();
-            soundBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                if (window.pahomSound) {
-                    window.pahomSound.toggleMute();
-                    updateSoundButton();
-                }
-            });
-            window.addEventListener('pahomSoundMutedChanged', updateSoundButton);
-        }
-
-        function initBottomTabs() {
-            if (homeTab) {
-                homeTab.onclick = function(e) {
-                    e.preventDefault();
-                    switchTab('home');
-                };
-            }
-            if (shopTab) {
-                shopTab.onclick = function(e) {
-                    e.preventDefault();
-                    switchTab('shop');
-                };
-            }
-            if (shopItemsTab) shopItemsTab.onclick = function() { switchShopTab('items'); };
-            if (shopBuffsTab) shopBuffsTab.onclick = function() { switchShopTab('buffs'); };
-            if (shopInventoryTab) shopInventoryTab.onclick = function() { switchShopTab('inventory'); };
-        }
-
-        function invalidatePahomRect() { pahomRect = null; }
-        window.addEventListener('resize', invalidatePahomRect);
-        window.addEventListener('scroll', invalidatePahomRect, { passive: true });
-        window.addEventListener('orientationchange', invalidatePahomRect);
-
-        function init() {
-            try { initBottomTabs(); } catch(e) {}
-            try {
-                if (pahomHitbox) {
-                    pahomHitbox.addEventListener('click', handleClick);
-                }
-            } catch(e) {}
-            try { initSoundButton(); } catch(e) {}
-            try { renderShopOnce(); } catch(e) {}
-            try { startDecayCheck(); } catch(e) {}
-            try { startBuffCheck(); } catch(e) {}
-            try { startTicker(); } catch(e) {}
-            try {
-                syncSexpahFromStorage();
-                ensureValidTool();
-                ensureBuffsTop();
-                updateUI();
-            } catch(e) {}
-            try { openInventoryFromHash(); } catch(e) {}
-            try {
-                if (window.tgSyncReady) {
-                    window.tgSyncLoad(function(loaded) {
-                        if (loaded) {
-                            sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
-                            totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0', 10) || 0;
-                            totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0', 10) || 0;
-                            currentTool = localStorage.getItem('pahomTool') || 'hand';
-                            try { activeBuffs = JSON.parse(localStorage.getItem('pahomBuffs') || '{}') || {}; } catch(e) {}
-                            try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) {}
-                            ensureValidTool();
-                            updateUI();
-                            ensureBuffsTop();
-                            renderShopOnce();
-                            refreshInventoryValues();
-                            refreshItemsAvailability();
-                        }
-                    });
-                }
-            } catch(e) {}
-        }
-
-        window.addEventListener('beforeunload', function() {
-            if (dirtySave) saveData();
-        });
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
-        }
-    })();
-    </script>
-
-    <script src="income.js"></script>
+      }
+    }
+
+    if (love > maxLove * 0.9 && !isCooldown && pahomHitbox) {
+      if (!pahomHitbox.classList.contains('shake')) {
+        pahomHitbox.classList.add('shake');
+        setTimeout(function() { pahomHitbox.classList.remove('shake'); }, 250);
+      }
+    }
+
+    if (love >= maxLove) {
+      totalOverexcites++;
+      startCooldown();
+    }
+
+    scheduleQuickUI();
+  }
+
+  function startDecayCheck() {
+    if (decayInterval) clearInterval(decayInterval);
+    decayInterval = setInterval(function() {
+      if (!isCooldown && love > 0 && Date.now() - lastClickTime >= 500) {
+        love = Math.max(0, love - 5);
+        scheduleUI();
+      }
+    }, 500);
+  }
+
+  function startBuffCheck() {
+    if (buffInterval) clearInterval(buffInterval);
+    buffInterval = setInterval(function() {
+      var now = Date.now();
+      var changed = false;
+      if (activeBuffs.viagra && activeBuffs.viagra <= now) { delete activeBuffs.viagra; changed = true; }
+      if (activeBuffs.cigs && activeBuffs.cigs <= now) {
+        delete activeBuffs.cigs;
+        if (love > BASE_MAX_LOVE) love = BASE_MAX_LOVE;
+        changed = true;
+      }
+      ensureBuffsTop();
+      if (changed) { markDirty(); scheduleUI(); }
+    }, 1000);
+  }
+
+  function startTicker() {
+    if (tickerInterval) clearInterval(tickerInterval);
+    tickerInterval = setInterval(function() {
+      if (dirtySave) saveData();
+
+      ensureBuffsTop();
+      syncSexpahFromStorage();
+      ensureValidTool();
+      scheduleUI();
+      if (currentShopTab === 'items' && shopPanel && !shopPanel.classList.contains('hidden')) {
+        refreshItemsAvailability();
+      }
+      if (currentShopTab === 'inventory' && shopPanel && !shopPanel.classList.contains('hidden')) {
+        try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) {}
+        refreshInventoryValues();
+      }
+    }, 1000);
+  }
+
+  function switchTab(tab) {
+    if (isAnimating) return;
+    if (!homePanel || !shopPanel) return;
+    isAnimating = true;
+
+    var currentPage = tab === 'home' ? shopPanel : homePanel;
+    var targetPage = tab === 'home' ? homePanel : shopPanel;
+
+    if (tab === 'shop') {
+      syncSexpahFromStorage();
+      ensureValidTool();
+      refreshItemsAvailability();
+      currentPage.classList.add('exit-left');
+      currentPage.classList.remove('active');
+      setTimeout(function() {
+        currentPage.classList.remove('exit-left');
+        currentPage.classList.add('hidden');
+        targetPage.classList.remove('hidden');
+        targetPage.classList.add('active-left');
+        setTimeout(function() {
+          targetPage.classList.remove('active-left');
+          targetPage.classList.add('active');
+          isAnimating = false;
+        }, 50);
+      }, 700);
+    } else {
+      currentPage.classList.add('exit-right');
+      currentPage.classList.remove('active');
+      setTimeout(function() {
+        currentPage.classList.remove('exit-right');
+        currentPage.classList.add('hidden');
+        targetPage.classList.remove('hidden');
+        targetPage.classList.add('active');
+        isAnimating = false;
+      }, 700);
+    }
+
+    if (homeTab) homeTab.classList.remove('active');
+    if (shopTab) shopTab.classList.remove('active');
+
+    if (tab === 'home') {
+      if (homeTab) homeTab.classList.add('active');
+      if (headerTitle) headerTitle.textContent = 'ГЛАВНАЯ';
+      if (cooldownDiv) cooldownDiv.style.display = 'block';
+    } else {
+      if (shopTab) shopTab.classList.add('active');
+      if (headerTitle) headerTitle.textContent = 'МАГАЗИН';
+      if (cooldownDiv) cooldownDiv.style.display = 'none';
+      renderShopOnce();
+      refreshInventoryValues();
+      refreshItemsAvailability();
+    }
+  }
+
+  function switchShopTab(tab) {
+    if (isShopTabAnimating || tab === currentShopTab) return;
+    if (!shopItemsContent || !shopBuffsContent || !shopInventoryContent) return;
+    isShopTabAnimating = true;
+
+    var tabsMap = { items: shopItemsContent, buffs: shopBuffsContent, inventory: shopInventoryContent };
+    var buttonsMap = { items: shopItemsTab, buffs: shopBuffsTab, inventory: shopInventoryTab };
+
+    var order = ['items', 'buffs', 'inventory'];
+    var fromIndex = order.indexOf(currentShopTab);
+    var toIndex = order.indexOf(tab);
+    var movingRight = toIndex > fromIndex;
+
+    var fromPage = tabsMap[currentShopTab];
+    var toPage = tabsMap[tab];
+
+    if (buttonsMap[currentShopTab]) buttonsMap[currentShopTab].classList.remove('active');
+    if (buttonsMap[tab]) buttonsMap[tab].classList.add('active');
+
+    fromPage.classList.remove('active', 'active-left', 'exit-left', 'exit-right');
+    toPage.classList.remove('active', 'active-left', 'exit-left', 'exit-right');
+
+    if (movingRight) {
+      fromPage.classList.add('exit-left');
+      toPage.classList.add('active');
+    } else {
+      fromPage.classList.add('exit-right');
+      toPage.classList.add('active-left');
+    }
+
+    setTimeout(function() {
+      fromPage.classList.remove('exit-left', 'exit-right');
+      toPage.classList.remove('active', 'active-left');
+      toPage.classList.add('active');
+      isShopTabAnimating = false;
+    }, 700);
+
+    currentShopTab = tab;
+    if (tab === 'items') {
+      syncSexpahFromStorage();
+      ensureValidTool();
+      refreshItemsAvailability();
+    } else if (tab === 'inventory') {
+      try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) {}
+      refreshInventoryValues();
+    }
+  }
+
+  function openInventoryFromHash() {
+    if (window.location.hash !== '#inventory') return;
+    if (!homePanel || !shopPanel) return;
+    homePanel.classList.remove('active');
+    homePanel.classList.add('hidden');
+    shopPanel.classList.remove('hidden');
+    shopPanel.classList.add('active');
+    if (homeTab) homeTab.classList.remove('active');
+    if (shopTab) shopTab.classList.add('active');
+    shopItemsContent.classList.remove('active');
+    shopBuffsContent.classList.remove('active');
+    shopInventoryContent.classList.add('active');
+    shopItemsTab.classList.remove('active');
+    shopBuffsTab.classList.remove('active');
+    shopInventoryTab.classList.add('active');
+    if (headerTitle) headerTitle.textContent = 'МАГАЗИН';
+    if (cooldownDiv) cooldownDiv.style.display = 'none';
+    currentShopTab = 'inventory';
+    renderShopOnce();
+    try { bossInventory = JSON.parse(localStorage.getItem('pahomBossInventory') || '{}') || {}; } catch(e) {}
+    refreshInventoryValues();
+    try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
+  }
+
+  function openShopFromHash() {
+    if (window.location.hash !== '#shop') return;
+    if (!homePanel || !shopPanel) return;
+    homePanel.classList.remove('active');
+    homePanel.classList.add('hidden');
+    shopPanel.classList.remove('hidden');
+    shopPanel.classList.add('active');
+    if (homeTab) homeTab.classList.remove('active');
+    if (shopTab) shopTab.classList.add('active');
+    if (headerTitle) headerTitle.textContent = 'МАГАЗИН';
+    if (cooldownDiv) cooldownDiv.style.display = 'none';
+    renderShopOnce();
+    refreshInventoryValues();
+    refreshItemsAvailability();
+    try { history.replaceState(null, '', window.location.pathname); } catch(e) {}
+  }
+
+  function updateSoundButton() {
+    if (!soundBtn) return;
+    var muted = window.pahomSound ? window.pahomSound.isMuted() : false;
+    soundBtn.classList.toggle('muted', muted);
+    soundBtn.title = muted ? 'Звук выключен' : 'Звук включён';
+    soundBtn.classList.remove('pulse');
+    void soundBtn.offsetWidth;
+    soundBtn.classList.add('pulse');
+    setTimeout(function() { soundBtn.classList.remove('pulse'); }, 550);
+  }
+
+  function initSoundButton() {
+    if (!soundBtn) return;
+    updateSoundButton();
+    soundBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (window.pahomSound) {
+        window.pahomSound.toggleMute();
+        updateSoundButton();
+      }
+    });
+    window.addEventListener('pahomSoundMutedChanged', updateSoundButton);
+  }
+
+  function initBottomTabs() {
+    if (homeTab) homeTab.onclick = function(e) { e.preventDefault(); switchTab('home'); };
+    if (shopTab) shopTab.onclick = function(e) { e.preventDefault(); switchTab('shop'); };
+    if (shopItemsTab) shopItemsTab.onclick = function() { switchShopTab('items'); };
+    if (shopBuffsTab) shopBuffsTab.onclick = function() { switchShopTab('buffs'); };
+    if (shopInventoryTab) shopInventoryTab.onclick = function() { switchShopTab('inventory'); };
+  }
+
+  function invalidatePahomRect() { pahomRect = null; }
+  window.addEventListener('resize', invalidatePahomRect);
+  window.addEventListener('scroll', invalidatePahomRect, { passive: true });
+  window.addEventListener('orientationchange', invalidatePahomRect);
+
+  function init() {
+    try { initBottomTabs(); } catch(e) {}
+    try {
+      if (pahomHitbox) {
+        pahomHitbox.addEventListener('click', handleClick);
+      }
+    } catch(e) {}
+    try { initSoundButton(); } catch(e) {}
+    try { renderShopOnce(); } catch(e) {}
+    try { startDecayCheck(); } catch(e) {}
+    try { startBuffCheck(); } catch(e) {}
+    try { startTicker(); } catch(e) {}
+    try {
+      syncSexpahFromStorage();
+      ensureValidTool();
+      ensureBuffsTop();
+      updateUI();
+    } catch(e) {}
+    try { openInventoryFromHash(); } catch(e) {}
+    try { openShopFromHash(); } catch(e) {}
+  }
+
+  window.addEventListener('beforeunload', function() {
+    if (dirtySave) saveData();
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+<script src="income.js"></script>
 <script src="server-sync.js"></script>
 </body>
 </html>
