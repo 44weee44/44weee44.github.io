@@ -3,7 +3,7 @@
   'use strict';
 
   var API_BASE = 'https://save-pahom.duckdns.org';
-  var SAVE_INTERVAL_MS = 30000;
+  var SAVE_INTERVAL_MS = 5000;   // автосейв раз в 5 секунд
   var MIGRATION_KEY = 'pahomMigratedToServer';
 
   var SYNC_KEYS = [
@@ -55,7 +55,6 @@
   function getUserId() {
     var tgId = null;
 
-    // 1. Пробуем Telegram
     try {
       var tg = window.Telegram && window.Telegram.WebApp;
       if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id) {
@@ -63,24 +62,19 @@
       }
     } catch(e) {}
 
-    // 2. Старый ID из localStorage
     var stored = null;
     try { stored = localStorage.getItem('pahomServerUserId'); } catch(e) {}
 
-    // 3. Если есть Telegram ID и он отличается от старого — мигрируем
     if (tgId) {
       if (stored && stored !== tgId) {
-        // Запускаем миграцию в фоне
         migrateLocalToTg(stored, tgId);
       }
       try { localStorage.setItem('pahomServerUserId', tgId); } catch(e) {}
       return tgId;
     }
 
-    // 4. Если Telegram нет — используем старый
     if (stored) return stored;
 
-    // 5. Иначе — новый u_...
     var newId = 'u_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 10);
     try { localStorage.setItem('pahomServerUserId', newId); } catch(e) {}
     return newId;
@@ -126,6 +120,18 @@
         console.warn('[Sync] save error:', err);
         if (callback) callback(false);
       });
+  }
+
+  // ==== BEACON (гарантированная отправка при закрытии) ====
+  function saveViaBeacon() {
+    try {
+      var data = collectAllData();
+      var payload = JSON.stringify({ userId: USER_ID, data: data });
+      if (navigator.sendBeacon) {
+        var blob = new Blob([payload], { type: 'application/json' });
+        navigator.sendBeacon(API_BASE + '/api/save', blob);
+      }
+    } catch(e) {}
   }
 
   // ==== ЗАГРУЗКА ====
@@ -236,11 +242,27 @@
 
   // ==== АВТОСЕЙВ ====
   setInterval(function() { saveToServer(false); }, SAVE_INTERVAL_MS);
+
+  // ==== ОБРАБОТЧИКИ СОБЫТИЙ ====
   document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'hidden') saveToServer(true);
+    if (document.visibilityState === 'hidden') {
+      saveToServer(true);
+      saveViaBeacon();
+    }
   });
-  window.addEventListener('pagehide', function() { saveToServer(true); });
-  window.addEventListener('beforeunload', function() { saveToServer(true); });
+  window.addEventListener('pagehide', function() {
+    saveToServer(true);
+    saveViaBeacon();
+  });
+  window.addEventListener('beforeunload', function() {
+    saveViaBeacon();
+  });
+  window.addEventListener('blur', function() {
+    saveToServer(true);
+  });
+  window.addEventListener('hashchange', function() {
+    saveToServer(true);
+  });
 
   // ==== ЭКСПОРТ ====
   window.tgSyncReady = true;

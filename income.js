@@ -1,5 +1,4 @@
 // income.js — общий оффлайн-доход от срочников (копит в pending)
-// Подключить на КАЖДОЙ странице: <script src="income.js"></script>
 (function() {
   'use strict';
 
@@ -7,7 +6,6 @@
   var LAST_TICK = 'pahomKraftLastTick';
   var PENDING = 'pahomKraftPending';
 
-  // Доход в минуту от каждого типа срочника (1 шт = N/мин)
   var INCOMES = {
     medic: 2,
     seimur: 10,
@@ -69,7 +67,6 @@
 
     window.dispatchEvent(new CustomEvent('pahomPendingChanged', { detail: { pending: 0 } }));
 
-    // Форсируем сохранение на сервер
     try {
       if (window.tgSyncSave) window.tgSyncSave(true);
     } catch(e) {}
