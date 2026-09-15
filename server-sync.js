@@ -3,7 +3,7 @@
   'use strict';
 
   var API_BASE = 'https://save-pahom.duckdns.org';
-  var SAVE_INTERVAL_MS = 5000;   // автосейв раз в 5 секунд
+  var SAVE_INTERVAL_MS = 3000;
   var MIGRATION_KEY = 'pahomMigratedToServer';
 
   var SYNC_KEYS = [
@@ -15,7 +15,6 @@
     'pahomUpgradeLove', 'pahomUpgradeLoot'
   ];
 
-  // ==== МИГРАЦИЯ u_... → tg_... ====
   function migrateLocalToTg(oldId, newId) {
     if (!oldId || !newId) return;
     if (oldId === newId) return;
@@ -51,7 +50,6 @@
     });
   }
 
-  // ==== ID ИГРОКА ====
   function getUserId() {
     var tgId = null;
 
@@ -82,7 +80,6 @@
 
   var USER_ID = getUserId();
 
-  // ==== СБОР ДАННЫХ ====
   function collectAllData() {
     var data = {};
     for (var i = 0; i < SYNC_KEYS.length; i++) {
@@ -93,12 +90,21 @@
     return data;
   }
 
-  // ==== СОХРАНЕНИЕ ====
   var lastSaveHash = '';
   var isSaving = false;
+  var pendingSaveTimer = null;
 
   function saveToServer(force, callback) {
-    if (isSaving) { if (callback) callback(false); return; }
+    // Если уже сохраняемся — ставим в очередь и повторим после
+    if (isSaving) {
+      if (pendingSaveTimer) clearTimeout(pendingSaveTimer);
+      pendingSaveTimer = setTimeout(function() {
+        pendingSaveTimer = null;
+        saveToServer(force, callback);
+      }, 80);
+      return;
+    }
+
     var data = collectAllData();
     var json = JSON.stringify(data);
     if (!force && json === lastSaveHash) { if (callback) callback(true); return; }
@@ -122,7 +128,7 @@
       });
   }
 
-  // ==== BEACON (гарантированная отправка при закрытии) ====
+  // Гарантированная отправка через sendBeacon при закрытии
   function saveViaBeacon() {
     try {
       var data = collectAllData();
@@ -134,7 +140,6 @@
     } catch(e) {}
   }
 
-  // ==== ЗАГРУЗКА ====
   function loadFromServer(callback) {
     fetch(API_BASE + '/api/load?userId=' + encodeURIComponent(USER_ID))
       .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
@@ -166,7 +171,6 @@
       });
   }
 
-  // ==== МИГРАЦИЯ ИЗ TELEGRAM CLOUDSTORAGE (один раз) ====
   function tryTelegramMigration(callback) {
     var migrated = false;
     try { migrated = localStorage.getItem(MIGRATION_KEY) === '1'; } catch(e) {}
@@ -240,10 +244,10 @@
     });
   }
 
-  // ==== АВТОСЕЙВ ====
+  // Автосейв раз в 3 секунды
   setInterval(function() { saveToServer(false); }, SAVE_INTERVAL_MS);
 
-  // ==== ОБРАБОТЧИКИ СОБЫТИЙ ====
+  // Форс-сохранение при важных событиях
   document.addEventListener('visibilitychange', function() {
     if (document.visibilityState === 'hidden') {
       saveToServer(true);
@@ -264,7 +268,11 @@
     saveToServer(true);
   });
 
-  // ==== ЭКСПОРТ ====
+  // Глобальная функция форс-сохранения для игры
+  window.pahomForceSave = function() {
+    saveToServer(true);
+  };
+
   window.tgSyncReady = true;
   window.tgSyncLoad = loadFromServer;
   window.tgSyncSave = saveToServer;

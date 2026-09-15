@@ -1,1228 +1,1166 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ПРОФИЛЬ — кликер Пахома</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-        :root { --bg:#0a0a0a; --panel:#1a1a1a; --border:#4a4a2a; --text:#c4b08a; --accent:#8a7a5a; --gold:#b8962e; --red:#c0392b; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>ПРОФИЛЬ — кликер Пахома</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+:root { --bg:#0a0a0a; --panel:#1a1a1a; --border:#4a4a2a; --text:#c4b08a; --accent:#8a7a5a; --gold:#b8962e; --gold-bright:#ffd76b; --red:#c0392b; }
 
-        body {
-            background: var(--bg);
-            background-image: radial-gradient(circle at 30% 20%, #1a1a1a, #050505);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            touch-action: manipulation;
-            overflow: hidden;
-        }
+body {
+  background: var(--bg);
+  background-image: radial-gradient(circle at 30% 20%, #1a1a1a, #050505);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  margin: 0;
+  touch-action: manipulation;
+  overflow: hidden;
+}
 
-        .loading-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #0a0a0a;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            z-index: 2000;
-            animation: fadeOut 0.8s ease 2.5s forwards;
-            pointer-events: none;
-        }
-        .loading-circle {
-            width: 100px; height: 100px;
-            border: 4px solid var(--border);
-            border-top: 4px solid var(--gold);
-            border-radius: 50%;
-            animation: spin 1.5s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading-text {
-            font-size: 1.3rem; font-weight: 800;
-            color: var(--text); letter-spacing: 2px;
-            text-transform: uppercase;
-            animation: textGlow 1.5s ease-in-out infinite;
-        }
-        @keyframes textGlow {
-            0%,100% { text-shadow: 0 0 5px rgba(184,150,46,0.3); }
-            50% { text-shadow: 0 0 20px rgba(184,150,46,0.8); }
-        }
-        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; visibility: hidden; } }
+.profile-container {
+  background: var(--panel);
+  background-image: linear-gradient(160deg, #222222, #111111);
+  width: 100%; height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
 
-        .profile-container {
-            background: var(--panel);
-            background-image: linear-gradient(160deg, #222222, #111111);
-            width: 100%; height: 100vh;
-            display: flex; flex-direction: column;
-            align-items: center;
-            position: relative;
-            opacity: 0;
-            animation: profileAppear 0.8s ease-out 2.5s forwards;
-            overflow: hidden;
-        }
-        @keyframes profileAppear {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
+.header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 15px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #2a2a1a, #1a1a10);
+  width: 100%;
+  position: relative;
+  z-index: 10;
+}
+.header-title {
+  font-size: 1.3rem; font-weight: 900;
+  letter-spacing: 4px; color: var(--text);
+  text-transform: uppercase;
+  margin: 0 auto;
+  text-shadow: 0 0 15px rgba(184,150,46,0.55), 0 0 30px rgba(184,150,46,0.25);
+  animation: titleGlow 3.5s ease-in-out infinite;
+}
+@keyframes titleGlow {
+  0%, 100% { text-shadow: 0 0 12px rgba(184,150,46,0.4), 0 0 24px rgba(184,150,46,0.15); }
+  50%      { text-shadow: 0 0 20px rgba(255,215,107,0.9), 0 0 40px rgba(255,215,107,0.4); }
+}
+.settings-btn {
+  position: absolute; right: 15px; top: 50%;
+  transform: translateY(-50%);
+  background: transparent; border: none;
+  color: var(--text); cursor: pointer;
+  font-size: 1.5rem;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 20;
+}
+.settings-btn:hover { transform: translateY(-50%) rotate(45deg) scale(1.1); }
 
-        /* ==== ШАПКА ==== */
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px;
-            flex-shrink: 0;
-            border-bottom: 1px solid var(--border);
-            background: linear-gradient(180deg, #2a2a1a, #1a1a10);
-            width: 100%;
-            position: relative;
-            z-index: 10;
-        }
-        .header-title {
-            font-size: 1.3rem; font-weight: 800;
-            letter-spacing: 3px; color: var(--text);
-            text-transform: uppercase;
-            margin: 0 auto;
-            text-shadow: 0 0 12px rgba(184,150,46,0.4);
-        }
-        .settings-btn {
-            position: absolute; right: 15px; top: 50%;
-            transform: translateY(-50%);
-            background: transparent; border: none;
-            color: var(--text); cursor: pointer;
-            font-size: 1.5rem;
-            transition: transform 0.3s;
-            z-index: 20;
-        }
-        .settings-btn:hover { transform: translateY(-50%) rotate(45deg); }
+.stats-btn {
+  position: absolute; right: 55px; top: 50%;
+  transform: translateY(-50%);
+  background: transparent; border: none;
+  color: var(--text); cursor: pointer;
+  padding: 5px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 20;
+  display: flex; align-items: center; justify-content: center;
+}
+.stats-btn svg {
+  width: 24px; height: 24px;
+  filter: drop-shadow(0 0 4px rgba(184,150,46,0.5));
+}
+.stats-btn:hover {
+  transform: translateY(-50%) scale(1.15);
+  color: var(--gold-bright);
+  filter: drop-shadow(0 0 12px rgba(255,215,107,1));
+}
 
-        .stats-btn {
-            position: absolute; right: 55px; top: 50%;
-            transform: translateY(-50%);
-            background: transparent; border: none;
-            color: var(--text); cursor: pointer;
-            padding: 5px;
-            transition: all 0.3s;
-            z-index: 20;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .stats-btn svg {
-            width: 24px; height: 24px;
-            filter: drop-shadow(0 0 4px rgba(184,150,46,0.4));
-        }
-        .stats-btn:hover {
-            transform: translateY(-50%) scale(1.15);
-            color: var(--gold);
-            filter: drop-shadow(0 0 10px rgba(184,150,46,0.9));
-        }
+.profile-content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 20px 10px;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.profile-content::-webkit-scrollbar { width: 5px; }
+.profile-content::-webkit-scrollbar-track { background: transparent; }
+.profile-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
-        /* ==== КОНТЕНТ ==== */
-        .profile-content {
-            flex: 1;
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 16px 20px 10px;
-            width: 100%;
-            max-width: 440px;
-            margin: 0 auto;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: thin;
-            scrollbar-color: var(--border) transparent;
-        }
-        .profile-content::-webkit-scrollbar { width: 5px; }
-        .profile-content::-webkit-scrollbar-track { background: transparent; }
-        .profile-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.profile-avatar-wrap {
+  position: relative;
+  margin-bottom: 10px;
+}
+.profile-avatar {
+  width: 110px; height: 110px;
+  border-radius: 50%;
+  border: 3px solid var(--gold);
+  background: linear-gradient(135deg, #252515, #1a1a10);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 3.6rem;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 35px rgba(184,150,46,0.5);
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.profile-avatar img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.profile-avatar:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 60px rgba(255,215,107,0.7);
+  transform: scale(1.04);
+}
 
-        /* ==== АВАТАР ==== */
-        .profile-avatar-wrap {
-            position: relative;
-            margin-bottom: 10px;
-            animation: avatarAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s backwards;
-        }
-        @keyframes avatarAppear {
-            0% { opacity: 0; transform: scale(0.6); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-        .profile-avatar {
-            width: 110px; height: 110px;
-            border-radius: 50%;
-            border: 3px solid var(--gold);
-            background: linear-gradient(135deg, #252515, #1a1a10);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 3.6rem;
-            overflow: hidden;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 30px rgba(184,150,46,0.35);
-            transition: all 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
-        }
-        .profile-avatar img {
-            width: 100%; height: 100%;
-            object-fit: cover;
-        }
-        .profile-avatar:hover {
-            box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 50px rgba(184,150,46,0.6);
-            transform: scale(1.03);
-        }
+.profile-nickname {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: 1px;
+  text-shadow: 0 0 16px rgba(184,150,46,0.6);
+  margin-bottom: 4px;
+  text-align: center;
+  word-break: break-all;
+}
+.profile-ip {
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+}
+.profile-server-id {
+  font-size: 0.7rem;
+  color: #8a6aba;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+  text-shadow: 0 0 8px rgba(106,74,154,0.5);
+}
 
-        .profile-nickname {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: var(--text);
-            letter-spacing: 1px;
-            text-shadow: 0 0 14px rgba(184,150,46,0.5);
-            margin-bottom: 4px;
-            text-align: center;
-            word-break: break-all;
-        }
-        .profile-ip {
-            font-size: 0.78rem;
-            color: var(--accent);
-            font-family: 'Courier New', monospace;
-            letter-spacing: 1px;
-            margin-bottom: 14px;
-        }
-        .profile-server-id {
-            font-size: 0.7rem;
-            color: #6a4a9a;
-            font-family: 'Courier New', monospace;
-            letter-spacing: 1px;
-            margin-top: -12px;
-            margin-bottom: 14px;
-            opacity: 0.85;
-        }
+.player-level-block {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(184,150,46,0.12), rgba(139,105,20,0.06));
+  border: 1px solid rgba(184,150,46,0.45);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 0 25px rgba(184,150,46,0.15);
+}
+.player-level {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: 1.2px;
+  text-shadow: 0 0 12px rgba(184,150,46,0.7);
+}
+.exp-bar-bg {
+  width: 100%;
+  max-width: 280px;
+  height: 14px;
+  background: #0f0f00;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 4px black;
+}
+.exp-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #b8962e, #ffd76b);
+  border-radius: 7px;
+  transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 0 15px rgba(255,215,107,1);
+}
+.exp-text {
+  font-size: 0.72rem;
+  color: var(--accent);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+  text-align: center;
+}
 
-        /* ==== БЛОК ВЫСЛУГИ ==== */
-        .player-level-block {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            padding: 12px 14px;
-            background: linear-gradient(135deg, rgba(184,150,46,0.1), rgba(139,105,20,0.05));
-            border: 1px solid rgba(184,150,46,0.35);
-            border-radius: 12px;
-            margin-bottom: 12px;
-            animation: statAppear 0.5s ease-out 0.3s backwards;
-            box-shadow: 0 0 20px rgba(184,150,46,0.1);
-        }
-        .player-level {
-            font-size: 1.05rem;
-            font-weight: 800;
-            color: var(--gold);
-            letter-spacing: 1.2px;
-            text-shadow: 0 0 10px rgba(184,150,46,0.6);
-        }
-        .exp-bar-bg {
-            width: 100%;
-            max-width: 280px;
-            height: 14px;
-            background: #0f0f00;
-            border-radius: 7px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            position: relative;
-            box-shadow: inset 0 2px 4px black;
-        }
-        .exp-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #b8962e, #ffd76b);
-            border-radius: 7px;
-            transition: width 0.8s cubic-bezier(0.25,0.46,0.45,0.94);
-            box-shadow: 0 0 12px rgba(184,150,46,0.9);
-            position: relative;
-            overflow: hidden;
-        }
-        .exp-bar-fill::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-            transform: translateX(-100%);
-            animation: barShine 2.5s ease-in-out infinite;
-        }
-        @keyframes barShine {
-            0% { transform: translateX(-100%); }
-            50% { transform: translateX(100%); }
-            100% { transform: translateX(100%); }
-        }
-        .exp-text {
-            font-size: 0.72rem;
-            color: var(--accent);
-            font-family: 'Courier New', monospace;
-            letter-spacing: 0.5px;
-            text-align: center;
-        }
+.battle-glory-title {
+  width: 100%;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  padding-left: 4px;
+  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.battle-glory-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  opacity: 0.4;
+}
 
-        /* ==== БОЕВАЯ СЛАВА (боссы) ==== */
-        .battle-glory-title {
-            width: 100%;
-            font-size: 0.75rem;
-            font-weight: 800;
-            color: var(--gold);
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            padding-left: 4px;
-            opacity: 0.85;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            animation: statAppear 0.5s ease-out 0.4s backwards;
-        }
-        .battle-glory-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: linear-gradient(90deg, var(--gold), transparent);
-            opacity: 0.4;
-        }
+.battle-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.battle-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 6px;
+  border-radius: 10px;
+  background: linear-gradient(160deg, rgba(30,30,14,0.9), rgba(20,20,10,0.9));
+  border: 1px solid var(--border);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+.battle-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold-bright);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 25px rgba(255,215,107,0.5);
+}
+.battle-card.wins {
+  background: linear-gradient(160deg, rgba(60,180,80,0.18), rgba(30,60,30,0.18));
+  border-color: rgba(76,217,100,0.5);
+}
+.battle-card.wins:hover { border-color: #4cd964; box-shadow: 0 6px 25px rgba(76,217,100,0.5); }
+.battle-card.losses {
+  background: linear-gradient(160deg, rgba(180,40,40,0.18), rgba(60,20,20,0.18));
+  border-color: rgba(255,90,90,0.5);
+}
+.battle-card.losses:hover { border-color: #ff5a5a; box-shadow: 0 6px 25px rgba(255,90,90,0.5); }
+.battle-card.earned {
+  background: linear-gradient(160deg, rgba(184,150,46,0.18), rgba(60,50,10,0.18));
+  border-color: rgba(184,150,46,0.55);
+}
+.battle-card.earned:hover { border-color: var(--gold-bright); box-shadow: 0 6px 25px rgba(255,215,107,0.6); }
 
-        .battle-grid {
-            width: 100%;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 14px;
-        }
+.battle-icon {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
+}
+.battle-card.wins .battle-icon { filter: drop-shadow(0 0 10px rgba(76,217,100,0.9)); }
+.battle-card.losses .battle-icon { filter: drop-shadow(0 0 10px rgba(255,90,90,0.9)); }
+.battle-card.earned .battle-icon { filter: drop-shadow(0 0 10px rgba(255,215,107,0.9)); }
 
-        .battle-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px 6px;
-            border-radius: 10px;
-            background: linear-gradient(160deg, rgba(30,30,14,0.9), rgba(20,20,10,0.9));
-            border: 1px solid var(--border);
-            transition: all 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
-            animation: statAppear 0.5s ease-out backwards;
-            position: relative;
-            overflow: hidden;
-        }
-        .battle-card:nth-child(1) { animation-delay: 0.45s; }
-        .battle-card:nth-child(2) { animation-delay: 0.55s; }
-        .battle-card:nth-child(3) { animation-delay: 0.65s; }
+.battle-value {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+  text-align: center;
+  word-break: break-all;
+  line-height: 1.1;
+}
+.battle-card.wins .battle-value { color: #4cd964; text-shadow: 0 0 10px rgba(76,217,100,0.6); }
+.battle-card.losses .battle-value { color: #ff5a5a; text-shadow: 0 0 10px rgba(255,90,90,0.6); }
+.battle-card.earned .battle-value { color: var(--gold-bright); text-shadow: 0 0 10px rgba(255,215,107,0.7); }
 
-        .battle-card:hover {
-            transform: translateY(-3px);
-            border-color: var(--gold);
-            box-shadow: 0 6px 20px rgba(184,150,46,0.3);
-        }
+.battle-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #b0a070;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+}
 
-        .battle-card.wins {
-            background: linear-gradient(160deg, rgba(60,180,80,0.15), rgba(30,60,30,0.15));
-            border-color: rgba(76,217,100,0.4);
-        }
-        .battle-card.wins:hover { border-color: #4cd964; box-shadow: 0 6px 20px rgba(76,217,100,0.4); }
+.profile-stats {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(30,30,14,0.7);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.stat-item:hover {
+  border-color: rgba(184,150,46,0.6);
+  background: rgba(45,45,26,0.8);
+  transform: translateX(4px);
+  box-shadow: 0 0 18px rgba(184,150,46,0.3);
+}
+.stat-item-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #b0a070;
+}
+.stat-item-label .icon {
+  font-size: 1rem;
+  filter: drop-shadow(0 0 5px rgba(184,150,46,0.5));
+}
+.stat-item-value {
+  font-family: 'Courier New', monospace;
+  font-weight: 800;
+  color: var(--gold-bright);
+  font-size: 0.95rem;
+  text-shadow: 0 0 8px rgba(255,215,107,0.5);
+}
 
-        .battle-card.losses {
-            background: linear-gradient(160deg, rgba(180,40,40,0.15), rgba(60,20,20,0.15));
-            border-color: rgba(255,90,90,0.4);
-        }
-        .battle-card.losses:hover { border-color: #ff5a5a; box-shadow: 0 6px 20px rgba(255,90,90,0.4); }
+.tabs-bar {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 30px 80px;
+  flex-shrink: 0;
+  width: 100%;
+  position: relative;
+  z-index: 10;
+  gap: 10px;
+  background: linear-gradient(0deg, rgba(10,10,10,0.9), transparent);
+  margin-top: auto;
+}
+.tab-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--accent);
+  opacity: 0.55;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  padding: 8px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  pointer-events: auto;
+}
+.tab-btn.active {
+  opacity: 1;
+  color: var(--text);
+  transform: scale(1.15) translateY(-3px);
+  filter: drop-shadow(0 0 14px rgba(255,215,107,0.75));
+  background: radial-gradient(circle, rgba(184,150,46,0.15), transparent 70%);
+}
+.tab-btn:hover { opacity: 0.95; transform: scale(1.1) translateY(-2px); }
+.tab-btn:active { transform: scale(0.92); }
+.tab-btn svg {
+  width: 30px;
+  height: 30px;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.9));
+  transition: filter 0.5s ease, transform 0.5s ease;
+}
+.tab-btn.home-btn svg { width: 40px; height: 40px; }
+.tab-btn.boss-btn svg { width: 32px; height: 32px; }
+.tab-btn.active svg { filter: drop-shadow(0 0 12px rgba(255,215,107,0.8)); }
+.tab-btn.boss-btn:hover svg {
+  filter: drop-shadow(0 0 16px rgba(255,80,80,1));
+  transform: scale(1.15);
+}
+.tab-btn.boss-btn:hover { color: #c0392b; }
+.boss-skull-glow {
+  animation: skullGlow 3s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes skullGlow {
+  0%,100% { filter: drop-shadow(0 0 4px rgba(200,60,60,0.5)); }
+  50% { filter: drop-shadow(0 0 14px rgba(255,60,60,1)); }
+}
 
-        .battle-card.earned {
-            background: linear-gradient(160deg, rgba(184,150,46,0.15), rgba(60,50,10,0.15));
-            border-color: rgba(184,150,46,0.45);
-        }
-        .battle-card.earned:hover { border-color: var(--gold); box-shadow: 0 6px 20px rgba(184,150,46,0.5); }
+.settings-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  backdrop-filter: blur(8px);
+}
+.settings-overlay.show { display: flex; animation: modalFadeIn 0.3s ease; }
+@keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        .battle-icon {
-            font-size: 1.5rem;
-            margin-bottom: 4px;
-            filter: drop-shadow(0 0 6px rgba(255,255,255,0.2));
-        }
-        .battle-card.wins .battle-icon { filter: drop-shadow(0 0 8px rgba(76,217,100,0.7)); }
-        .battle-card.losses .battle-icon { filter: drop-shadow(0 0 8px rgba(255,90,90,0.7)); }
-        .battle-card.earned .battle-icon { filter: drop-shadow(0 0 8px rgba(184,150,46,0.7)); }
+.settings-box {
+  background: linear-gradient(160deg, #24241a, #1a1a10);
+  border-radius: 16px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  border: 2px solid var(--gold);
+  animation: modalSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 20px 70px rgba(0,0,0,0.9), 0 0 50px rgba(184,150,46,0.3);
+}
+.stats-box { max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
+@keyframes modalSlideIn {
+  from { transform: scale(0.8) translateY(20px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+.settings-title {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 12px rgba(184,150,46,0.6);
+}
+.settings-balance {
+  text-align: center;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: var(--gold-bright);
+  margin-bottom: 12px;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(255,215,107,0.6);
+}
+.settings-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+.settings-tab {
+  flex: 1;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: auto;
+}
+.settings-tab.active {
+  border-color: var(--gold-bright);
+  background: rgba(184,150,46,0.15);
+  box-shadow: 0 0 15px rgba(255,215,107,0.4);
+}
 
-        .battle-value {
-            font-size: 1rem;
-            font-weight: 900;
-            color: var(--text);
-            font-family: 'Courier New', monospace;
-            letter-spacing: 0.5px;
-            margin-bottom: 2px;
-            text-align: center;
-            word-break: break-all;
-            line-height: 1.1;
-        }
-        .battle-card.wins .battle-value { color: #4cd964; text-shadow: 0 0 8px rgba(76,217,100,0.5); }
-        .battle-card.losses .battle-value { color: #ff5a5a; text-shadow: 0 0 8px rgba(255,90,90,0.5); }
-        .battle-card.earned .battle-value { color: var(--gold); text-shadow: 0 0 8px rgba(184,150,46,0.5); }
+.stats-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 5px;
+  margin: 0 -5px 10px -5px;
+  padding-left: 5px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
+}
+.stats-scroll::-webkit-scrollbar { width: 5px; }
+.stats-scroll::-webkit-scrollbar-track { background: transparent; }
+.stats-scroll::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
 
-        .battle-label {
-            font-size: 0.65rem;
-            font-weight: 700;
-            color: #b0a070;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            text-align: center;
-        }
+.stats-block {
+  background: linear-gradient(160deg, #1a1a10, #131308);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+.stats-block:hover {
+  border-color: rgba(184,150,46,0.6);
+  box-shadow: 0 0 20px rgba(184,150,46,0.2);
+}
+.stats-block-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.stats-block-title .lvl-badge {
+  font-size: 0.7rem;
+  color: var(--gold-bright);
+  background: rgba(184,150,46,0.2);
+  padding: 2px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--gold);
+  text-shadow: 0 0 6px rgba(255,215,107,0.6);
+}
 
-        /* ==== ОСНОВНЫЕ СТАТЫ ==== */
-        .profile-stats {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 14px;
-            background: rgba(30,30,14,0.6);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-weight: 600;
-            font-size: 0.85rem;
-            transition: all 0.3s;
-            animation: statAppear 0.5s ease-out backwards;
-        }
-        .stat-item:nth-child(1) { animation-delay: 0.7s; }
-        .stat-item:nth-child(2) { animation-delay: 0.8s; }
-        .stat-item:nth-child(3) { animation-delay: 0.9s; }
+.level-segments { display: flex; gap: 3px; margin-bottom: 10px; flex-wrap: nowrap; }
+.level-segments span {
+  flex: 1;
+  height: 10px;
+  background: #0f0f00;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.level-segments span.filled {
+  background: linear-gradient(180deg, #ffd76b, #b8962e);
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 8px rgba(255,215,107,0.8);
+}
 
-        .stat-item:hover {
-            border-color: rgba(184,150,46,0.5);
-            background: rgba(45,45,26,0.7);
-            transform: translateX(3px);
-        }
+.stats-effect { font-size: 0.78rem; color: #8fd4b0; margin-bottom: 5px; font-weight: 600; }
+.stats-cost { font-size: 0.78rem; color: var(--accent); margin-bottom: 10px; }
+.stats-cost b { color: var(--gold-bright); text-shadow: 0 0 8px rgba(255,215,107,0.5); }
 
-        .stat-item-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #b0a070;
-        }
-        .stat-item-label .icon {
-            font-size: 1rem;
-            filter: drop-shadow(0 0 4px rgba(184,150,46,0.4));
-        }
-        .stat-item-value {
-            font-family: 'Courier New', monospace;
-            font-weight: 800;
-            color: var(--gold);
-            font-size: 0.95rem;
-        }
+.upgrade-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold-bright);
+  padding: 9px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 0 12px rgba(184,150,46,0.2);
+}
+.upgrade-btn:hover:not(:disabled) {
+  background: rgba(184,150,46,0.25);
+  box-shadow: 0 0 25px rgba(255,215,107,0.6);
+  transform: scale(1.02);
+}
+.upgrade-btn:active:not(:disabled) { transform: scale(0.97); }
+.upgrade-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: var(--border);
+  color: var(--accent);
+  box-shadow: none;
+}
 
-        @keyframes statAppear {
-            0% { opacity: 0; transform: translateY(10px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
+.stat-message {
+  font-size: 0.75rem;
+  color: #ff5a5a;
+  text-align: center;
+  margin-top: 6px;
+  min-height: 1em;
+  transition: opacity 0.3s;
+  opacity: 0;
+}
+.stat-message.show { opacity: 1; }
 
-        /* ==== НИЖНЯЯ ПАНЕЛЬ ==== */
-        .tabs-bar {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            padding: 8px 30px 80px;
-            flex-shrink: 0;
-            width: 100%;
-            position: relative;
-            z-index: 10;
-            gap: 10px;
-            background: linear-gradient(0deg, rgba(10,10,10,0.9), transparent);
-            margin-top: auto;
-        }
-        .tab-btn {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            color: var(--accent);
-            opacity: 0.6;
-            transition: all 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-            padding: 5px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: auto;
-        }
-        .tab-btn.active {
-            opacity: 1;
-            color: var(--text);
-            transform: scale(1.12);
-            filter: drop-shadow(0 0 10px rgba(180,150,90,0.7));
-        }
-        .tab-btn:hover { opacity: 0.95; transform: scale(1.08); }
-        .tab-btn:active { transform: scale(0.93); }
-        .tab-btn svg {
-            width: 28px;
-            height: 28px;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
-            transition: filter 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-                        transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .tab-btn.home-btn svg { width: 36px; height: 36px; }
-        .tab-btn.boss-btn svg { width: 30px; height: 30px; }
-        .tab-btn.boss-btn:hover svg {
-            filter: drop-shadow(0 0 10px rgba(200,60,60,0.9));
-            transform: scale(1.15);
-        }
-        .tab-btn.boss-btn:hover { color: #c0392b; }
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.avatar-option {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: auto;
+}
+.avatar-option:hover {
+  border-color: var(--gold-bright);
+  transform: scale(1.12);
+  box-shadow: 0 0 15px rgba(255,215,107,0.5);
+}
+.avatar-option.selected {
+  border-color: var(--gold-bright);
+  background: rgba(184,150,46,0.25);
+  transform: scale(1.12);
+  box-shadow: 0 0 20px rgba(255,215,107,0.7);
+}
 
-        .tab-btn.rating-btn:hover svg {
-            filter: drop-shadow(0 0 12px rgba(255, 215, 107, 1));
-            transform: scale(1.15);
-        }
-        .tab-btn.rating-btn:hover { color: #ffd76b; }
-        .tab-btn.rating-btn.active svg {
-            filter: drop-shadow(0 0 10px rgba(255, 215, 107, 0.9));
-        }
+.upload-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.4s;
+  pointer-events: auto;
+}
+.upload-btn:hover {
+  background: rgba(74,74,58,0.5);
+  border-color: rgba(184,150,46,0.6);
+  box-shadow: 0 0 15px rgba(184,150,46,0.3);
+}
 
-        .boss-skull-glow {
-            animation: skullGlow 3s ease-in-out infinite;
-            transform-origin: center;
-        }
-        @keyframes skullGlow {
-            0%,100% { filter: drop-shadow(0 0 3px rgba(200,60,60,0.4)); }
-            50% { filter: drop-shadow(0 0 9px rgba(200,60,60,0.9)); }
-        }
+.modal-input {
+  width: 100%;
+  padding: 10px;
+  background: #1a1a10;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 10px;
+  outline: none;
+  transition: all 0.4s;
+}
+.modal-input:focus {
+  border-color: var(--gold-bright);
+  box-shadow: 0 0 15px rgba(255,215,107,0.5);
+}
+.modal-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: all 0.4s;
+  pointer-events: auto;
+}
+.modal-btn:hover {
+  background: rgba(74,74,58,0.5);
+  border-color: rgba(184,150,46,0.6);
+  box-shadow: 0 0 15px rgba(184,150,46,0.3);
+}
+.error-msg { color: #e74c3c; font-size: 0.8rem; margin-bottom: 10px; display: none; }
 
-        /* ==== МОДАЛКИ ==== */
-        .settings-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 3000;
-            backdrop-filter: blur(6px);
-        }
-        .settings-overlay.show { display: flex; animation: modalFadeIn 0.3s ease; }
-        @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        .settings-box {
-            background: #24241a;
-            border-radius: 16px;
-            padding: 20px;
-            width: 90%;
-            max-width: 400px;
-            border: 2px solid var(--gold);
-            animation: modalSlideIn 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 40px rgba(184,150,46,0.2);
-        }
-        .stats-box { max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
-        @keyframes modalSlideIn {
-            from { transform: scale(0.8) translateY(20px); opacity: 0; }
-            to { transform: scale(1) translateY(0); opacity: 1; }
-        }
-        .settings-title {
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: var(--text);
-            text-align: center;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        .settings-balance {
-            text-align: center;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-            color: var(--gold);
-            margin-bottom: 12px;
-            font-weight: 700;
-        }
-        .settings-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
-        .settings-tab {
-            flex: 1;
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.8rem;
-            transition: all 0.3s;
-            pointer-events: auto;
-        }
-        .settings-tab.active {
-            border-color: var(--gold);
-            background: rgba(184,150,46,0.1);
-        }
-
-        .stats-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 5px;
-            margin: 0 -5px 10px -5px;
-            padding-left: 5px;
-            scrollbar-width: thin;
-            scrollbar-color: var(--gold) transparent;
-        }
-        .stats-scroll::-webkit-scrollbar { width: 5px; }
-        .stats-scroll::-webkit-scrollbar-track { background: transparent; }
-        .stats-scroll::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 3px; }
-
-        .stats-block {
-            background: #1a1a10;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 10px;
-            transition: border-color 0.3s;
-        }
-        .stats-block:hover { border-color: rgba(184,150,46,0.5); }
-        .stats-block-title {
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: var(--text);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .stats-block-title .lvl-badge {
-            font-size: 0.7rem;
-            color: var(--gold);
-            background: rgba(184,150,46,0.15);
-            padding: 2px 8px;
-            border-radius: 10px;
-            border: 1px solid var(--gold);
-        }
-
-        .level-segments { display: flex; gap: 3px; margin-bottom: 10px; flex-wrap: nowrap; }
-        .level-segments span {
-            flex: 1;
-            height: 10px;
-            background: #0f0f00;
-            border: 1px solid var(--border);
-            border-radius: 2px;
-            transition: all 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
-        }
-        .level-segments span.filled {
-            background: linear-gradient(180deg, #ffd76b, #b8962e);
-            border-color: var(--gold);
-            box-shadow: 0 0 6px rgba(184,150,46,0.7);
-        }
-
-        .stats-effect { font-size: 0.78rem; color: #8fd4b0; margin-bottom: 5px; font-weight: 600; }
-        .stats-cost { font-size: 0.78rem; color: var(--accent); margin-bottom: 10px; }
-        .stats-cost b { color: var(--gold); }
-
-        .upgrade-btn {
-            width: 100%;
-            background: transparent;
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            padding: 9px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 0.85rem;
-            transition: all 0.3s;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-        .upgrade-btn:hover:not(:disabled) {
-            background: rgba(184,150,46,0.2);
-            box-shadow: 0 0 15px rgba(184,150,46,0.5);
-        }
-        .upgrade-btn:active:not(:disabled) { transform: scale(0.97); }
-        .upgrade-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            border-color: var(--border);
-            color: var(--accent);
-        }
-
-        .stat-message {
-            font-size: 0.75rem;
-            color: #ff5a5a;
-            text-align: center;
-            margin-top: 6px;
-            min-height: 1em;
-            transition: opacity 0.3s;
-            opacity: 0;
-        }
-        .stat-message.show { opacity: 1; }
-
-        .avatar-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-        .avatar-option {
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            pointer-events: auto;
-        }
-        .avatar-option:hover { border-color: var(--gold); transform: scale(1.1); }
-        .avatar-option.selected {
-            border-color: var(--gold);
-            background: rgba(184,150,46,0.2);
-            transform: scale(1.1);
-        }
-
-        .upload-btn {
-            width: 100%;
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            pointer-events: auto;
-        }
-        .upload-btn:hover { background: rgba(74,74,58,0.5); }
-
-        .modal-input {
-            width: 100%;
-            padding: 10px;
-            background: #1a1a10;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text);
-            font-size: 1rem;
-            text-align: center;
-            margin-bottom: 10px;
-            outline: none;
-            transition: all 0.3s;
-        }
-        .modal-input:focus {
-            border-color: var(--gold);
-            box-shadow: 0 0 10px rgba(184,150,46,0.3);
-        }
-        .modal-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 10px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-            pointer-events: auto;
-        }
-        .modal-btn:hover { background: rgba(74,74,58,0.5); }
-        .error-msg { color: #e74c3c; font-size: 0.8rem; margin-bottom: 10px; display: none; }
-
-        @media (max-width: 400px) {
-            .profile-avatar { width: 95px; height: 95px; font-size: 3rem; }
-            .profile-nickname { font-size: 1.3rem; }
-            .battle-value { font-size: 0.9rem; }
-            .battle-icon { font-size: 1.3rem; }
-            .battle-label { font-size: 0.6rem; }
-            .tabs-bar { padding: 8px 15px 80px; }
-        }
-    </style>
+@media (max-width: 400px) {
+  .profile-avatar { width: 95px; height: 95px; font-size: 3rem; }
+  .profile-nickname { font-size: 1.3rem; }
+  .battle-value { font-size: 0.9rem; }
+  .battle-icon { font-size: 1.3rem; }
+  .battle-label { font-size: 0.6rem; }
+  .tabs-bar { padding: 8px 15px 80px; }
+}
+</style>
 </head>
 <body>
-    <script src="income.js"></script>
+<script src="income.js"></script>
 
-    <div class="loading-screen" id="loadingScreen">
-        <div class="loading-circle"></div>
-        <div class="loading-text">Загрузка профиля</div>
+<div id="nicknameModal" class="settings-overlay">
+  <div class="settings-box">
+    <div class="settings-title">Создание легенды</div>
+    <p style="color:#aaa; font-size:0.8rem; margin-bottom:15px; text-align:center;">Только латиница и русские буквы, 2-15 символов</p>
+    <input type="text" id="nicknameInput" class="modal-input" maxlength="15" placeholder="Введите ник" autocomplete="off">
+    <div class="error-msg" id="nicknameError"></div>
+    <button id="nicknameSubmit" class="modal-btn" type="button">Подтвердить</button>
+  </div>
+</div>
+
+<div id="settingsModal" class="settings-overlay">
+  <div class="settings-box">
+    <div class="settings-title">Настройка профиля</div>
+    <div class="settings-tabs">
+      <button id="nameTab" class="settings-tab active">Имя</button>
+      <button id="avatarTab" class="settings-tab">Аватарка</button>
+    </div>
+    <div id="namePanel">
+      <input type="text" id="newNameInput" class="modal-input" maxlength="15" placeholder="Новый ник">
+      <div class="error-msg" id="settingsError"></div>
+      <button id="confirmNameBtn" class="modal-btn" style="width:100%;">Сменить</button>
+    </div>
+    <div id="avatarPanel" style="display:none;">
+      <div class="avatar-grid" id="avatarGrid">
+        <button class="avatar-option" data-emoji="👤">👤</button>
+        <button class="avatar-option" data-emoji="👴">👴</button>
+        <button class="avatar-option" data-emoji="🐍">🐍</button>
+        <button class="avatar-option" data-emoji="🌲">🌲</button>
+        <button class="avatar-option" data-emoji="🥢">🥢</button>
+        <button class="avatar-option" data-emoji="🔧">🔧</button>
+        <button class="avatar-option" data-emoji="🪏">🪏</button>
+        <button class="avatar-option" data-emoji="🎖️">🎖️</button>
+      </div>
+      <button class="upload-btn" id="uploadAvatarBtn">Загрузить из галереи</button>
+      <input type="file" id="avatarUpload" accept="image/*" style="display:none;">
+    </div>
+    <button id="closeSettings" class="modal-btn" style="margin-top:15px; width:100%;">Закрыть</button>
+  </div>
+</div>
+
+<div id="statsModal" class="settings-overlay">
+  <div class="settings-box stats-box">
+    <div class="settings-title">ПРОКАЧКИ</div>
+    <div class="settings-balance">💰 <span id="statsBalance">0</span> секспахомов</div>
+    <div class="stats-scroll">
+      <div class="stats-block">
+        <div class="stats-block-title">
+          <span>Любовь за клик</span>
+          <span class="lvl-badge">Ур <span id="loveUpgradeLevel">1</span> / 20</span>
+        </div>
+        <div class="level-segments" id="loveSegments"></div>
+        <div class="stats-effect">💕 Эффект: <b id="loveEffect">+0.0</b> к любви за клик</div>
+        <div class="stats-cost">Стоимость: <b id="loveCost">100 000</b> секспахомов</div>
+        <button class="upgrade-btn" id="loveUpgradeBtn">Улучшить</button>
+        <div class="stat-message" id="loveMessage"></div>
+      </div>
+
+      <div class="stats-block">
+        <div class="stats-block-title">
+          <span>Шанс выпадения</span>
+          <span class="lvl-badge">Ур <span id="lootUpgradeLevel">1</span> / 5</span>
+        </div>
+        <div class="level-segments" id="lootSegments"></div>
+        <div class="stats-effect">🎁 Эффект: <b id="lootEffect">+0%</b> к шансу лута</div>
+        <div class="stats-cost">Стоимость: <b id="lootCost">500 000</b> секспахомов</div>
+        <button class="upgrade-btn" id="lootUpgradeBtn">Улучшить</button>
+        <div class="stat-message" id="lootMessage"></div>
+      </div>
+    </div>
+    <button id="closeStats" class="modal-btn" style="width:100%;">Закрыть</button>
+  </div>
+</div>
+
+<div class="profile-container" id="profileContainer">
+  <div class="header">
+    <div class="header-title">ПРОФИЛЬ</div>
+    <button class="stats-btn" id="statsBtn" title="Прокачки">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="21" x2="21" y2="21"/>
+        <line x1="7" y1="21" x2="7" y2="12"/>
+        <line x1="12" y1="21" x2="12" y2="8"/>
+        <line x1="17" y1="21" x2="17" y2="4"/>
+      </svg>
+    </button>
+    <button class="settings-btn" id="settingsBtn">⚙️</button>
+  </div>
+
+  <div class="profile-content">
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar" id="profileAvatar">👤</div>
+    </div>
+    <div class="profile-nickname" id="profileNickname">Игрок</div>
+    <div class="profile-ip" id="profileIP">0.0.0.0</div>
+    <div class="profile-server-id" id="profileServerID">ID: ...</div>
+
+    <div class="player-level-block">
+      <div class="player-level">Выслуга <span id="playerLevel">1</span> лет</div>
+      <div class="exp-bar-bg">
+        <div class="exp-bar-fill" id="expBarFill"></div>
+      </div>
+      <div class="exp-text">Прославился на всю дивизию: <span id="expCurrent">0</span> / <span id="expRequired">1200</span></div>
     </div>
 
-    <div id="nicknameModal" class="settings-overlay">
-        <div class="settings-box">
-            <div class="settings-title">Создание легенды</div>
-            <p style="color:#aaa; font-size:0.8rem; margin-bottom:15px; text-align:center;">Только латиница и русские буквы, 2-15 символов</p>
-            <input type="text" id="nicknameInput" class="modal-input" maxlength="15" placeholder="Введите ник" autocomplete="off">
-            <div class="error-msg" id="nicknameError"></div>
-            <button id="nicknameSubmit" class="modal-btn" type="button">Подтвердить</button>
-        </div>
+    <div class="battle-glory-title">⚔️ Боевая слава</div>
+    <div class="battle-grid">
+      <div class="battle-card wins">
+        <div class="battle-icon">🏆</div>
+        <div class="battle-value" id="bossWins">0</div>
+        <div class="battle-label">Побеждено</div>
+      </div>
+      <div class="battle-card losses">
+        <div class="battle-icon">💀</div>
+        <div class="battle-value" id="bossLosses">0</div>
+        <div class="battle-label">Провалено</div>
+      </div>
+      <div class="battle-card earned">
+        <div class="battle-icon">💰</div>
+        <div class="battle-value" id="bossEarned">0</div>
+        <div class="battle-label">Заработано</div>
+      </div>
     </div>
 
-    <div id="settingsModal" class="settings-overlay">
-        <div class="settings-box">
-            <div class="settings-title">Настройка профиля</div>
-            <div class="settings-tabs">
-                <button id="nameTab" class="settings-tab active">Имя</button>
-                <button id="avatarTab" class="settings-tab">Аватарка</button>
-            </div>
-            <div id="namePanel">
-                <input type="text" id="newNameInput" class="modal-input" maxlength="15" placeholder="Новый ник">
-                <div class="error-msg" id="settingsError"></div>
-                <button id="confirmNameBtn" class="modal-btn" style="width:100%;">Сменить</button>
-            </div>
-            <div id="avatarPanel" style="display:none;">
-                <div class="avatar-grid" id="avatarGrid">
-                    <button class="avatar-option" data-emoji="👤">👤</button>
-                    <button class="avatar-option" data-emoji="👴">👴</button>
-                    <button class="avatar-option" data-emoji="🐍">🐍</button>
-                    <button class="avatar-option" data-emoji="🌲">🌲</button>
-                    <button class="avatar-option" data-emoji="🥢">🥢</button>
-                    <button class="avatar-option" data-emoji="🔧">🔧</button>
-                    <button class="avatar-option" data-emoji="🪏">🪏</button>
-                    <button class="avatar-option" data-emoji="🎖️">🎖️</button>
-                </div>
-                <button class="upload-btn" id="uploadAvatarBtn">Загрузить из галереи</button>
-                <input type="file" id="avatarUpload" accept="image/*" style="display:none;">
-            </div>
-            <button id="closeSettings" class="modal-btn" style="margin-top:15px; width:100%;">Закрыть</button>
-        </div>
+    <div class="profile-stats">
+      <div class="stat-item">
+        <span class="stat-item-label"><span class="icon">👆</span> Кликов всего</span>
+        <span class="stat-item-value" id="totalClicks">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-item-label"><span class="icon">🔞</span> Секспахомов</span>
+        <span class="stat-item-value" id="profileSexpah">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-item-label"><span class="icon">💥</span> Перевозбуждений</span>
+        <span class="stat-item-value" id="totalOverexcites">0</span>
+      </div>
     </div>
+  </div>
 
-    <div id="statsModal" class="settings-overlay">
-        <div class="settings-box stats-box">
-            <div class="settings-title">ПРОКАЧКИ</div>
-            <div class="settings-balance">💰 <span id="statsBalance">0</span> секспахомов</div>
-            <div class="stats-scroll">
-                <div class="stats-block">
-                    <div class="stats-block-title">
-                        <span>Любовь за клик</span>
-                        <span class="lvl-badge">Ур <span id="loveUpgradeLevel">1</span> / 20</span>
-                    </div>
-                    <div class="level-segments" id="loveSegments"></div>
-                    <div class="stats-effect">💕 Эффект: <b id="loveEffect">+0.0</b> к любви за клик</div>
-                    <div class="stats-cost">Стоимость: <b id="loveCost">100 000</b> секспахомов</div>
-                    <button class="upgrade-btn" id="loveUpgradeBtn">Улучшить</button>
-                    <div class="stat-message" id="loveMessage"></div>
-                </div>
+  <div class="tabs-bar">
+    <a href="boss.html" class="tab-btn boss-btn" title="Боссы">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="boss-skull-glow">
+        <path d="M12 2C7.6 2 4 5.6 4 10c0 2.4 1 4.5 2.7 5.9V19c0 .6.4 1 1 1h1.3v-2h1.4v2h1.2v-2h1.4v2H14v-2h1.4v2H16.7c.6 0 1-.4 1-1v-3.1C19.4 14.5 20 12.4 20 10c0-4.4-3.6-8-8-8z"/>
+        <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
+        <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
+        <path d="M12 13.5l-1.2 2.5h2.4z" fill="currentColor"/>
+      </svg>
+    </a>
+    <a href="seks.html#shop" class="tab-btn" title="Магазин">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+    </a>
+    <a href="seks.html" class="tab-btn home-btn" title="Главная">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </a>
+    <a href="rating.html" class="tab-btn rating-btn" title="Рейтинг">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 21h8"/>
+        <path d="M12 17v4"/>
+        <path d="M7 4h10v5a5 5 0 01-10 0V4z"/>
+        <path d="M17 5h2a2 2 0 012 2v1a3 3 0 01-3 3"/>
+        <path d="M7 5H5a2 2 0 00-2 2v1a3 3 0 003 3"/>
+      </svg>
+    </a>
+    <a href="prof.html" class="tab-btn active" title="Профиль">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </a>
+  </div>
+</div>
 
-                <div class="stats-block">
-                    <div class="stats-block-title">
-                        <span>Шанс выпадения</span>
-                        <span class="lvl-badge">Ур <span id="lootUpgradeLevel">1</span> / 5</span>
-                    </div>
-                    <div class="level-segments" id="lootSegments"></div>
-                    <div class="stats-effect">🎁 Эффект: <b id="lootEffect">+0%</b> к шансу лута</div>
-                    <div class="stats-cost">Стоимость: <b id="lootCost">500 000</b> секспахомов</div>
-                    <button class="upgrade-btn" id="lootUpgradeBtn">Улучшить</button>
-                    <div class="stat-message" id="lootMessage"></div>
-                </div>
-            </div>
-            <button id="closeStats" class="modal-btn" style="width:100%;">Закрыть</button>
-        </div>
-    </div>
+<script>
+(function() {
+  const $ = (id) => document.getElementById(id);
+  const nicknameModal = $('nicknameModal');
+  const nicknameInput = $('nicknameInput');
+  const nicknameSubmit = $('nicknameSubmit');
+  const nicknameError = $('nicknameError');
+  const settingsModal = $('settingsModal');
+  const settingsBtn = $('settingsBtn');
+  const closeSettings = $('closeSettings');
+  const nameTab = $('nameTab');
+  const avatarTab = $('avatarTab');
+  const namePanel = $('namePanel');
+  const avatarPanel = $('avatarPanel');
+  const newNameInput = $('newNameInput');
+  const confirmNameBtn = $('confirmNameBtn');
+  const settingsError = $('settingsError');
+  const avatarGrid = $('avatarGrid');
+  const uploadAvatarBtn = $('uploadAvatarBtn');
+  const avatarUpload = $('avatarUpload');
+  const statsModal = $('statsModal');
+  const statsBtn = $('statsBtn');
+  const closeStats = $('closeStats');
+  const profileNickname = $('profileNickname');
+  const profileIP = $('profileIP');
+  const profileServerID = $('profileServerID');
+  const profileAvatar = $('profileAvatar');
+  const totalClicksSpan = $('totalClicks');
+  const profileSexpah = $('profileSexpah');
+  const totalOverexcitesSpan = $('totalOverexcites');
+  const playerLevelSpan = $('playerLevel');
+  const expCurrentSpan = $('expCurrent');
+  const expRequiredSpan = $('expRequired');
+  const expBarFill = $('expBarFill');
 
-    <div class="profile-container" id="profileContainer">
-        <div class="header">
-            <div class="header-title">ПРОФИЛЬ</div>
-            <button class="stats-btn" id="statsBtn" title="Прокачки">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="21" x2="21" y2="21"/>
-                    <line x1="7" y1="21" x2="7" y2="12"/>
-                    <line x1="12" y1="21" x2="12" y2="8"/>
-                    <line x1="17" y1="21" x2="17" y2="4"/>
-                </svg>
-            </button>
-            <button class="settings-btn" id="settingsBtn">⚙️</button>
-        </div>
+  const bossWinsEl = $('bossWins');
+  const bossLossesEl = $('bossLosses');
+  const bossEarnedEl = $('bossEarned');
 
-        <div class="profile-content">
-            <div class="profile-avatar-wrap">
-                <div class="profile-avatar" id="profileAvatar">👤</div>
-            </div>
-            <div class="profile-nickname" id="profileNickname">Игрок</div>
-            <div class="profile-ip" id="profileIP">0.0.0.0</div>
-            <div class="profile-server-id" id="profileServerID">ID: ...</div>
+  const MAX_LOVE_UP = 20;
+  const MAX_LOOT_UP = 5;
+  const BASE_EXP = 1200;
+  const EXP_STEP = 600;
 
-            <div class="player-level-block">
-                <div class="player-level">Выслуга <span id="playerLevel">1</span> лет</div>
-                <div class="exp-bar-bg">
-                    <div class="exp-bar-fill" id="expBarFill"></div>
-                </div>
-                <div class="exp-text">Прославился на всю дивизию: <span id="expCurrent">0</span> / <span id="expRequired">1200</span></div>
-            </div>
+  let nickname = localStorage.getItem('pahomNickname') || '';
+  let playerIP = localStorage.getItem('pahomIP') || '';
+  let avatarData = localStorage.getItem('pahomAvatar') || '';
 
-            <div class="battle-glory-title">
-                ⚔️ Боевая слава
-            </div>
-            <div class="battle-grid">
-                <div class="battle-card wins">
-                    <div class="battle-icon">🏆</div>
-                    <div class="battle-value" id="bossWins">0</div>
-                    <div class="battle-label">Побеждено</div>
-                </div>
-                <div class="battle-card losses">
-                    <div class="battle-icon">💀</div>
-                    <div class="battle-value" id="bossLosses">0</div>
-                    <div class="battle-label">Провалено</div>
-                </div>
-                <div class="battle-card earned">
-                    <div class="battle-icon">💰</div>
-                    <div class="battle-value" id="bossEarned">0</div>
-                    <div class="battle-label">Заработано</div>
-                </div>
-            </div>
+  // ==== ФОРС-СОХРАНЕНИЕ НА СЕРВЕР ====
+  function forceSave() {
+    try {
+      if (window.tgSyncSave) window.tgSyncSave(true);
+    } catch(e) {}
+  }
 
-            <div class="profile-stats">
-                <div class="stat-item">
-                    <span class="stat-item-label"><span class="icon">👆</span> Кликов всего</span>
-                    <span class="stat-item-value" id="totalClicks">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-item-label"><span class="icon">🔞</span> Секспахомов</span>
-                    <span class="stat-item-value" id="profileSexpah">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-item-label"><span class="icon">💥</span> Перевозбуждений</span>
-                    <span class="stat-item-value" id="totalOverexcites">0</span>
-                </div>
-            </div>
-        </div>
+  function expRequired(level) { return BASE_EXP + (level - 1) * EXP_STEP; }
+  function loveUpgradeCost(targetLevel) { return 100000 + Math.floor((targetLevel - 1) / 3) * 200000; }
+  function lootUpgradeCost(targetLevel) { return 500000 * (targetLevel - 1); }
+  function loveBonus(level) { return (level - 1) * 0.5; }
+  function lootBonusPct(level) { return (level - 1) * 5; }
+  function formatNumber(n) {
+    if (n >= 1000000000) { const v = n/1000000000; return (v<10?v.toFixed(1):Math.floor(v))+'B'; }
+    if (n >= 1000000) { const v = n/1000000; return (v<10?v.toFixed(1):Math.floor(v))+'M'; }
+    return Number(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
 
-        <div class="tabs-bar">
-            <a href="boss.html" class="tab-btn boss-btn" title="Боссы">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="boss-skull-glow">
-                    <path d="M12 2C7.6 2 4 5.6 4 10c0 2.4 1 4.5 2.7 5.9V19c0 .6.4 1 1 1h1.3v-2h1.4v2h1.2v-2h1.4v2H14v-2h1.4v2H16.7c.6 0 1-.4 1-1v-3.1C19.4 14.5 20 12.4 20 10c0-4.4-3.6-8-8-8z"/>
-                    <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
-                    <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
-                    <path d="M12 13.5l-1.2 2.5h2.4z" fill="currentColor"/>
-                </svg>
-            </a>
-            <a href="seks.html#shop" class="tab-btn" title="Магазин">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-            </a>
-            <a href="seks.html" class="tab-btn home-btn" title="Главная">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            </a>
-            <a href="rating.html" class="tab-btn rating-btn" title="Рейтинг">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 21h8"/>
-                    <path d="M12 17v4"/>
-                    <path d="M7 4h10v5a5 5 0 01-10 0V4z"/>
-                    <path d="M17 5h2a2 2 0 012 2v1a3 3 0 01-3 3"/>
-                    <path d="M7 5H5a2 2 0 00-2 2v1a3 3 0 003 3"/>
-                </svg>
-            </a>
-            <a href="prof.html" class="tab-btn active" title="Профиль">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            </a>
-        </div>
-    </div>
+  function updateServerID() {
+    if (!profileServerID) return;
+    var sid = window.tgSyncUserId || localStorage.getItem('pahomServerUserId') || '—';
+    profileServerID.textContent = 'ID: ' + sid;
+  }
 
-    <script>
-        (function() {
-            const $ = (id) => document.getElementById(id);
-            const loadingScreen = $('loadingScreen');
-            const nicknameModal = $('nicknameModal');
-            const nicknameInput = $('nicknameInput');
-            const nicknameSubmit = $('nicknameSubmit');
-            const nicknameError = $('nicknameError');
-            const settingsModal = $('settingsModal');
-            const settingsBtn = $('settingsBtn');
-            const closeSettings = $('closeSettings');
-            const nameTab = $('nameTab');
-            const avatarTab = $('avatarTab');
-            const namePanel = $('namePanel');
-            const avatarPanel = $('avatarPanel');
-            const newNameInput = $('newNameInput');
-            const confirmNameBtn = $('confirmNameBtn');
-            const settingsError = $('settingsError');
-            const avatarGrid = $('avatarGrid');
-            const uploadAvatarBtn = $('uploadAvatarBtn');
-            const avatarUpload = $('avatarUpload');
-            const statsModal = $('statsModal');
-            const statsBtn = $('statsBtn');
-            const closeStats = $('closeStats');
-            const profileNickname = $('profileNickname');
-            const profileIP = $('profileIP');
-            const profileServerID = $('profileServerID');
-            const profileAvatar = $('profileAvatar');
-            const totalClicksSpan = $('totalClicks');
-            const profileSexpah = $('profileSexpah');
-            const totalOverexcitesSpan = $('totalOverexcites');
-            const playerLevelSpan = $('playerLevel');
-            const expCurrentSpan = $('expCurrent');
-            const expRequiredSpan = $('expRequired');
-            const expBarFill = $('expBarFill');
+  function updateProfile() {
+    const totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0', 10) || 0;
+    const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
+    const totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0', 10) || 0;
+    const playerExp = parseInt(localStorage.getItem('pahomPlayerExp') || '0', 10) || 0;
+    const playerLevel = parseInt(localStorage.getItem('pahomPlayerLevel') || '1', 10) || 1;
 
-            const bossWinsEl = $('bossWins');
-            const bossLossesEl = $('bossLosses');
-            const bossEarnedEl = $('bossEarned');
+    nickname = localStorage.getItem('pahomNickname') || '';
+    playerIP = localStorage.getItem('pahomIP') || '';
+    avatarData = localStorage.getItem('pahomAvatar') || '';
 
-            const MAX_LOVE_UP = 20;
-            const MAX_LOOT_UP = 5;
-            const BASE_EXP = 1200;
-            const EXP_STEP = 600;
+    profileNickname.textContent = nickname || 'Игрок';
+    profileIP.textContent = playerIP || '0.0.0.0';
+    totalClicksSpan.textContent = formatNumber(totalClicks);
+    profileSexpah.textContent = formatNumber(sexpah);
+    totalOverexcitesSpan.textContent = formatNumber(totalOverexcites);
 
-            let nickname = localStorage.getItem('pahomNickname') || '';
-            let playerIP = localStorage.getItem('pahomIP') || '';
-            let avatarData = localStorage.getItem('pahomAvatar') || '';
+    playerLevelSpan.textContent = playerLevel;
+    const req = expRequired(playerLevel);
+    expCurrentSpan.textContent = formatNumber(playerExp);
+    expRequiredSpan.textContent = formatNumber(req);
+    const pct = Math.min(100, (playerExp / req) * 100);
+    expBarFill.style.width = pct + '%';
 
-            function expRequired(level) { return BASE_EXP + (level - 1) * EXP_STEP; }
-            function loveUpgradeCost(targetLevel) { return 100000 + Math.floor((targetLevel - 1) / 3) * 200000; }
-            function lootUpgradeCost(targetLevel) { return 500000 * (targetLevel - 1); }
-            function loveBonus(level) { return (level - 1) * 0.5; }
-            function lootBonusPct(level) { return (level - 1) * 5; }
-            function formatNumber(n) {
-                if (n >= 1000000000) { const v = n/1000000000; return (v<10?v.toFixed(1):Math.floor(v))+'B'; }
-                if (n >= 1000000) { const v = n/1000000; return (v<10?v.toFixed(1):Math.floor(v))+'M'; }
-                return Number(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-            }
+    if (avatarData) {
+      profileAvatar.innerHTML = '<img src="' + avatarData + '" alt="аватар">';
+    } else {
+      profileAvatar.textContent = '👤';
+    }
 
-            function updateServerID() {
-                if (!profileServerID) return;
-                var sid = window.tgSyncUserId || '—';
-                profileServerID.textContent = 'ID: ' + sid;
-            }
+    let bossStats = { wins: 0, losses: 0, earned: 0 };
+    try {
+      const raw = JSON.parse(localStorage.getItem('pahomBossStats') || 'null');
+      if (raw && typeof raw === 'object') {
+        bossStats = { wins: raw.wins || 0, losses: raw.losses || 0, earned: raw.earned || 0 };
+      }
+    } catch(e) {}
+    bossWinsEl.textContent = formatNumber(bossStats.wins);
+    bossLossesEl.textContent = formatNumber(bossStats.losses);
+    bossEarnedEl.textContent = formatNumber(bossStats.earned);
 
-            function updateProfile() {
-                const totalClicks = parseInt(localStorage.getItem('pahomClicks') || '0', 10) || 0;
-                const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
-                const totalOverexcites = parseInt(localStorage.getItem('pahomOverexcites') || '0', 10) || 0;
-                const playerExp = parseInt(localStorage.getItem('pahomPlayerExp') || '0', 10) || 0;
-                const playerLevel = parseInt(localStorage.getItem('pahomPlayerLevel') || '1', 10) || 1;
+    updateServerID();
+  }
 
-                nickname = localStorage.getItem('pahomNickname') || '';
-                playerIP = localStorage.getItem('pahomIP') || '';
-                avatarData = localStorage.getItem('pahomAvatar') || '';
+  function renderSegments(containerId, current, max) {
+    const c = document.getElementById(containerId);
+    if (!c) return;
+    if (c.children.length !== max) {
+      c.innerHTML = '';
+      for (let i = 0; i < max; i++) c.appendChild(document.createElement('span'));
+    }
+    for (let i = 0; i < max; i++) {
+      if (i < current) c.children[i].classList.add('filled');
+      else c.children[i].classList.remove('filled');
+    }
+  }
 
-                profileNickname.textContent = nickname || 'Игрок';
-                profileIP.textContent = playerIP || '0.0.0.0';
-                totalClicksSpan.textContent = formatNumber(totalClicks);
-                profileSexpah.textContent = formatNumber(sexpah);
-                totalOverexcitesSpan.textContent = formatNumber(totalOverexcites);
+  function updateStatsPanel() {
+    const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
+    const loveUpgrade = parseInt(localStorage.getItem('pahomUpgradeLove') || '1', 10) || 1;
+    const lootUpgrade = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1;
 
-                playerLevelSpan.textContent = playerLevel;
-                const req = expRequired(playerLevel);
-                expCurrentSpan.textContent = formatNumber(playerExp);
-                expRequiredSpan.textContent = formatNumber(req);
-                const pct = Math.min(100, (playerExp / req) * 100);
-                expBarFill.style.width = pct + '%';
+    document.getElementById('statsBalance').textContent = formatNumber(sexpah);
 
-                if (avatarData) {
-                    profileAvatar.innerHTML = '<img src="' + avatarData + '" alt="аватар">';
-                } else {
-                    profileAvatar.textContent = '👤';
-                }
+    document.getElementById('loveUpgradeLevel').textContent = loveUpgrade;
+    document.getElementById('loveEffect').textContent = '+' + loveBonus(loveUpgrade).toFixed(1);
+    renderSegments('loveSegments', loveUpgrade, MAX_LOVE_UP);
+    const loveBtn = document.getElementById('loveUpgradeBtn');
+    if (loveUpgrade >= MAX_LOVE_UP) {
+      document.getElementById('loveCost').textContent = 'МАКС';
+      loveBtn.disabled = true;
+      loveBtn.textContent = 'МАКСИМУМ';
+    } else {
+      const cost = loveUpgradeCost(loveUpgrade + 1);
+      document.getElementById('loveCost').textContent = formatNumber(cost);
+      loveBtn.disabled = sexpah < cost;
+      loveBtn.textContent = sexpah < cost ? 'НЕДОСТАТОЧНО' : 'УЛУЧШИТЬ';
+    }
 
-                let bossStats = { wins: 0, losses: 0, earned: 0 };
-                try {
-                    const raw = JSON.parse(localStorage.getItem('pahomBossStats') || 'null');
-                    if (raw && typeof raw === 'object') {
-                        bossStats = { wins: raw.wins || 0, losses: raw.losses || 0, earned: raw.earned || 0 };
-                    }
-                } catch(e) {}
-                bossWinsEl.textContent = formatNumber(bossStats.wins);
-                bossLossesEl.textContent = formatNumber(bossStats.losses);
-                bossEarnedEl.textContent = formatNumber(bossStats.earned);
+    document.getElementById('lootUpgradeLevel').textContent = lootUpgrade;
+    document.getElementById('lootEffect').textContent = '+' + lootBonusPct(lootUpgrade) + '%';
+    renderSegments('lootSegments', lootUpgrade, MAX_LOOT_UP);
+    const lootBtn = document.getElementById('lootUpgradeBtn');
+    if (lootUpgrade >= MAX_LOOT_UP) {
+      document.getElementById('lootCost').textContent = 'МАКС';
+      lootBtn.disabled = true;
+      lootBtn.textContent = 'МАКСИМУМ';
+    } else {
+      const cost = lootUpgradeCost(lootUpgrade + 1);
+      document.getElementById('lootCost').textContent = formatNumber(cost);
+      lootBtn.disabled = sexpah < cost;
+      lootBtn.textContent = sexpah < cost ? 'НЕДОСТАТОЧНО' : 'УЛУЧШИТЬ';
+    }
+  }
 
-                updateServerID();
-            }
+  function flashMessage(elId, text, isError) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.textContent = text;
+    el.style.color = isError ? '#ff5a5a' : '#4cd964';
+    el.classList.add('show');
+    setTimeout(function() { el.classList.remove('show'); }, 2000);
+  }
 
-            function renderSegments(containerId, current, max) {
-                const c = document.getElementById(containerId);
-                if (!c) return;
-                if (c.children.length !== max) {
-                    c.innerHTML = '';
-                    for (let i = 0; i < max; i++) c.appendChild(document.createElement('span'));
-                }
-                for (let i = 0; i < max; i++) {
-                    if (i < current) c.children[i].classList.add('filled');
-                    else c.children[i].classList.remove('filled');
-                }
-            }
+  function generateIP() {
+    return Math.floor(Math.random() * 255) + '.' + Math.floor(Math.random() * 255) + '.' + Math.floor(Math.random() * 255) + '.' + Math.floor(Math.random() * 255);
+  }
 
-            function updateStatsPanel() {
-                const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
-                const loveUpgrade = parseInt(localStorage.getItem('pahomUpgradeLove') || '1', 10) || 1;
-                const lootUpgrade = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1;
+  function submitNickname() {
+    const newName = nicknameInput.value.trim();
+    if (!/^[a-zA-Zа-яА-Я]{2,15}$/.test(newName)) {
+      nicknameError.textContent = 'Только латиница и русские буквы, 2-15 символов!';
+      nicknameError.style.display = 'block';
+      return;
+    }
+    nickname = newName;
+    localStorage.setItem('pahomNickname', nickname);
+    playerIP = generateIP();
+    localStorage.setItem('pahomIP', playerIP);
+    nicknameError.style.display = 'none';
+    nicknameModal.classList.remove('show');
+    updateProfile();
+    forceSave();
+  }
 
-                document.getElementById('statsBalance').textContent = formatNumber(sexpah);
+  nicknameSubmit.addEventListener('click', submitNickname);
+  nicknameInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') submitNickname(); });
 
-                document.getElementById('loveUpgradeLevel').textContent = loveUpgrade;
-                document.getElementById('loveEffect').textContent = '+' + loveBonus(loveUpgrade).toFixed(1);
-                renderSegments('loveSegments', loveUpgrade, MAX_LOVE_UP);
-                const loveBtn = document.getElementById('loveUpgradeBtn');
-                if (loveUpgrade >= MAX_LOVE_UP) {
-                    document.getElementById('loveCost').textContent = 'МАКС';
-                    loveBtn.disabled = true;
-                    loveBtn.textContent = 'МАКСИМУМ';
-                } else {
-                    const cost = loveUpgradeCost(loveUpgrade + 1);
-                    document.getElementById('loveCost').textContent = formatNumber(cost);
-                    loveBtn.disabled = sexpah < cost;
-                    loveBtn.textContent = sexpah < cost ? 'НЕДОСТАТОЧНО' : 'УЛУЧШИТЬ';
-                }
+  settingsBtn.addEventListener('click', function() { settingsModal.classList.add('show'); });
+  closeSettings.addEventListener('click', function() { settingsModal.classList.remove('show'); });
+  statsBtn.addEventListener('click', function() { updateStatsPanel(); statsModal.classList.add('show'); });
+  closeStats.addEventListener('click', function() { statsModal.classList.remove('show'); });
 
-                document.getElementById('lootUpgradeLevel').textContent = lootUpgrade;
-                document.getElementById('lootEffect').textContent = '+' + lootBonusPct(lootUpgrade) + '%';
-                renderSegments('lootSegments', lootUpgrade, MAX_LOOT_UP);
-                const lootBtn = document.getElementById('lootUpgradeBtn');
-                if (lootUpgrade >= MAX_LOOT_UP) {
-                    document.getElementById('lootCost').textContent = 'МАКС';
-                    lootBtn.disabled = true;
-                    lootBtn.textContent = 'МАКСИМУМ';
-                } else {
-                    const cost = lootUpgradeCost(lootUpgrade + 1);
-                    document.getElementById('lootCost').textContent = formatNumber(cost);
-                    lootBtn.disabled = sexpah < cost;
-                    lootBtn.textContent = sexpah < cost ? 'НЕДОСТАТОЧНО' : 'УЛУЧШИТЬ';
-                }
-            }
+  document.getElementById('loveUpgradeBtn').addEventListener('click', function() {
+    const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
+    let loveUpgrade = parseInt(localStorage.getItem('pahomUpgradeLove') || '1', 10) || 1;
+    if (loveUpgrade >= MAX_LOVE_UP) { flashMessage('loveMessage', 'Достигнут максимум', true); return; }
+    const cost = loveUpgradeCost(loveUpgrade + 1);
+    if (sexpah < cost) { flashMessage('loveMessage', 'Недостаточно секспахомов', true); return; }
+    localStorage.setItem('pahomSexpah', String(sexpah - cost));
+    loveUpgrade++;
+    localStorage.setItem('pahomUpgradeLove', String(loveUpgrade));
+    flashMessage('loveMessage', 'Улучшено до ур. ' + loveUpgrade, false);
+    updateStatsPanel();
+    updateProfile();
+    forceSave();
+  });
 
-            function flashMessage(elId, text, isError) {
-                const el = document.getElementById(elId);
-                if (!el) return;
-                el.textContent = text;
-                el.style.color = isError ? '#ff5a5a' : '#4cd964';
-                el.classList.add('show');
-                setTimeout(function() { el.classList.remove('show'); }, 2000);
-            }
+  document.getElementById('lootUpgradeBtn').addEventListener('click', function() {
+    const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
+    let lootUpgrade = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1;
+    if (lootUpgrade >= MAX_LOOT_UP) { flashMessage('lootMessage', 'Достигнут максимум', true); return; }
+    const cost = lootUpgradeCost(lootUpgrade + 1);
+    if (sexpah < cost) { flashMessage('lootMessage', 'Недостаточно секспахомов', true); return; }
+    localStorage.setItem('pahomSexpah', String(sexpah - cost));
+    lootUpgrade++;
+    localStorage.setItem('pahomUpgradeLoot', String(lootUpgrade));
+    flashMessage('lootMessage', 'Улучшено до ур. ' + lootUpgrade, false);
+    updateStatsPanel();
+    updateProfile();
+    forceSave();
+  });
 
-            if (!sessionStorage.getItem('pahomProfileLoaded')) {
-                setTimeout(function() {
-                    if (loadingScreen) loadingScreen.style.display = 'none';
-                    sessionStorage.setItem('pahomProfileLoaded', 'true');
-                }, 2500);
-            } else {
-                if (loadingScreen) loadingScreen.style.display = 'none';
-                document.querySelector('.profile-container').style.animation = 'none';
-                document.querySelector('.profile-container').style.opacity = '1';
-            }
+  nameTab.addEventListener('click', function() {
+    nameTab.classList.add('active');
+    avatarTab.classList.remove('active');
+    namePanel.style.display = 'block';
+    avatarPanel.style.display = 'none';
+  });
 
-            function generateIP() {
-                return Math.floor(Math.random() * 255) + '.' + Math.floor(Math.random() * 255) + '.' + Math.floor(Math.random() * 255) + '.' + Math.floor(Math.random() * 255);
-            }
+  avatarTab.addEventListener('click', function() {
+    avatarTab.classList.add('active');
+    nameTab.classList.remove('active');
+    avatarPanel.style.display = 'block';
+    namePanel.style.display = 'none';
+  });
 
-            function submitNickname() {
-                const newName = nicknameInput.value.trim();
-                if (!/^[a-zA-Zа-яА-Я]{2,15}$/.test(newName)) {
-                    nicknameError.textContent = 'Только латиница и русские буквы, 2-15 символов!';
-                    nicknameError.style.display = 'block';
-                    return;
-                }
-                nickname = newName;
-                localStorage.setItem('pahomNickname', nickname);
-                playerIP = generateIP();
-                localStorage.setItem('pahomIP', playerIP);
-                nicknameError.style.display = 'none';
-                nicknameModal.classList.remove('show');
-                updateProfile();
-            }
+  confirmNameBtn.addEventListener('click', function() {
+    const newName = newNameInput.value.trim();
+    if (!/^[a-zA-Zа-яА-Я]{2,15}$/.test(newName)) {
+      settingsError.textContent = 'Только латиница и русские буквы, 2-15 символов!';
+      settingsError.style.display = 'block';
+      return;
+    }
+    nickname = newName;
+    localStorage.setItem('pahomNickname', nickname);
+    newNameInput.value = '';
+    settingsError.style.display = 'none';
+    updateProfile();
+    settingsModal.classList.remove('show');
+    forceSave();
+  });
 
-            nicknameSubmit.addEventListener('click', submitNickname);
-            nicknameInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') submitNickname(); });
-            settingsBtn.addEventListener('click', function() { settingsModal.classList.add('show'); });
-            closeSettings.addEventListener('click', function() { settingsModal.classList.remove('show'); });
-            statsBtn.addEventListener('click', function() { updateStatsPanel(); statsModal.classList.add('show'); });
-            closeStats.addEventListener('click', function() { statsModal.classList.remove('show'); });
+  newNameInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') confirmNameBtn.click(); });
 
-            document.getElementById('loveUpgradeBtn').addEventListener('click', function() {
-                const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
-                let loveUpgrade = parseInt(localStorage.getItem('pahomUpgradeLove') || '1', 10) || 1;
-                if (loveUpgrade >= MAX_LOVE_UP) { flashMessage('loveMessage', 'Достигнут максимум', true); return; }
-                const cost = loveUpgradeCost(loveUpgrade + 1);
-                if (sexpah < cost) { flashMessage('loveMessage', 'Недостаточно секспахомов', true); return; }
-                localStorage.setItem('pahomSexpah', String(sexpah - cost));
-                loveUpgrade++;
-                localStorage.setItem('pahomUpgradeLove', String(loveUpgrade));
-                flashMessage('loveMessage', 'Улучшено до ур. ' + loveUpgrade, false);
-                updateStatsPanel();
-                updateProfile();
-            });
+  avatarGrid.querySelectorAll('.avatar-option').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      avatarGrid.querySelectorAll('.avatar-option').forEach(function(b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      avatarData = '';
+      localStorage.setItem('pahomAvatar', '');
+      profileAvatar.textContent = btn.getAttribute('data-emoji');
+      forceSave();
+    });
+  });
 
-            document.getElementById('lootUpgradeBtn').addEventListener('click', function() {
-                const sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
-                let lootUpgrade = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1;
-                if (lootUpgrade >= MAX_LOOT_UP) { flashMessage('lootMessage', 'Достигнут максимум', true); return; }
-                const cost = lootUpgradeCost(lootUpgrade + 1);
-                if (sexpah < cost) { flashMessage('lootMessage', 'Недостаточно секспахомов', true); return; }
-                localStorage.setItem('pahomSexpah', String(sexpah - cost));
-                lootUpgrade++;
-                localStorage.setItem('pahomUpgradeLoot', String(lootUpgrade));
-                flashMessage('lootMessage', 'Улучшено до ур. ' + lootUpgrade, false);
-                updateStatsPanel();
-                updateProfile();
-            });
+  uploadAvatarBtn.addEventListener('click', function() { avatarUpload.click(); });
+  avatarUpload.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        avatarData = event.target.result;
+        localStorage.setItem('pahomAvatar', avatarData);
+        updateProfile();
+        forceSave();
+      };
+      reader.readAsDataURL(file);
+    }
+  });
 
-            nameTab.addEventListener('click', function() {
-                nameTab.classList.add('active');
-                avatarTab.classList.remove('active');
-                namePanel.style.display = 'block';
-                avatarPanel.style.display = 'none';
-            });
+  // ==== СТАРТ ====
+  if (!nickname) {
+    nicknameModal.classList.add('show');
+    setTimeout(function() { nicknameInput.focus(); }, 600);
+  } else {
+    updateProfile();
+  }
 
-            avatarTab.addEventListener('click', function() {
-                avatarTab.classList.add('active');
-                nameTab.classList.remove('active');
-                avatarPanel.style.display = 'block';
-                namePanel.style.display = 'none';
-            });
+  setInterval(updateProfile, 1500);
 
-            confirmNameBtn.addEventListener('click', function() {
-                const newName = newNameInput.value.trim();
-                if (!/^[a-zA-Zа-яА-Я]{2,15}$/.test(newName)) {
-                    settingsError.textContent = 'Только латиница и русские буквы, 2-15 символов!';
-                    settingsError.style.display = 'block';
-                    return;
-                }
-                nickname = newName;
-                localStorage.setItem('pahomNickname', nickname);
-                newNameInput.value = '';
-                settingsError.style.display = 'none';
-                updateProfile();
-                settingsModal.classList.remove('show');
-            });
+  // ==== ФОРС-СОХРАНЕНИЕ ПРИ УХОДЕ ====
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') forceSave();
+  });
+  window.addEventListener('pagehide', forceSave);
+  window.addEventListener('beforeunload', forceSave);
 
-            newNameInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') confirmNameBtn.click(); });
-
-            avatarGrid.querySelectorAll('.avatar-option').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    avatarGrid.querySelectorAll('.avatar-option').forEach(function(b) { b.classList.remove('selected'); });
-                    btn.classList.add('selected');
-                    avatarData = '';
-                    localStorage.setItem('pahomAvatar', '');
-                    profileAvatar.textContent = btn.getAttribute('data-emoji');
-                });
-            });
-
-            uploadAvatarBtn.addEventListener('click', function() { avatarUpload.click(); });
-            avatarUpload.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        avatarData = event.target.result;
-                        localStorage.setItem('pahomAvatar', avatarData);
-                        updateProfile();
-                    };
-                    reader.readAsDataURL(file);
-                }
-            });
-
-            if (!nickname) {
-                nicknameModal.classList.add('show');
-                setTimeout(function() { nicknameInput.focus(); }, 600);
-            } else {
-                updateProfile();
-            }
-
-            setInterval(updateProfile, 1500);
-
-            // === SERVER SYNC ===
-            if (window.tgSyncReady) {
-                window.tgSyncLoad(function(loaded) {
-                    if (loaded) {
-                        updateProfile();
-                        if (typeof updateStatsPanel === 'function') updateStatsPanel();
-                    }
-                    updateServerID();
-                });
-            }
-        })();
-    </script>
-    <script src="server-sync.js"></script>
+  // ==== SERVER SYNC ====
+  if (window.tgSyncReady) {
+    window.tgSyncLoad(function(loaded) {
+      if (loaded) {
+        updateProfile();
+        if (typeof updateStatsPanel === 'function') updateStatsPanel();
+      }
+      updateServerID();
+    });
+  }
+})();
+</script>
+<script src="server-sync.js"></script>
 </body>
 </html>
