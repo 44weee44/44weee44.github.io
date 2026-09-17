@@ -1218,93 +1218,76 @@ body {
     return found;
   }
 
-    function runAdminCommand() {
-        var input = adminCmdInput.value.trim();
-        if (!input) { adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Пустая команда</span>'; return; }
+     function runAdminCommand() {
+         var input = adminCmdInput.value.trim();
+         if (!input) { adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Пустая команда</span>'; return; }
+     
+         var parts = input.split(/\s+/);
+         if (parts.length !== 3) {
+           adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Формат: выдать|забрать &lt;ID или ник&gt; &lt;сумма&gt;</span>';
+           return;
+         }
+     
+         var action = parts[0].toLowerCase();
+         var targetQuery = parts[1];
+         var amount = parseInt(parts[2], 10);
+     
+         if (action !== 'выдать' && action !== 'забрать') {
+           adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Команда: "выдать" или "забрать"</span>';
+           return;
+         }
+         if (!amount || amount <= 0) {
+           adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Сумма > 0</span>';
+           return;
+         }
+     
+         var resolvedId = resolveUser(targetQuery);
+         if (!resolvedId) {
+           adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Игрок не найден: ' + targetQuery + '</span>';
+           return;
+         }
+         if (resolvedId.multiple) {
+           adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Несколько игроков с ником — используй ID</span>';
+           return;
+         }
+     
+         var endpoint = (action === 'выдать') ? '/api/admin/give' : '/api/admin/take';
+         var adminId = getUserId();
+     
+         adminCmdResult.innerHTML = '<span style="color:#ffd76b;">⏳ Отправка на сервер...</span>';
+     
+         fetch('https://save-pahom.duckdns.org' + endpoint, {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ adminId: adminId, targetId: resolvedId, amount: amount })
+         })
+           .then(function(r) { return r.json(); })
+           .then(function(resp) {
+             if (!resp || !resp.ok) {
+               var reason = (resp && resp.reason) ? resp.reason : (resp && resp.error ? resp.error : 'ошибка');
+               adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Сервер: ' + reason + '</span>';
+               return;
+             }
+             var color = action === 'выдать' ? '#4cd964' : '#ff8c3c';
+             adminCmdResult.innerHTML = '<span style="color:' + color + ';">OK: ' + action + ' → ' + resolvedId + ': ' + amount + ' (новый баланс: ' + formatNumber(resp.newBalance) + ')</span>';
+     
+             logEvent('admin_' + (action === 'выдать' ? 'give' : 'take'), resolvedId + ' ' + (action === 'выдать' ? '+' : '-') + amount);
+     
+             if (resolvedId === getUserId()) {
+               localStorage.setItem('pahomSexpah', String(resp.newBalance));
+               updateProfile();
+             }
+     
+             adminCmdInput.value = '';
+             setTimeout(function() { renderLogs(); }, 100);
+           })
+           .catch(function(err) {
+             adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Сеть: ' + err.message + '</span>';
+           });
+       }
+     
+       adminCmdRun.addEventListener('click', runAdminCommand);
     
-        var parts = input.split(/\s+/);
-        if (parts.length !== 3) {
-          adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Формат: выдать|забрать &lt;ID или ник&gt; &lt;сумма&gt;</span>';
-          return;
-        }
-    
-        var action = parts[0].toLowerCase();
-        var targetQuery = parts[1];
-        var amount = parseInt(parts[2], 10);
-    
-        if (action !== 'выдать' && action !== 'забрать') {
-          adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Команда: "выдать" или "забрать"</span>';
-          return;
-        }
-        if (!amount || amount <= 0) {
-          adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Сумма > 0</span>';
-          return;
-        }
-    
-        var resolvedId = resolveUser(targetQuery);
-        if (!resolvedId) {
-          adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Игрок не найден: ' + targetQuery + '</span>';
-          return;
-        }
-        if (resolvedId.multiple) {
-          adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Несколько игроков с ником — используй ID</span>';
-          return;
-        }
-    
-        // Сначала пробуем через сервер
-        var endpoint = (action === 'выдать') ? '/api/admin/give' : '/api/admin/take';
-        var adminId = getUserId();
-    
-        adminCmdResult.innerHTML = '<span style="color:#ffd76b;">⏳ Отправка на сервер...</span>';
-    
-        fetch('https://save-pahom.duckdns.org' + endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ adminId: adminId, targetId: resolvedId, amount: amount })
-        })
-          .then(function(r) { return r.json(); })
-          .then(function(resp) {
-            if (!resp || !resp.ok) {
-              var reason = (resp && resp.reason) ? resp.reason : (resp && resp.error ? resp.error : 'ошибка');
-              adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Сервер: ' + reason + '</span>';
-              return;
-            }
-            var color = action === 'выдать' ? '#4cd964' : '#ff8c3c';
-            adminCmdResult.innerHTML = '<span style="color:' + color + ';">OK: ' + action + ' → ' + resolvedId + ': ' + amount + ' (новый баланс: ' + formatNumber(resp.newBalance) + ')</span>';
-    
-            // Если это мы сами — обновим локально сразу
-            if (resolvedId === getUserId()) {
-              localStorage.setItem('pahomSexpah', String(resp.newBalance));
-              updateProfile();
-            }
-    
-            adminCmdInput.value = '';
-          })
-          .catch(function(err) {
-            adminCmdResult.innerHTML = '<span style="color:#ff5a5a;">Сеть: ' + err.message + '</span>';
-          });
-      }
-
-    var myId = getUserId();
-    if (resolvedId === myId) {
-      var cur = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
-      if (action === 'выдать') cur += amount;
-      else cur = Math.max(0, cur - amount);
-      localStorage.setItem('pahomSexpah', String(cur));
-      updateProfile();
-      forceSave();
-    }
-
-    logEvent('admin_' + (action === 'выдать' ? 'give' : 'take'), resolvedId + ' ' + (action === 'выдать' ? '+' : '-') + amount);
-
-    var color = action === 'выдать' ? '#4cd964' : '#ff8c3c';
-    adminCmdResult.innerHTML = '<span style="color:' + color + ';">OK: ' + action + ' → ' + resolvedId + ': ' + amount + '</span>';
-
-    adminCmdInput.value = '';
-    setTimeout(function() { renderLogs(); updateProfile(); }, 100);
-  }
-
-  adminCmdRun.addEventListener('click', runAdminCommand);
   adminCmdInput.addEventListener('keypress', function(e) { if (e.key === 'Enter') runAdminCommand(); });
   
    // ==== ЧАСТИЦЫ ФОНА ====
