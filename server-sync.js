@@ -276,6 +276,7 @@
   window.tgSyncReady = true;
   window.tgSyncLoad = loadFromServer;
   window.tgSyncSave = saveToServer;
+  window.tgSyncSaveBeacon = saveViaBeacon;
   window.tgSyncUserId = USER_ID;
 
   console.log('[Sync] Ready. UserID:', USER_ID, 'API:', API_BASE);
