@@ -82,67 +82,65 @@
   var pendingTimer = null;
 
   function doSave(callback) {
-    if (!IS_TG_USER) { if (callback) callback(false); return; }
-    if (isSaving) {
-      pendingForce = true;
-      if (callback) callback(true);
-      return;
-    }
-
-    var data = collectAllData();
-    var json = JSON.stringify(data);
-    if (json === lastSaveHash && !pendingForce) {
-      if (callback) callback(true);
-      return;
-    }
-
-    lastSaveHash = json;
-    lastSaveTime = Date.now();
-    isSaving = true;
-    pendingForce = false;
-
-    fetch(API_BASE + '/api/save', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: USER_ID, data: data })
-    })
-      .then(function(r) { return r.json(); })
-      .then(function() {
-        isSaving = false;
+      if (!IS_TG_USER) { if (callback) callback(false); return; }
+      if (isSaving) {
+        pendingForce = true;
         if (callback) callback(true);
+        return;
+      }
+  
+      var data = collectAllData();
+      var json = JSON.stringify(data);
+      // УБРАТЬ проверку json === lastSaveHash
+      lastSaveHash = json;
+      lastSaveTime = Date.now();
+      isSaving = true;
+      pendingForce = false;
+  
+      fetch(API_BASE + '/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: USER_ID, data: data })
       })
-      .catch(function(err) {
-        isSaving = false;
-        console.warn('[Sync] save error:', err);
-        if (callback) callback(false);
-      });
-  }
+        .then(function(r) { return r.json(); })
+        .then(function() {
+          isSaving = false;
+          if (pendingForce) { pendingForce = false; doSave(); }
+          if (callback) callback(true);
+        })
+        .catch(function(err) {
+          isSaving = false;
+          console.warn('[Sync] save error:', err);
+          if (pendingForce) { pendingForce = false; doSave(); }
+          if (callback) callback(false);
+        });
+    }
 
-  function saveToServer(force, callback) {
-    if (!IS_TG_USER) { if (callback) callback(true); return; }
-
-    var now = Date.now();
-    var sinceLast = now - lastSaveTime;
-
-    // Форсированное сохранение — сразу
-    if (force) {
+    function saveToServer(force, callback) {
+          if (!IS_TG_USER) { if (callback) callback(true); return; }
+      
+          var now = Date.now();
+          var sinceLast = now - lastSaveTime;
+      
+          // Форс — сразу, без задержки
+          if (force) {
+            if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
+            doSave(callback);
+            return;
+          }
+  
+      if (sinceLast < MIN_SAVE_GAP_MS) {
+        if (pendingTimer) clearTimeout(pendingTimer);
+        pendingTimer = setTimeout(function() {
+          pendingTimer = null;
+          doSave(callback);
+        }, MIN_SAVE_GAP_MS - sinceLast);
+        if (callback) callback(true);
+        return;
+      }
+  
       doSave(callback);
-      return;
     }
-
-    // Если прошло меньше MIN_SAVE_GAP_MS — откладываем
-    if (sinceLast < MIN_SAVE_GAP_MS) {
-      if (pendingTimer) clearTimeout(pendingTimer);
-      pendingTimer = setTimeout(function() {
-        pendingTimer = null;
-        doSave(callback);
-      }, MIN_SAVE_GAP_MS - sinceLast);
-      if (callback) callback(true);
-      return;
-    }
-
-    doSave(callback);
-  }
 
   function saveViaBeacon() {
     if (!IS_TG_USER) return;
