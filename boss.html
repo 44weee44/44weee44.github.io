@@ -7,48 +7,261 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
-html, body { background:#0a0a0a; width:100%; height:100%; margin:0; font-family:'Segoe UI',Arial,sans-serif; overflow:hidden; }
+:root {
+  --bg-0:#0a0a0c;
+  --bg-1:#121216;
+  --bg-2:#18181f;
+  --line:#24242c;
+  --line-2:#33333d;
+  --text:#e8e8ec;
+  --text-2:#8a8a92;
+  --text-3:#5a5a62;
+  --accent:#2a8a30;
+  --accent-2:#7af080;
+  --green:#4cd964;
+  --red:#ff4a4a;
+  --gold:#ffd76b;
+}
+html, body {
+  background:#050506;
+  width:100%; height:100%;
+  margin:0;
+  font-family:-apple-system, 'SF Pro Display', 'Inter', 'Segoe UI', Arial, sans-serif;
+  color:var(--text);
+  overflow:hidden;
+}
 body { display:flex; justify-content:center; align-items:center; touch-action:manipulation; }
 
 .game-container {
-  background:#1a1a1a;
-  background-image:linear-gradient(rgba(10,10,10,0.88), rgba(10,10,10,0.96)), url('Fon.jpeg');
-  background-size:cover; background-position:center;
-  width:100%; height:100vh; height:100dvh; display:flex; flex-direction:column;
+  width:100%; max-width:520px; height:100vh; height:100dvh;
+  display:flex; flex-direction:column;
+  background:var(--bg-0);
   position:relative; min-height:0; overflow:hidden;
+  animation:fadeInSoft 0.5s ease-out;
+}
+@keyframes fadeInSoft { from { opacity:0.6; } to { opacity:1; } }
+
+.game-container::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size:32px 32px;
+  pointer-events:none;
+  z-index:0;
+  mask-image:radial-gradient(ellipse at 50% 0%, #000 20%, transparent 75%);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 0%, #000 20%, transparent 75%);
+}
+.game-container::after {
+  content:'';
+  position:absolute;
+  top:-40%; left:50%;
+  transform:translateX(-50%);
+  width:500px; height:500px;
+  background:conic-gradient(from 180deg at 50% 50%,
+    transparent 0deg, rgba(42,138,48,0.05) 30deg, transparent 60deg,
+    transparent 300deg, rgba(42,138,48,0.05) 330deg, transparent 360deg);
+  animation:spotlight 24s linear infinite;
+  pointer-events:none;
+  z-index:0;
+  filter:blur(30px);
+}
+@keyframes spotlight { 0% { transform:translateX(-50%) rotate(0); } 100% { transform:translateX(-50%) rotate(360deg); } }
+
+/* ШАПКА */
+.header {
+  position:relative;
+  z-index:5;
+  padding:12px 15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-bottom:1px solid var(--line);
+  min-height:56px;
+  flex-shrink:0;
+}
+.header::after {
+  content:'';
+  position:absolute;
+  left:20%; right:20%;
+  bottom:-1px;
+  height:1px;
+  background:linear-gradient(90deg, transparent, var(--accent-2), transparent);
+  box-shadow:0 0 12px rgba(42,138,48,0.9);
+}
+.header-title {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--text);
+  font-weight:800;
+  letter-spacing:5px;
+  font-size:1.25rem;
+  text-transform:uppercase;
+}
+.header-title::before {
+  content:'';
+  width:8px; height:8px;
+  background:var(--accent-2);
+  box-shadow:0 0 12px rgba(42,138,48,0.9);
+  transform:rotate(45deg);
+}
+.header-title svg { display:none; }
+
+/* СЧЁТ */
+.score-board {
+  position:relative;
+  z-index:5;
+  padding:8px 15px;
+  display:flex;
+  gap:8px;
+  border-bottom:1px solid var(--line);
+  flex-shrink:0;
+}
+.sexpah, .tool-info {
+  flex:1;
+  padding:5px 12px;
+  border-radius:8px;
+  background:var(--bg-1);
+  border:1px solid var(--line);
+  position:relative;
+  overflow:hidden;
+  font-size:0.82rem;
+  font-weight:700;
+  color:var(--text);
+  font-variant-numeric:tabular-nums;
+  letter-spacing:0.2px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  transition:transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+  white-space:nowrap;
+}
+.sexpah { flex:1.4; }
+.tool-info { flex:1; }
+
+/* Левая акцентная полоса — зелёная по умолчанию, меняется у оружия */
+.sexpah::before, .tool-info::before {
+  content:'';
+  position:absolute;
+  top:0; left:0;
+  width:3px; height:100%;
+  background:var(--accent-2);
+  box-shadow:0 0 12px rgba(42,138,48,0.9);
+  transition:background 0.3s ease, box-shadow 0.3s ease;
 }
 
-.header { display:flex; align-items:center; justify-content:center; padding:12px 15px; flex-shrink:0; border-bottom:1px solid #4a4a2a; background:linear-gradient(180deg, rgba(50,30,30,0.9), rgba(30,15,15,0.85)); z-index:10; }
-.header-title { font-size:1.25rem; font-weight:900; letter-spacing:5px; color:#c4b08a; text-transform:uppercase; text-shadow:0 2px 4px rgba(0,0,0,0.9), 0 0 18px rgba(200,60,60,0.4); display:flex; align-items:center; gap:10px; }
-.header-title svg { width:26px; height:26px; filter:drop-shadow(0 0 10px rgba(200,60,60,0.9)); }
+.sexpah.bump { transform:scale(1.06); box-shadow:0 0 20px rgba(42,138,48,0.6); }
 
-.score-board { display:flex; justify-content:space-between; align-items:center; padding:8px 15px; flex-shrink:0; border-bottom:1px solid #4a4a2a; background:rgba(28,28,14,0.85); z-index:10; gap:10px; }
-.sexpah { background:rgba(37,37,21,0.9); padding:5px 15px; border-radius:8px; border:1px solid #4a4a2a; font-size:0.9rem; font-weight:700; color:#c4b08a; transition:transform 0.3s ease, box-shadow 0.3s ease; }
-.sexpah.bump { transform:scale(1.08); box-shadow:0 0 20px rgba(184,150,46,0.7); }
-.tool-info { background:rgba(37,37,21,0.9); padding:5px 12px; border-radius:8px; border:1px solid #4a4a2a; font-size:0.8rem; font-weight:700; color:#c4b08a; }
+/* ==== СЕКСПАХОМЫ — зелёный фон ==== */
+.sexpah {
+  background:linear-gradient(135deg, rgba(42,138,48,0.15), rgba(20,40,22,0.4));
+  border-color:rgba(122,240,128,0.35);
+}
+.sexpah::before { background:var(--accent-2); box-shadow:0 0 12px rgba(42,138,48,0.9); }
 
-.notify-bar { display:flex; flex-direction:column; gap:6px; padding:0 15px; flex-shrink:0; z-index:100; pointer-events:none; position:relative; }
+/* ==== ОРУЖИЕ — фон и рамка по редкости ==== */
+.tool-info.rarity-common {
+  background:linear-gradient(135deg, rgba(154,154,154,0.15), rgba(30,30,34,0.4));
+  border-color:rgba(180,180,200,0.4);
+}
+.tool-info.rarity-common::before {
+  background:#b4b4c8;
+  box-shadow:0 0 12px rgba(180,180,200,0.9);
+}
+
+.tool-info.rarity-rare {
+  background:linear-gradient(135deg, rgba(59,130,246,0.18), rgba(15,25,50,0.4));
+  border-color:rgba(59,130,246,0.55);
+}
+.tool-info.rarity-rare::before {
+  background:#5aa8ff;
+  box-shadow:0 0 12px rgba(90,168,255,0.9);
+}
+
+.tool-info.rarity-legendary {
+  background:linear-gradient(135deg, rgba(255,215,107,0.18), rgba(50,40,10,0.4));
+  border-color:rgba(255,215,107,0.55);
+}
+.tool-info.rarity-legendary::before {
+  background:#ffd76b;
+  box-shadow:0 0 12px rgba(255,215,107,0.9);
+}
+
+.tool-info.rarity-mythic {
+  background:linear-gradient(135deg, rgba(168,85,247,0.18), rgba(40,15,60,0.4));
+  border-color:rgba(168,85,247,0.55);
+}
+.tool-info.rarity-mythic::before {
+  background:#a855f7;
+  box-shadow:0 0 12px rgba(168,85,247,0.9);
+}
+
+.tool-info.rarity-divine {
+  background:linear-gradient(135deg, rgba(255,59,59,0.18), rgba(60,10,10,0.4));
+  border-color:rgba(255,59,59,0.6);
+}
+.tool-info.rarity-divine::before {
+  background:#ff3b3b;
+  box-shadow:0 0 12px rgba(255,59,59,0.9);
+}
+
+/* NOTIFY */
+.notify-bar {
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  padding:0 16px;
+  flex-shrink:0;
+  z-index:100;
+  pointer-events:none;
+}
 .notify-bar:empty { padding:0; }
-.notify-chip { display:flex; align-items:center; gap:8px; padding:10px 16px; background:linear-gradient(135deg, rgba(184,150,46,0.3), rgba(139,105,20,0.2)); border:1px solid #b8962e; border-radius:20px; font-size:0.85rem; font-weight:700; color:#ffd76b; font-family:'Courier New',monospace; align-self:flex-start; box-shadow:0 0 25px rgba(184,150,46,0.5); animation:chipIn 0.5s ease both; }
-.notify-chip.leaving { animation:chipOut 0.4s ease forwards; }
+.notify-chip {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 16px;
+  background:var(--bg-2);
+  border:1px solid var(--accent-2);
+  border-radius:10px;
+  font-size:0.82rem;
+  font-weight:700;
+  color:var(--accent-2);
+  box-shadow:0 0 20px rgba(42,138,48,0.5);
+  animation:chipIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  align-self:flex-start;
+  font-family:'Courier New', monospace;
+}
 .notify-chip .notify-icon img { width:1.2rem; height:1.2rem; object-fit:contain; border-radius:3px; vertical-align:middle; }
-@keyframes chipIn { from { opacity:0; transform:translateY(-20px) scale(0.8); } to { opacity:1; transform:translateY(0) scale(1); } }
-@keyframes chipOut { from { opacity:1; transform:translateY(0) scale(1); } to { opacity:0; transform:translateY(-15px) scale(0.9); } }
+.notify-chip.leaving { animation:chipOut 0.35s ease forwards; }
+@keyframes chipIn { from { opacity:0; transform:translateY(-12px) scale(0.9); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes chipOut { from { opacity:1; transform:translateY(0) scale(1); } to { opacity:0; transform:translateY(-10px) scale(0.95); } }
 
 .hidden { display:none !important; }
 
-/* ===== ТАБЫ БОССОВ ===== */
-.boss-tabs { display:flex; gap:10px; padding:12px 15px; flex-shrink:0; z-index:20; }
+/* ТАБЫ БОССОВ — свечение как в seks (glow-блик на .active::before) */
+.boss-tabs {
+  position:relative;
+  z-index:20;
+  display:flex;
+  gap:10px;
+  padding:12px 16px;
+  flex-shrink:0;
+}
 .boss-tab {
   flex:1;
-  background:linear-gradient(135deg, rgba(40,30,15,0.75), rgba(25,20,10,0.75));
-  border:1px solid #4a4a2a;
-  color:#c4b08a;
+  background:linear-gradient(135deg, rgba(30,30,20,0.75), rgba(18,18,12,0.75));
+  border:1px solid var(--line);
+  color:var(--text-3);
   padding:12px 6px;
   border-radius:10px;
   cursor:pointer;
   font-weight:800;
-  font-size:0.78rem;
+  font-size:0.72rem;
   transition:all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   letter-spacing:1.6px;
   text-transform:uppercase;
@@ -61,7 +274,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   content:'';
   position:absolute;
   inset:0;
-  background:linear-gradient(135deg, transparent 30%, rgba(255,215,107,0.18) 50%, transparent 70%);
+  background:linear-gradient(135deg, transparent 30%, rgba(122,240,128,0.15) 50%, transparent 70%);
   transform:translateX(-100%);
   transition:transform 0.7s ease;
   pointer-events:none;
@@ -72,39 +285,55 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   bottom:0; left:50%;
   transform:translateX(-50%) scaleX(0);
   width:70%; height:2px;
-  background:linear-gradient(90deg, transparent, #ffd76b, transparent);
+  background:linear-gradient(90deg, transparent, var(--accent-2), transparent);
   transition:transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   border-radius:2px;
 }
 .boss-tab:hover:not(.active) {
-  border-color:rgba(184,150,46,0.6);
+  border-color:rgba(122,240,128,0.4);
   transform:translateY(-2px);
-  box-shadow:0 6px 18px rgba(0,0,0,0.6), 0 0 18px rgba(184,150,46,0.25);
+  color:var(--text-2);
+  box-shadow:0 6px 18px rgba(0,0,0,0.6), 0 0 18px rgba(42,138,48,0.2);
 }
 .boss-tab.active {
-  border-color:#b8962e;
-  background:linear-gradient(135deg, rgba(184,150,46,0.4), rgba(139,105,20,0.3));
-  color:#ffd76b;
-  box-shadow:0 0 25px rgba(184,150,46,0.55), inset 0 0 18px rgba(255,215,107,0.12), 0 4px 12px rgba(0,0,0,0.5);
+  border-color:var(--accent-2);
+  background:linear-gradient(135deg, rgba(42,138,48,0.35), rgba(20,60,24,0.25));
+  color:var(--accent-2);
+  box-shadow:0 0 25px rgba(42,138,48,0.5), inset 0 0 18px rgba(122,240,128,0.1), 0 4px 12px rgba(0,0,0,0.5);
   transform:translateY(-2px);
-  text-shadow:0 0 10px rgba(255,215,107,0.7);
+  text-shadow:0 0 10px rgba(122,240,128,0.6);
 }
 .boss-tab.active::before { transform:translateX(100%); }
 .boss-tab.active::after { transform:translateX(-50%) scaleX(1); }
 .boss-tab:active { transform:translateY(0) scale(0.97); }
 
-/* ===== СПИСОК ===== */
-.boss-list { flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:0 15px 5px; display:flex; flex-direction:column; gap:12px; scrollbar-width:thin; scrollbar-color:#4a4a2a transparent; }
+/* СПИСОК */
+.boss-list {
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+  padding:0 16px 5px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  scrollbar-width:thin;
+  scrollbar-color:var(--line-2) transparent;
+  position:relative;
+  z-index:5;
+}
 .boss-list::-webkit-scrollbar { width:5px; }
 .boss-list::-webkit-scrollbar-track { background:transparent; }
-.boss-list::-webkit-scrollbar-thumb { background:#4a4a2a; border-radius:3px; }
+.boss-list::-webkit-scrollbar-thumb { background:var(--line-2); border-radius:3px; }
 
+/* КАРТОЧКА БОССА (обычная) */
 .boss-card {
   display:flex; align-items:center; gap:14px;
   padding:14px 16px;
-  border:1px solid #4a4a2a;
+  border:1px solid var(--line);
   border-radius:14px;
-  background: linear-gradient(135deg, rgba(35,25,20,0.95), rgba(20,15,12,0.95));
+  background:var(--bg-1);
   cursor:pointer; flex-shrink:0;
   position: relative;
   overflow: hidden;
@@ -131,106 +360,70 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   top: 15%;
   bottom: 15%;
   width: 3px;
-  background: linear-gradient(180deg, transparent, #b8962e, transparent);
+  background: linear-gradient(180deg, transparent, var(--accent-2), transparent);
   border-radius: 3px;
   opacity: 0.5;
   transition: opacity 0.5s ease, width 0.5s ease;
 }
-.boss-card:hover:not(.locked)::before { width: 5px; opacity: 1; box-shadow: 0 0 15px #ffd76b; }
+.boss-card:hover:not(.locked)::before { width: 5px; opacity: 1; box-shadow: 0 0 15px var(--accent-2); }
 .boss-card:hover:not(.locked) {
-  border-color: #b8962e;
+  border-color: var(--accent-2);
   transform: translateX(6px);
-  background: linear-gradient(135deg, rgba(50,40,20,0.95), rgba(30,20,15,0.95));
-  box-shadow: 0 8px 25px rgba(0,0,0,0.5), 0 0 25px rgba(184,150,46,0.25);
+  background: #16161b;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.5), 0 0 25px rgba(42,138,48,0.25);
 }
 .boss-card:active:not(.locked) { transform: translateX(6px) scale(0.98); }
 .boss-card.locked { opacity: 0.5; filter: grayscale(0.5); }
-.boss-card.in-progress { border-color: #ff8c3c; box-shadow: 0 0 25px rgba(255,140,60,0.4); }
-.boss-card.in-progress::before { width: 5px; opacity: 1; background: linear-gradient(180deg, transparent, #ff8c3c, transparent); box-shadow: 0 0 15px #ff8c3c; }
+.boss-card.in-progress { border-color: var(--gold); box-shadow: 0 0 25px rgba(255,215,107,0.4); }
+.boss-card.in-progress::before { width: 5px; opacity: 1; background: linear-gradient(180deg, transparent, var(--gold), transparent); box-shadow: 0 0 15px var(--gold); }
 
-/* ===== ИВЕНТ-БОССЫ ===== */
-.boss-card.event-boss {
-  padding: 16px 18px;
-  border-width: 2px;
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-}
+/* ИВЕНТ-БОССЫ — оставляю исходные цветные темы */
+.boss-card.event-boss { padding: 16px 18px; border-width: 2px; position: relative; overflow: hidden; isolation: isolate; }
 .boss-card.event-boss .boss-avatar-wrap { width: 68px; height: 68px; }
-.boss-card.event-boss .boss-avatar {
-  width: 68px; height: 68px;
-  border-width: 3px;
-  animation: eventAvatarPulse 3s ease-in-out infinite;
-}
-.boss-card.event-boss .boss-avatar img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-@keyframes eventAvatarPulse {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.05); }
-}
+.boss-card.event-boss .boss-avatar { width: 68px; height: 68px; border-width: 3px; animation: eventAvatarPulse 3s ease-in-out infinite; }
+.boss-card.event-boss .boss-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+@keyframes eventAvatarPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 .boss-card.event-boss .boss-name { font-size: 1.15rem; letter-spacing: 0.8px; }
 
-/* ABYSS — золотые лучи */
 .boss-card.event-boss.abyss {
   border-color: #ffd76b;
-  background: radial-gradient(circle at 50% 50%, rgba(255,215,107,0.12) 0%, transparent 55%), linear-gradient(135deg, rgba(90,70,20,0.7), rgba(45,35,10,0.85));
-  box-shadow: 0 0 30px rgba(255,215,107,0.4), inset 0 0 25px rgba(255,215,107,0.1);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,215,107,0.22) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(120,95,30,0.75), rgba(60,45,15,0.9));
+  box-shadow: 0 0 40px rgba(255,215,107,0.55), inset 0 0 35px rgba(255,215,107,0.18);
 }
 .boss-card.event-boss.abyss::after {
   content: '';
   position: absolute;
   top: 50%; left: 50%;
-  width: 300px; height: 300px;
-  margin: -150px 0 0 -150px;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg, rgba(255,215,107,0.22) 8deg, transparent 16deg,
-    transparent 30deg, rgba(255,215,107,0.18) 38deg, transparent 46deg,
-    transparent 60deg, rgba(255,215,107,0.22) 68deg, transparent 76deg,
-    transparent 90deg, rgba(255,215,107,0.18) 98deg, transparent 106deg,
-    transparent 120deg, rgba(255,215,107,0.22) 128deg, transparent 136deg,
-    transparent 150deg, rgba(255,215,107,0.18) 158deg, transparent 166deg,
-    transparent 180deg, rgba(255,215,107,0.22) 188deg, transparent 196deg,
-    transparent 210deg, rgba(255,215,107,0.18) 218deg, transparent 226deg,
-    transparent 240deg, rgba(255,215,107,0.22) 248deg, transparent 256deg,
-    transparent 270deg, rgba(255,215,107,0.18) 278deg, transparent 286deg,
-    transparent 300deg, rgba(255,215,107,0.22) 308deg, transparent 316deg,
-    transparent 330deg, rgba(255,215,107,0.18) 338deg, transparent 346deg,
-    transparent 360deg
-  );
+  width: 500px; height: 500px;
+  margin: -250px 0 0 -250px;
+  background: conic-gradient(from 0deg,
+    transparent 0deg, rgba(255,215,107,0.4) 8deg, transparent 16deg,
+    transparent 30deg, rgba(255,215,107,0.35) 38deg, transparent 46deg,
+    transparent 60deg, rgba(255,215,107,0.4) 68deg, transparent 76deg,
+    transparent 90deg, rgba(255,215,107,0.35) 98deg, transparent 106deg,
+    transparent 120deg, rgba(255,215,107,0.4) 128deg, transparent 136deg,
+    transparent 150deg, rgba(255,215,107,0.35) 158deg, transparent 166deg,
+    transparent 180deg, rgba(255,215,107,0.4) 188deg, transparent 196deg,
+    transparent 210deg, rgba(255,215,107,0.35) 218deg, transparent 226deg,
+    transparent 240deg, rgba(255,215,107,0.4) 248deg, transparent 256deg,
+    transparent 270deg, rgba(255,215,107,0.35) 278deg, transparent 286deg,
+    transparent 300deg, rgba(255,215,107,0.4) 308deg, transparent 316deg,
+    transparent 330deg, rgba(255,215,107,0.35) 338deg, transparent 346deg,
+    transparent 360deg);
   animation: abyssRays 20s linear infinite;
   pointer-events: none;
-  opacity: 0.6;
+  opacity: 0.85;
   z-index: 0;
+  filter: blur(0.5px);
 }
-@keyframes abyssRays {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
-.boss-card.event-boss.abyss::before {
-  background: linear-gradient(180deg, transparent, #ffd76b, transparent);
-  box-shadow: 0 0 25px #ffd76b;
-  width: 5px; opacity: 1;
-  z-index: 2;
-}
+@keyframes abyssRays { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.boss-card.event-boss.abyss::before { background: linear-gradient(180deg, transparent, #ffd76b, transparent); box-shadow: 0 0 25px #ffd76b; width: 5px; opacity: 1; z-index: 2; }
 .boss-card.event-boss.abyss > * { position: relative; z-index: 1; }
-.boss-card.event-boss.abyss .boss-avatar {
-  border-color: #ffd76b;
-  box-shadow: 0 0 30px rgba(255,215,107,0.9), inset 0 0 15px rgba(255,215,107,0.3);
-}
-.boss-card.event-boss.abyss .boss-name {
-  color: #ffd76b;
-  text-shadow: 0 0 15px rgba(255,215,107,0.7);
-}
-.boss-card.event-boss.abyss:hover:not(.locked) {
-  border-color: #ffe594;
-  box-shadow: 0 0 50px rgba(255,215,107,0.85), 0 8px 25px rgba(0,0,0,0.5);
-}
+.boss-card.event-boss.abyss .boss-avatar { border-color: #ffd76b; box-shadow: 0 0 30px rgba(255,215,107,0.9), inset 0 0 15px rgba(255,215,107,0.3); }
+.boss-card.event-boss.abyss .boss-name { color: #ffd76b; text-shadow: 0 0 15px rgba(255,215,107,0.7); }
 
-/* SAMURAI — восход + иероглифы */
 .boss-card.event-boss.samurai {
   border-color: #ff5a5a;
   background: radial-gradient(circle at 50% 120%, rgba(255,90,90,0.3) 0%, transparent 60%), linear-gradient(180deg, rgba(140,30,30,0.65) 0%, rgba(60,10,10,0.8) 100%);
@@ -248,31 +441,12 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   opacity: 0.5;
   z-index: 0;
 }
-@keyframes samuraiInk {
-  0%, 100% { opacity: 0.4; }
-  50%      { opacity: 0.65; }
-}
-.boss-card.event-boss.samurai::before {
-  background: linear-gradient(180deg, transparent, #ff5a5a, transparent);
-  box-shadow: 0 0 25px #ff5a5a;
-  width: 5px; opacity: 1;
-  z-index: 2;
-}
+@keyframes samuraiInk { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.65; } }
+.boss-card.event-boss.samurai::before { background: linear-gradient(180deg, transparent, #ff5a5a, transparent); box-shadow: 0 0 25px #ff5a5a; width: 5px; opacity: 1; z-index: 2; }
 .boss-card.event-boss.samurai > * { position: relative; z-index: 1; }
-.boss-card.event-boss.samurai .boss-avatar {
-  border-color: #ff5a5a;
-  box-shadow: 0 0 30px rgba(255,90,90,0.9), inset 0 0 15px rgba(255,90,90,0.3);
-}
-.boss-card.event-boss.samurai .boss-name {
-  color: #ff8080;
-  text-shadow: 0 0 15px rgba(255,90,90,0.7);
-}
-.boss-card.event-boss.samurai:hover:not(.locked) {
-  border-color: #ff7a7a;
-  box-shadow: 0 0 50px rgba(255,90,90,0.85), 0 8px 25px rgba(0,0,0,0.5);
-}
+.boss-card.event-boss.samurai .boss-avatar { border-color: #ff5a5a; box-shadow: 0 0 30px rgba(255,90,90,0.9), inset 0 0 15px rgba(255,90,90,0.3); }
+.boss-card.event-boss.samurai .boss-name { color: #ff8080; text-shadow: 0 0 15px rgba(255,90,90,0.7); }
 
-/* PANTERA — дымка + звёзды */
 .boss-card.event-boss.pantera {
   border-color: #e0e0e0;
   background: radial-gradient(ellipse at 30% 20%, rgba(200,200,220,0.15) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(180,180,200,0.12) 0%, transparent 50%), linear-gradient(135deg, rgba(50,50,60,0.7), rgba(15,15,20,0.85));
@@ -287,256 +461,202 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     radial-gradient(1px 1px at 60% 20%, rgba(255,255,255,0.7) 0%, transparent 100%),
     radial-gradient(1.5px 1.5px at 85% 60%, rgba(255,255,255,0.85) 0%, transparent 100%),
     radial-gradient(1px 1px at 40% 75%, rgba(255,255,255,0.6) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 75% 40%, rgba(255,255,255,0.8) 0%, transparent 100%),
-    radial-gradient(1px 1px at 15% 65%, rgba(255,255,255,0.7) 0%, transparent 100%),
-    radial-gradient(1.5px 1.5px at 50% 50%, rgba(255,255,255,0.75) 0%, transparent 100%);
+    radial-gradient(1.5px 1.5px at 75% 40%, rgba(255,255,255,0.8) 0%, transparent 100%);
   animation: panteraStars 6s ease-in-out infinite;
   pointer-events: none;
   opacity: 0.8;
   z-index: 0;
 }
-@keyframes panteraStars {
-  0%, 100% { opacity: 0.6; }
-  50%      { opacity: 1; }
-}
-.boss-card.event-boss.pantera::before {
-  background: linear-gradient(180deg, transparent, #e0e0e0, transparent);
-  box-shadow: 0 0 25px #e0e0e0;
-  width: 5px; opacity: 1;
-  z-index: 2;
-}
+@keyframes panteraStars { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+.boss-card.event-boss.pantera::before { background: linear-gradient(180deg, transparent, #e0e0e0, transparent); box-shadow: 0 0 25px #e0e0e0; width: 5px; opacity: 1; z-index: 2; }
 .boss-card.event-boss.pantera > * { position: relative; z-index: 1; }
-.boss-card.event-boss.pantera .boss-avatar {
-  border-color: #e0e0e0;
-  box-shadow: 0 0 30px rgba(200,200,220,0.7), inset 0 0 15px rgba(200,200,220,0.3);
-}
-.boss-card.event-boss.pantera .boss-name {
-  color: #f0f0f0;
-  text-shadow: 0 0 15px rgba(200,200,220,0.7);
-}
-.boss-card.event-boss.pantera:hover:not(.locked) {
-  border-color: #ffffff;
-  box-shadow: 0 0 50px rgba(200,200,220,0.7), 0 8px 25px rgba(0,0,0,0.5);
-}
+.boss-card.event-boss.pantera .boss-avatar { border-color: #e0e0e0; box-shadow: 0 0 30px rgba(200,200,220,0.7), inset 0 0 15px rgba(200,200,220,0.3); }
+.boss-card.event-boss.pantera .boss-name { color: #f0f0f0; text-shadow: 0 0 15px rgba(200,200,220,0.7); }
 
-.boss-card.event-boss.locked-event {
-  opacity: 0.5;
-  filter: grayscale(0.5);
-  animation: eventLockedBreath 4s ease-in-out infinite;
-}
-@keyframes eventLockedBreath {
-  0%, 100% { opacity: 0.5; }
-  50%      { opacity: 0.65; }
-}
+.boss-card.event-boss.locked-event { opacity: 0.5; filter: grayscale(0.5); animation: eventLockedBreath 4s ease-in-out infinite; }
+@keyframes eventLockedBreath { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.65; } }
 .boss-card.event-boss.locked-event:hover { transform: none; }
 .boss-card.event-boss.locked-event::after { opacity: 0; }
 
-/* ===== АВАТАР ===== */
+/* АВАТАР / ИНФО */
 .boss-avatar-wrap { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
 .boss-avatar {
   width:56px; height:56px;
   border-radius:50%;
-  border:2px solid #b8962e;
-  background: linear-gradient(135deg, rgba(60,40,20,0.9), rgba(30,20,10,0.9));
+  border:2px solid var(--line-2);
+  background: var(--bg-2);
   display:flex; align-items:center; justify-content:center;
   font-size:1.8rem;
-  box-shadow:0 0 15px rgba(184,150,46,0.4), inset 0 0 15px rgba(0,0,0,0.5);
+  box-shadow:inset 0 0 15px rgba(0,0,0,0.5);
   transition: transform 0.5s ease, box-shadow 0.5s ease;
   overflow:hidden;
 }
 .boss-avatar img { width:100%; height:100%; object-fit:contain; border-radius:50%; }
-.boss-card:hover:not(.locked) .boss-avatar {
-  box-shadow:0 0 25px rgba(184,150,46,0.8);
-  transform: scale(1.08);
-}
+.boss-card:hover:not(.locked) .boss-avatar { box-shadow:0 0 25px rgba(42,138,48,0.6); transform: scale(1.08); }
 
-/* ===== ИНФО ===== */
 .boss-info { flex:1; min-width:0; }
-.boss-name { font-size:1.05rem; font-weight:800; color:#c4b08a; margin-bottom:4px; letter-spacing:0.5px; }
-.boss-card.in-progress .boss-name { color: #ff9b5c; text-shadow: 0 0 10px rgba(255,140,60,0.5); }
-
-.boss-meta { display:flex; flex-direction:column; gap:3px; font-size:0.75rem; color:#b0a070; }
-.boss-reward { color:#ffd76b; font-weight:700; display: flex; align-items: center; gap: 4px; }
-.boss-lvl { color:#ffd76b; font-weight:700; }
+.boss-name { font-size:1.05rem; font-weight:800; color:var(--text); margin-bottom:4px; letter-spacing:0.5px; }
+.boss-card.in-progress .boss-name { color: var(--gold); text-shadow: 0 0 10px rgba(255,215,107,0.5); }
+.boss-meta { display:flex; flex-direction:column; gap:3px; font-size:0.75rem; color:var(--text-2); }
+.boss-reward { color:var(--accent-2); font-weight:700; }
+.boss-lvl { color:var(--accent-2); font-weight:700; }
 .boss-loot { color:#8fd4b0; font-size:0.7rem; display:flex; flex-direction:column; gap:2px; margin-top: 2px; }
 .boss-loot .loot-line { display:flex; align-items:center; gap:4px; }
 .boss-loot img { width:0.95rem; height:0.95rem; object-fit:contain; border-radius:2px; vertical-align:middle; }
-.boss-timer { font-family:'Courier New',monospace; font-size:0.72rem; color:#ff9b5c; font-weight:700; }
-.boss-card.in-progress .boss-timer { color: #ff8c3c; }
+.boss-timer { font-family:'Courier New',monospace; font-size:0.72rem; color:var(--text-3); font-weight:700; }
+.boss-card.in-progress .boss-timer { color: var(--gold); }
 
-.boss-hp-bar {
-  width: 100%; height: 6px;
-  background: rgba(15,15,5,0.8);
-  border-radius: 4px;
-  overflow: hidden;
-  margin-top: 6px;
-  display: none;
-}
+.boss-hp-bar { width: 100%; height: 6px; background: var(--bg-2); border-radius: 4px; overflow: hidden; margin-top: 6px; display: none; }
 .boss-card.in-progress .boss-hp-bar { display: block; }
-.boss-hp-fill {
-  height: 100%; width: 0%;
-  background: linear-gradient(90deg, #8b1a1a, #ff3b3b, #ff6a3b);
-  border-radius: 4px;
-  transition: width 0.5s ease;
-  box-shadow: 0 0 8px rgba(255,60,60,0.8);
-}
+.boss-hp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--red), var(--gold)); border-radius: 4px; transition: width 0.5s ease; box-shadow: 0 0 8px rgba(255,74,74,0.8); }
 
-/* ===== СТАТУС ===== */
-.boss-status {
-  padding:5px 12px;
-  border-radius:20px;
-  font-size:0.7rem;
-  font-weight:900;
-  letter-spacing:1.5px;
-  text-transform:uppercase;
-  flex-shrink:0;
-  transition:all 0.4s ease;
-  align-self: flex-start;
-  margin-top: 2px;
-  white-space: nowrap;
-}
-.boss-status.ready {
-  background: linear-gradient(135deg, rgba(60,180,80,0.3), rgba(30,100,40,0.3));
-  color:#4cd964; border:1px solid #4cd964;
-}
-.boss-status.cooldown {
-  background: linear-gradient(135deg, rgba(180,40,40,0.3), rgba(90,20,20,0.3));
-  color:#ff5a5a; border:1px solid #ff5a5a;
-}
-.boss-status.in-progress {
-  background: linear-gradient(135deg, rgba(255,140,60,0.35), rgba(180,80,20,0.35));
-  color:#ff8c3c; border:1px solid #ff8c3c;
-}
-.boss-status.event-time {
-  background: rgba(40,40,40,0.6);
-  color:#ffd76b;
-  border:1px solid #b8962e;
-  font-size:0.6rem;
-  letter-spacing:0.5px;
-}
+/* СТАТУС */
+.boss-status { padding:5px 12px; border-radius:20px; font-size:0.7rem; font-weight:900; letter-spacing:1.5px; text-transform:uppercase; flex-shrink:0; transition:all 0.4s ease; align-self: flex-start; margin-top: 2px; white-space: nowrap; border:1px solid; }
+.boss-status.ready { background: rgba(42,138,48,0.15); color:var(--accent-2); border-color:var(--accent-2); }
+.boss-status.cooldown { background: rgba(255,74,74,0.12); color:var(--red); border-color:var(--red); }
+.boss-status.in-progress { background: rgba(255,215,107,0.15); color:var(--gold); border-color:var(--gold); }
+.boss-status.event-time { background: var(--bg-2); color:var(--text-3); border-color:var(--line-2); font-size:0.6rem; letter-spacing:0.5px; }
 
-/* ===== АРЕНА ===== */
-.arena { flex:1 1 auto; min-height:0; display:none; flex-direction:column; overflow:hidden; padding-bottom:80px; padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px)); position: relative; }
+/* АРЕНА */
+.arena { flex:1 1 auto; min-height:0; display:none; flex-direction:column; overflow:hidden; padding-bottom:80px; padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px)); position: relative; z-index:5; }
 .arena.active { display:flex; }
-.arena::before {
-  content: ''; position: absolute; inset: 0;
-  background: radial-gradient(circle at 50% 55%, transparent 30%, rgba(80,10,10,0.35) 80%, rgba(20,0,0,0.6) 100%);
-  pointer-events: none; z-index: 0;
-}
-.arena > * { position: relative; z-index: 1; }
 
-.arena-top { display:flex; align-items:center; justify-content:space-between; padding:12px 15px; flex-shrink:0; background:linear-gradient(180deg, rgba(50,15,15,0.9), rgba(28,14,14,0.85)); border-bottom:1px solid #c0392b; gap:10px; }
-.arena-back { background:transparent; border:1px solid #4a4a2a; color:#c4b08a; width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.3s ease; }
-.arena-back:hover { background:rgba(180,150,90,0.15); transform:scale(1.1); border-color:#b8962e; }
+.arena-top { display:flex; align-items:center; justify-content:space-between; padding:12px 15px; flex-shrink:0; border-bottom:1px solid var(--line); gap:10px; }
+.arena-back { background:var(--bg-2); border:1px solid var(--line-2); color:var(--text-2); width:36px; height:36px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.3s ease; }
+.arena-back:hover { border-color:var(--accent-2); color:var(--accent-2); box-shadow:0 0 16px rgba(42,138,48,0.6); transform:scale(1.1); }
 .arena-back svg { width:16px; height:16px; }
 
-.arena-boss-name { font-size:1.1rem; font-weight:900; color:#ff8c8c; letter-spacing:3px; flex:1; text-align:center; text-shadow:0 0 15px rgba(255,60,60,0.8); }
-.arena-timer { font-family:'Courier New',monospace; font-size:1.15rem; font-weight:900; color:#ffd76b; letter-spacing:2px; flex-shrink:0; }
-.arena-timer.danger { color:#ff3b3b; }
+.arena-boss-name { font-size:1.1rem; font-weight:900; color:var(--text); letter-spacing:3px; flex:1; text-align:center; text-transform:uppercase; }
+.arena-timer { font-family:'Courier New',monospace; font-size:1.15rem; font-weight:900; color:var(--accent-2); letter-spacing:2px; flex-shrink:0; }
+.arena-timer.danger { color:var(--red); }
 
-.arena-hp { padding: 8px 15px; flex-shrink: 0; background: rgba(28,14,14,0.7); border-bottom: 1px solid #4a2020; }
-.arena-hp-label { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 800; color: #ff9b9b; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
-.arena-hp-bar { width: 100%; height: 12px; background: #0f0f00; border-radius: 8px; border: 1px solid #4a2020; overflow: hidden; box-shadow: inset 0 2px 4px black; }
-.arena-hp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #8b1a1a, #ff3b3b, #ff6a3b); border-radius: 8px; transition: width 0.4s ease; box-shadow: 0 0 12px rgba(255,60,60,0.8); }
+.arena-hp { padding: 8px 15px; flex-shrink: 0; border-bottom: 1px solid var(--line); }
+.arena-hp-label { display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 800; color: var(--text-2); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+.arena-hp-bar { width: 100%; height: 12px; background: var(--bg-2); border-radius: 8px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.9); }
+.arena-hp-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--red), var(--gold)); border-radius: 8px; transition: width 0.4s ease; box-shadow: 0 0 12px rgba(255,74,74,0.9); }
 
-.arena-field { flex:1 1 auto; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; padding:10px; }
+.arena-field { flex:1 1 auto; min-height:0; position:relative; display:flex; align-items:center; justify-content:center; padding:16px; }
 .arena-boss-wrap { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:200px; height:200px; pointer-events:none; }
 
 .boss-hitbox {
   width:200px; height:200px; border-radius:50%;
   display:flex; justify-content:center; align-items:center;
   cursor:pointer;
-  border:3px solid #c0392b;
+  border:2px solid var(--line-2);
   position:absolute; left:0; top:0;
-  background: radial-gradient(circle at 40% 30%, rgba(80,20,20,0.9), rgba(30,10,10,0.9));
+  background:var(--bg-1);
   pointer-events:auto;
   animation:bossFloat 4s ease-in-out infinite;
   transition:transform 0.15s ease, box-shadow 0.4s ease, border-color 0.3s ease;
   will-change:transform;
   overflow:hidden;
-  box-shadow: 0 0 40px rgba(200, 40, 40, 0.6), inset 0 0 30px rgba(0,0,0,0.7);
 }
 @keyframes bossFloat { 0%,100% { transform:translateY(0) scale(1); } 50% { transform:translateY(-10px) scale(1.02); } }
 .boss-hitbox:active { transform:scale(0.92); }
-.boss-hitbox.shake { animation:bossShake 0.25s ease; }
-@keyframes bossShake { 0% { transform:translate(0,0); } 20% { transform:translate(-4px,2px); } 40% { transform:translate(4px,-2px); } 60% { transform:translate(-3px,-1px); } 80% { transform:translate(3px,1px); } 100% { transform:translate(0,0); } }
-.boss-hitbox.hot { box-shadow:0 0 70px rgba(255,140,60,0.8), inset 0 0 45px rgba(255,100,40,0.4); border-color:#ff8c3c; }
-.boss-hitbox.critical { box-shadow:0 0 100px rgba(255,60,60,1), inset 0 0 60px rgba(255,60,60,0.5); border-color:#ff3b3b; }
+.boss-hitbox.hot { box-shadow:0 0 60px rgba(255,215,107,0.7); border-color:var(--gold); }
+.boss-hitbox.critical { box-shadow:0 0 90px rgba(255,74,74,0.9); border-color:var(--red); }
 
-.boss-face { font-size:5rem; pointer-events:none; filter:drop-shadow(0 0 25px rgba(255,60,60,0.9)); transition:transform 0.25s ease; display:flex; justify-content:center; align-items:center; width:100%; height:100%; }
+.boss-face { font-size:5rem; pointer-events:none; filter:drop-shadow(0 0 20px rgba(42,138,48,0.6)); transition:transform 0.25s ease; display:flex; justify-content:center; align-items:center; width:100%; height:100%; }
 .boss-face img { width:11rem; height:11rem; object-fit:cover; border-radius:50%; }
 .boss-hitbox:active .boss-face { transform:scale(0.85); }
 
-.boss-click-power { position:absolute; bottom:-32px; left:50%; transform:translateX(-50%); color:#ff9b9b; font-size:0.85rem; font-weight:800; white-space:nowrap; text-shadow:0 2px 6px rgba(0,0,0,1); }
+.boss-click-power { position:absolute; bottom:-32px; left:50%; transform:translateX(-50%); color:var(--accent-2); font-size:0.78rem; font-weight:800; white-space:nowrap; padding:4px 12px; background:var(--bg-1); border:1px solid var(--line-2); border-radius:20px; box-shadow:0 0 15px rgba(42,138,48,0.3); letter-spacing:1.2px; text-transform:uppercase; }
 
-.arena-stats { display:flex; justify-content:space-between; padding:8px 15px; font-size:0.75rem; color:#b0a070; flex-shrink:0; background:rgba(28,14,14,0.8); border-top: 1px solid #4a2020; }
-.arena-stats b { color:#ff9b9b; font-family: 'Courier New', monospace; }
+.arena-stats { display:flex; justify-content:space-between; padding:10px 16px; font-size:0.72rem; color:var(--text-2); flex-shrink:0; border-top: 1px solid var(--line); font-weight:700; }
+.arena-stats b { color:var(--text); font-family: 'Courier New', monospace; font-weight:900; }
 
-.excite-panel { padding:10px 15px 12px; flex-shrink:0; background:rgba(28,14,14,0.9); border-top:1px solid #4a2020; }
-.excite-label { display:flex; justify-content:space-between; font-size:0.75rem; font-weight:800; color:#ff9b9b; letter-spacing:1px; margin-bottom:6px; text-transform:uppercase; }
-.excite-bar-bg { width:100%; height:24px; background:#0f0f00; border-radius:12px; border:1px solid #4a2020; overflow:hidden; position:relative; }
-.excite-bar-fill { height:100%; width:0%; background:linear-gradient(90deg,#8b1a1a,#ff3b3b,#ff6a3b); border-radius:12px; transition:width 0.4s ease; box-shadow:0 0 20px rgba(255,60,60,0.8); }
+.excite-panel { padding:10px 15px 12px; flex-shrink:0; border-top:1px solid var(--line); }
+.excite-label { display:flex; justify-content:space-between; font-size:0.75rem; font-weight:800; color:var(--text-2); letter-spacing:1px; margin-bottom:6px; text-transform:uppercase; }
+.excite-bar-bg { width:100%; height:24px; background:var(--bg-2); border-radius:12px; overflow:hidden; position:relative; box-shadow:inset 0 2px 4px rgba(0,0,0,0.9); }
+.excite-bar-fill { height:100%; width:0%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius:12px; transition:width 0.4s ease; box-shadow:0 0 20px rgba(42,138,48,0.8); }
 
-/* ===== НИЖНИЕ ТАБЫ ===== */
-.tabs-bar {
-  display:flex;
-  justify-content:space-around;
-  align-items:center;
-  padding:0 30px 80px;
-  padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px));
-  flex-shrink:0;
-  z-index:20;
-  gap:10px;
-}
+/* НИЖНИЕ ТАБЫ */
+.tabs-bar { display:flex; justify-content:space-around; align-items:center; padding:0 30px 80px; padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px)); flex-shrink:0; z-index:20; gap:10px; position:relative; }
+.tabs-bar::before { content:''; position:absolute; top:0; left:16px; right:16px; height:1px; background:linear-gradient(90deg, transparent, var(--line), transparent); }
 .tabs-bar.hidden { display:none; }
-.tab-btn {
-  background:transparent; border:none; cursor:pointer;
-  color:#8a7a5a; opacity:0.55;
-  padding:8px;
-  text-decoration:none;
-  display:flex; align-items:center; justify-content:center;
-  border-radius:12px;
-  transition:all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.tab-btn.active { opacity:1; color:#c4b08a; transform:scale(1.1) translateY(-3px); }
-.tab-btn:hover { opacity:0.95; transform:scale(1.08) translateY(-2px); }
+.tab-btn { background:transparent; border:none; cursor:pointer; color:var(--text-3); opacity:0.7; padding:8px; text-decoration:none; display:flex; align-items:center; justify-content:center; border-radius:12px; transition:all 0.3s ease; position:relative; }
+.tab-btn.active { opacity:1; color:var(--accent-2); transform:scale(1.1) translateY(-3px); }
+.tab-btn.active::after { content:''; position:absolute; bottom:-2px; left:50%; transform:translateX(-50%); width:60%; height:2px; background:var(--accent-2); box-shadow:0 0 10px rgba(42,138,48,0.9); }
+.tab-btn:hover { opacity:1; transform:scale(1.08) translateY(-2px); }
 .tab-btn:active { transform:scale(0.95); }
-.tab-btn svg { width:30px; height:30px; transition:transform 0.5s ease; }
-.tab-btn.home-btn svg { width:40px; height:40px; }
+.tab-btn svg { width:30px; height:30px; }
+.tab-btn.home-btn svg { width:38px; height:38px; }
 .tab-btn.boss-btn svg { width:32px; height:32px; }
-.tab-btn.boss-btn:hover { color:#c0392b; }
-.tab-btn.rating-btn:hover { color:#ffd76b; }
+.tab-btn.boss-btn.active { color:var(--accent-2); }
+.tab-btn.rating-btn:hover { color:var(--gold); }
 
-/* ===== РЕЗУЛЬТАТ ===== */
-.result-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index:2000; }
+/* РЕЗУЛЬТАТ */
+.result-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(6px); }
 .result-overlay.show { display:flex; }
-.result-box { background: linear-gradient(160deg, #2d2d1a, #1a1a10); border:2px solid #b8962e; border-radius:24px; padding:36px 40px; text-align:center; max-width:380px; width:90%; box-shadow:0 25px 80px rgba(0,0,0,0.95), 0 0 60px rgba(184,150,46,0.3); animation:boxIn 0.5s ease; position: relative; }
-@keyframes boxIn { from { opacity:0; transform:scale(0.8); } to { opacity:1; transform:scale(1); } }
-.result-medal { font-size: 4rem; margin-bottom: 8px; display: block; }
-.result-medal.win { color: #ffd76b; }
-.result-medal.lose { color: #ff3b3b; }
-.result-title { font-size:1.9rem; font-weight:900; letter-spacing:4px; margin-bottom:15px; text-transform:uppercase; }
-.result-title.win { color:#4cd964; text-shadow:0 0 25px rgba(76,217,100,0.9); }
-.result-title.lose { color:#ff3b3b; text-shadow:0 0 25px rgba(255,59,59,0.9); }
-.result-text { color:#c4b08a; font-size:1rem; margin-bottom:18px; }
-.result-reward { font-size:1.6rem; font-weight:900; color:#ffd76b; margin-bottom:14px; text-shadow:0 0 20px rgba(255,215,107,0.9); line-height: 1.4; }
-.result-loot { font-size:0.95rem; font-weight:700; color:#8fd4b0; margin-bottom:22px; padding:12px; background:linear-gradient(135deg, rgba(143,212,176,0.15), rgba(60,120,90,0.1)); border:1px solid #8fd4b0; border-radius:12px; line-height:1.8; }
+.result-box { background:var(--bg-1); border:1px solid var(--line-2); border-radius:20px; padding:32px 28px; text-align:center; max-width:360px; width:88%; box-shadow:0 25px 80px rgba(0,0,0,0.95), 0 0 50px rgba(42,138,48,0.15); animation:boxIn 0.5s ease; }
+@keyframes boxIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+.result-medal { font-size: 3.6rem; margin-bottom: 8px; display: block; }
+.result-title { font-size:1.6rem; font-weight:900; letter-spacing:4px; margin-bottom:14px; text-transform:uppercase; }
+.result-title.win { color:var(--accent-2); text-shadow:0 0 25px rgba(42,138,48,0.9); }
+.result-title.lose { color:var(--red); text-shadow:0 0 25px rgba(255,74,74,0.9); }
+.result-text { color:var(--text-2); font-size:0.9rem; margin-bottom:16px; font-weight:600; }
+.result-reward { font-size:1.4rem; font-weight:900; color:var(--accent-2); margin-bottom:14px; text-shadow:0 0 20px rgba(42,138,48,0.8); line-height: 1.4; }
+.result-loot { font-size:0.9rem; font-weight:700; color:var(--accent-2); margin-bottom:20px; padding:12px; background:rgba(42,138,48,0.08); border:1px solid rgba(122,240,128,0.3); border-radius:12px; line-height:1.8; }
 .result-loot .loot-row { display:flex; align-items:center; justify-content:center; gap:8px; }
-.result-loot img { width:1.4rem; height:1.4rem; object-fit:contain; border-radius:4px; }
-.result-btn { background: linear-gradient(135deg, rgba(184,150,46,0.3), rgba(139,105,20,0.2)); border:2px solid #b8962e; color:#ffd76b; padding:14px 34px; border-radius:14px; cursor:pointer; font-weight:900; font-size:1rem; letter-spacing:3px; text-transform:uppercase; transition:all 0.3s ease; font-family: inherit; }
-.result-btn:hover { background: linear-gradient(135deg, rgba(184,150,46,0.5), rgba(139,105,20,0.4)); transform:scale(1.05); }
+.result-loot img { width:1.3rem; height:1.3rem; object-fit:contain; border-radius:4px; }
+.result-btn { background:transparent; border:1px solid var(--accent-2); color:var(--accent-2); padding:14px 32px; border-radius:12px; cursor:pointer; font-weight:800; font-size:0.82rem; letter-spacing:2px; text-transform:uppercase; transition:all 0.2s ease; font-family: inherit; position:relative; overflow:hidden; }
+.result-btn::before { content:''; position:absolute; inset:0; background:var(--accent-2); transform:scaleX(0); transform-origin:left; transition:transform 0.22s ease; z-index:-1; }
+.result-btn:hover::before { transform:scaleX(1); }
+.result-btn:hover { color:#0a0a0c; box-shadow:0 0 25px rgba(42,138,48,0.6); }
 .result-btn:active { transform:scale(0.96); }
 
-.float-text { position:fixed; pointer-events:none; font-weight:900; color:#ffd76b; font-size:1.3rem; z-index:500; white-space:nowrap; transform:translate(-50%,-50%); text-shadow:0 2px 4px rgba(0,0,0,0.9), 0 0 15px rgba(255,215,107,0.9); animation: floatUp 1s ease forwards; }
-@keyframes floatUp {
-  0% { opacity:0; transform: translate(-50%,-50%) scale(0.5); }
-  20% { opacity:1; transform: translate(-50%,-70%) scale(1.2); }
-  100% { opacity:0; transform: translate(-50%,-200%) scale(0.9); }
+/* СДАЧА */
+.surrender-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center; z-index:2500; backdrop-filter:blur(4px); }
+.surrender-overlay.show { display:flex; animation:overlayFadeIn 0.3s ease; }
+@keyframes overlayFadeIn { from { opacity:0; } to { opacity:1; } }
+.surrender-box { background:var(--bg-1); border:1px solid var(--line-2); border-radius:18px; padding:28px 24px; text-align:center; max-width:340px; width:88%; box-shadow:0 25px 80px rgba(0,0,0,0.95), 0 0 40px rgba(42,138,48,0.15); animation:surrenderIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes surrenderIn { 0% { opacity:0; transform:scale(0.85) translateY(20px); } 100% { opacity:1; transform:scale(1) translateY(0); } }
+.surrender-icon { font-size:3.2rem; margin-bottom:12px; filter:drop-shadow(0 0 20px rgba(255,74,74,0.6)); }
+.surrender-title { font-size:1.3rem; font-weight:900; color:var(--red); letter-spacing:3px; text-transform:uppercase; margin-bottom:10px; text-shadow:0 0 15px rgba(255,74,74,0.8); }
+.surrender-text { font-size:0.85rem; color:var(--text-2); margin-bottom:22px; line-height:1.5; font-family:'Courier New', monospace; }
+.surrender-buttons { display:flex; gap:10px; }
+.surrender-btn { flex:1; padding:12px 16px; border-radius:10px; cursor:pointer; font-weight:800; font-size:0.8rem; letter-spacing:1.5px; text-transform:uppercase; font-family:inherit; transition:all 0.3s ease; border:1px solid; background:transparent; }
+.surrender-btn.no { border-color:var(--accent-2); color:var(--accent-2); }
+.surrender-btn.no:hover { background:rgba(42,138,48,0.15); box-shadow:0 0 20px rgba(42,138,48,0.5); }
+.surrender-btn.yes { border-color:var(--red); color:var(--red); }
+.surrender-btn.yes:hover { background:rgba(255,74,74,0.15); box-shadow:0 0 20px rgba(255,74,74,0.5); }
+.surrender-btn:active { transform:scale(0.96); }
+
+/* FLOAT TEXT */
+.float-text {
+  position:fixed;
+  pointer-events:none;
+  font-weight:900;
+  font-size:1.15rem;
+  color:var(--accent-2);
+  z-index:500;
+  white-space:nowrap;
+  transform:translate(-50%,-50%);
+  text-shadow:0 2px 4px rgba(0,0,0,0.95), 0 0 8px rgba(42,138,48,0.9);
+  animation:floatRise 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  will-change:transform, opacity;
 }
-.click-ripple { position:fixed; border-radius:50%; border:2px solid #b8962e; pointer-events:none; z-index:90; transform:translate(-50%,-50%); width:20px; height:20px; animation: rippleOut 0.7s ease forwards; }
-@keyframes rippleOut {
-  0% { width:20px; height:20px; opacity:0.9; }
-  100% { width:120px; height:120px; opacity:0; }
+@keyframes floatRise {
+  0%   { opacity:0; transform:translate(-50%, -50%) scale(0.7); }
+  12%  { opacity:1; transform:translate(-50%, -62%) scale(1.05); }
+  100% { opacity:0; transform:translate(-50%, -220%) scale(0.95); }
+}
+.float-text.mini {
+  font-size:0.8rem;
+  color:#d0ffd0;
+  text-shadow:0 1px 3px rgba(0,0,0,0.95), 0 0 6px rgba(122,240,128,0.7);
+  animation-duration:1.6s;
+}
+.float-text.sway {
+  animation:floatRise 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) forwards,
+             swayX 1.4s ease-in-out forwards;
+}
+@keyframes swayX {
+  0%   { margin-left:0px; }
+  25%  { margin-left:8px; }
+  50%  { margin-left:-6px; }
+  75%  { margin-left:4px; }
+  100% { margin-left:-2px; }
 }
 
 @media (max-width:400px) {
@@ -563,11 +683,6 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
 <div class="game-container" id="gameContainer">
   <div class="header">
     <div class="header-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <path d="M12 2C7.6 2 4 5.6 4 10c0 2.4 1 4.5 2.7 5.9V19c0 .6.4 1 1 1h1.3v-2h1.4v2h1.2v-2h1.4v2H14v-2h1.4v2H16.7c.6 0 1-.4 1-1v-3.1C19.4 14.5 20 12.4 20 10c0-4.4-3.6-8-8-8z"/>
-        <circle cx="9" cy="10" r="1.5" fill="currentColor"/>
-        <circle cx="15" cy="10" r="1.5" fill="currentColor"/>
-      </svg>
       БОССЫ
     </div>
   </div>
@@ -637,7 +752,9 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     </a>
     <a href="rating.html" class="tab-btn rating-btn" title="Рейтинг">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 01-10 0V4z"/><path d="M17 5h2a2 2 0 012 2v1a3 3 0 01-3 3"/><path d="M7 5H5a2 2 0 00-2 2v1a3 3 0 003 3"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 01-10 0V4z"/><path d="M17 5h2a2 2 0 012 2v1a3 3 0 01-3 3"/><path d="M7 5H5a2 2 0 00-2 2v1a3 3 0 003 3"/>
+      </svg>
     </a>
     <a href="prof.html" class="tab-btn" title="Профиль">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -653,6 +770,18 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     <div class="result-reward" id="resultReward">+50 000</div>
     <div class="result-loot hidden" id="resultLoot"></div>
     <button class="result-btn" id="resultBtn">К СПИСКУ</button>
+  </div>
+</div>
+
+<div class="surrender-overlay" id="surrenderOverlay">
+  <div class="surrender-box">
+    <div class="surrender-icon">💀</div>
+    <div class="surrender-title">Сдаться?</div>
+    <div class="surrender-text">Ты потеряешь прогресс боя. Босс уйдёт на перезарядку.</div>
+    <div class="surrender-buttons">
+      <button class="surrender-btn no" id="surrenderNo">Нет</button>
+      <button class="surrender-btn yes" id="surrenderYes">Да, сдаться</button>
+    </div>
   </div>
 </div>
 
@@ -688,10 +817,12 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   var resultMedal = $('resultMedal');
   var arenaBack = $('arenaBack');
   var tabsBar = $('tabsBar');
-  var bossTabs = $('bossTabs');
   var tabMini = $('tabMini');
   var tabMain = $('tabMain');
   var tabEvent = $('tabEvent');
+  var surrenderOverlay = $('surrenderOverlay');
+  var surrenderNo = $('surrenderNo');
+  var surrenderYes = $('surrenderYes');
 
   var TOOL_POWER = {
     hand:1, whip:3, stick:5, shank:7, shovel:9,
@@ -713,10 +844,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   }
 
   function getBossDamage() {
-    var base = 3;
-    var loveBonus = getLoveBonus();
-    var toolBonus = getToolPower() / 2;
-    return base + loveBonus + toolBonus;
+    return 3 + getLoveBonus() + getToolPower() / 2;
   }
 
   var sexpah = 0;
@@ -799,22 +927,21 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   ];
 
   var STATE_KEY = 'pahomBossState';
-  var STATE_VERSION = 7;
+  var STATE_VERSION = 8;
   var bossState = {};
   var currentGroup = 'mini';
 
   function getSt(id) {
     if (!bossState || typeof bossState !== 'object') bossState = {};
-    if (!bossState[id] || typeof bossState[id] !== 'object') bossState[id] = { fight:null, cooldownUntil:0 };
+    if (!bossState[id] || typeof bossState[id] !== 'object') bossState[id] = { cooldownUntil:0 };
     var st = bossState[id];
-    if (!('fight' in st)) st.fight = null;
     if (typeof st.cooldownUntil !== 'number' || isNaN(st.cooldownUntil)) st.cooldownUntil = 0;
     return st;
   }
 
   function defaultState() {
     var s = { __v: STATE_VERSION };
-    for (var i = 0; i < BOSSES.length; i++) s[BOSSES[i].id] = { fight:null, cooldownUntil:0 };
+    for (var i = 0; i < BOSSES.length; i++) s[BOSSES[i].id] = { cooldownUntil:0 };
     return s;
   }
 
@@ -822,15 +949,12 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     var raw = null;
     try { raw = JSON.parse(localStorage.getItem(STATE_KEY) || 'null'); } catch(e) { raw = null; }
     if (!raw || typeof raw !== 'object') { bossState = defaultState(); saveState(); return; }
-    bossState = raw; bossState.__v = STATE_VERSION;
+    bossState = raw;
+    bossState.__v = STATE_VERSION;
     var now = Date.now();
     for (var i = 0; i < BOSSES.length; i++) {
       var b = BOSSES[i];
       var st = getSt(b.id);
-      if (st.fight && st.fight.endAt && st.fight.endAt <= now) {
-        st.cooldownUntil = st.fight.endAt + b.cooldownDuration;
-        st.fight = null;
-      }
       if (st.cooldownUntil > 0 && st.cooldownUntil <= now) st.cooldownUntil = 0;
     }
     saveState();
@@ -838,7 +962,6 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
 
   function saveState() {
     try { localStorage.setItem(STATE_KEY, JSON.stringify(bossState)); } catch(e) {}
-    try { if (window.tgSyncSave) window.tgSyncSave(true); } catch(e) {}
   }
 
   function isEventActive() {
@@ -877,20 +1000,6 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     return m + 'м';
   }
 
-  function logEvent(action, details) {
-    try {
-      var logs = JSON.parse(localStorage.getItem('pahomLogs') || '[]') || [];
-      var nickname = localStorage.getItem('pahomNickname') || 'Игрок';
-      var userId = localStorage.getItem('pahomServerUserId') || 'local';
-      var d = new Date();
-      var pad = function(n){ return (n<10?'0':'')+n; };
-      var timeStr = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
-      logs.push({ time: timeStr, user: nickname, uid: userId, action: action, details: details || '' });
-      if (logs.length > 500) logs = logs.slice(-500);
-      localStorage.setItem('pahomLogs', JSON.stringify(logs));
-    } catch(e) {}
-  }
-
   function fmt(n) {
     if (n >= 1000000000) { var v = n / 1000000000; return (v < 10 ? v.toFixed(1) : Math.floor(v)) + 'B'; }
     if (n >= 1000000) { var v = n / 1000000; return (v < 10 ? v.toFixed(1) : Math.floor(v)) + 'M'; }
@@ -913,7 +1022,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     try { t = localStorage.getItem('pahomTool') || 'hand'; } catch(e) {}
     var names = { hand:'Рука', whip:'Плетка', stick:'Палка', shank:'Черенок', shovel:'Лопата', commissar:'Замполит', drin:'Дрын', tyrchik:'Тырчик', darkkatana:'Тёмная катана', abysblade:'Клинок бездны' };
     var dmg = Math.floor(getBossDamage() * 10) / 10;
-    if (toolInfo) toolInfo.textContent = '⚔️ ' + (names[t] || 'Рука') + ' · +' + dmg;
+    if (toolInfo) toolInfo.textContent = '⚔️ ' + (names[t] || 'Рука') + ' · ' + dmg;
   }
 
   function showNotify(iconHTML, text, delay) {
@@ -923,7 +1032,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       chip.className = 'notify-chip';
       chip.innerHTML = '<span class="notify-icon">' + iconHTML + '</span><span>' + text + '</span>';
       notifyBar.appendChild(chip);
-      setTimeout(function(){ chip.classList.add('leaving'); setTimeout(function(){ if (chip.parentNode) chip.parentNode.removeChild(chip); }, 400); }, 4000);
+      setTimeout(function(){ chip.classList.add('leaving'); setTimeout(function(){ if (chip.parentNode) chip.parentNode.removeChild(chip); }, 400); }, 4500);
     }, delay || 0);
   }
 
@@ -942,7 +1051,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     bossList.innerHTML = '';
     var list = getGroupBosses(currentGroup);
     if (list.length === 0) {
-      bossList.innerHTML = '<div style="color:#8a7a5a;text-align:center;padding:20px;">Пусто</div>';
+      bossList.innerHTML = '<div style="color:var(--text-3);text-align:center;padding:20px;">Пусто</div>';
       return;
     }
 
@@ -966,9 +1075,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
         var lootBlockHTML = lootLinesHTML ? '<span class="boss-loot">' + lootLinesHTML + '</span>' : '';
 
         card.innerHTML =
-          '<div class="boss-avatar-wrap">' +
-            '<div class="boss-avatar">' + avatarHTML + '</div>' +
-          '</div>' +
+          '<div class="boss-avatar-wrap"><div class="boss-avatar">' + avatarHTML + '</div></div>' +
           '<div class="boss-info">' +
             '<div class="boss-name">' + boss.name + '</div>' +
             '<div class="boss-meta">' +
@@ -991,8 +1098,6 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   function refreshList() {
     var now = Date.now();
     var list = getGroupBosses(currentGroup);
-    var otherInProgress = false;
-    for (var i = 0; i < BOSSES.length; i++) { if (getSt(BOSSES[i].id).fight) { otherInProgress = true; break; } }
     var eventOn = isEventActive();
     var cards = bossList.querySelectorAll('.boss-card');
 
@@ -1002,7 +1107,6 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       if (!card) continue;
       var timer = card.querySelector('.boss-timer');
       var status = card.querySelector('.boss-status');
-      var hpFill = card.querySelector('.boss-hp-fill');
       if (!timer || !status) continue;
 
       var st = getSt(boss.id);
@@ -1016,19 +1120,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
         continue;
       }
 
-      if (st.fight) {
-        card.classList.add('in-progress');
-        status.className = 'boss-status in-progress';
-        status.textContent = 'В БОЮ';
-        var pct = Math.floor((st.fight.excite / boss.exciteMax) * 100);
-        timer.textContent = 'HP: ' + pct + '% · ' + fmtTime(st.fight.endAt - now);
-        if (hpFill) hpFill.style.width = pct + '%';
-      } else if (otherInProgress) {
-        card.classList.add('locked');
-        status.className = 'boss-status cooldown';
-        status.textContent = 'ЗАНЯТО';
-        timer.textContent = 'Другой босс в бою';
-      } else if (st.cooldownUntil > now) {
+      if (st.cooldownUntil > now) {
         card.classList.add('locked');
         status.className = 'boss-status cooldown';
         status.textContent = 'КД';
@@ -1053,12 +1145,6 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
         return;
       }
     }
-
-    var otherInProgress = false;
-    for (var i = 0; i < BOSSES.length; i++) { if (BOSSES[i].id !== boss.id && getSt(BOSSES[i].id).fight) { otherInProgress = true; break; } }
-
-    if (st.fight) { enterFight(boss); return; }
-    if (otherInProgress) return;
     if (st.cooldownUntil > now) return;
 
     enterFight(boss);
@@ -1069,30 +1155,28 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   var tickerInterval = null;
   var isFightActive = false;
   var lastClick = 0;
-  var lastSave = 0;
+  var fightState = null;
 
   function enterFight(boss) {
     var now = Date.now();
     var st = getSt(boss.id);
 
-    for (var i = 0; i < BOSSES.length; i++) {
-      if (BOSSES[i].id !== boss.id && getSt(BOSSES[i].id).fight) return;
-    }
     if (st.cooldownUntil > now) return;
-    if (st.fight && st.fight.endAt && st.fight.endAt <= now) st.fight = null;
 
-    if (!st.fight) {
-      st.fight = { endAt: now + boss.fightDuration, clicks:0, damage:0, excite:0, startedAt: now };
-      saveState();
-    }
+    fightState = {
+      endAt: now + boss.fightDuration,
+      clicks: 0,
+      damage: 0,
+      excite: 0,
+      startedAt: now
+    };
 
     currentBoss = boss;
     isFightActive = true;
     lastClick = 0;
-    lastSave = 0;
 
     bossList.style.display = 'none';
-    bossTabs.style.display = 'none';
+    document.getElementById('bossTabs').style.display = 'none';
     arena.classList.add('active');
     tabsBar.classList.add('hidden');
 
@@ -1110,10 +1194,9 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     var power = getBossDamage();
     bossClickPower.textContent = '+' + (Math.floor(power * 10) / 10);
 
-    var f = st.fight;
-    arenaClicks.textContent = String(f.clicks);
-    arenaDamage.textContent = String(Math.floor(f.damage));
-    exciteValue.textContent = fmt(f.excite) + ' / ' + fmt(boss.exciteMax);
+    arenaClicks.textContent = '0';
+    arenaDamage.textContent = '0';
+    exciteValue.textContent = '0 / ' + fmt(boss.exciteMax);
 
     updateBar();
     updateHitbox();
@@ -1123,116 +1206,103 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   }
 
   function updateBar() {
-    if (!currentBoss) return;
-    var st = getSt(currentBoss.id);
-    if (!st.fight) return;
-    var pct = Math.min(100, (st.fight.excite / currentBoss.exciteMax) * 100);
+    if (!currentBoss || !fightState) return;
+    var pct = Math.min(100, (fightState.excite / currentBoss.exciteMax) * 100);
     exciteBarFill.style.width = pct + '%';
     if (arenaHpFill) arenaHpFill.style.width = pct + '%';
     if (arenaHpPercent) arenaHpPercent.textContent = Math.round(pct) + '%';
   }
 
   function updateHitbox() {
-    if (!currentBoss) return;
-    var st = getSt(currentBoss.id);
-    if (!st.fight) return;
-    var pct = st.fight.excite / currentBoss.exciteMax;
+    if (!currentBoss || !fightState) return;
+    var pct = fightState.excite / currentBoss.exciteMax;
     bossHitbox.classList.remove('hot', 'critical');
     if (pct >= 0.85) bossHitbox.classList.add('critical');
     else if (pct >= 0.5) bossHitbox.classList.add('hot');
   }
 
   function updateTimer() {
-    if (!isFightActive || !currentBoss) return;
+    if (!isFightActive || !currentBoss || !fightState) return;
     var now = Date.now();
-    var st = getSt(currentBoss.id);
-    if (!st.fight) return;
-    var remain = st.fight.endAt - now;
+    var remain = fightState.endAt - now;
     if (remain <= 0) { endFight(currentBoss, false); return; }
     arenaTimer.textContent = fmtTime(remain);
     arenaTimer.classList.toggle('danger', remain < 60000);
   }
 
   function hitBoss() {
-    if (!isFightActive || !currentBoss) return;
+    if (!isFightActive || !currentBoss || !fightState) return;
     var now = Date.now();
     if (now - lastClick < 55) return;
     lastClick = now;
 
-    var st = getSt(currentBoss.id);
-    if (!st.fight) return;
-    if (st.fight.endAt <= now) { endFight(currentBoss, false); return; }
+    if (fightState.endAt <= now) { endFight(currentBoss, false); return; }
 
+   
     var power = getBossDamage();
-    st.fight.clicks++;
-    st.fight.damage += power;
-    st.fight.excite += power;
-    if (st.fight.excite >= currentBoss.exciteMax) st.fight.excite = currentBoss.exciteMax;
+        fightState.clicks++;
+        fightState.damage += power;
+        fightState.excite += power;
+        if (fightState.excite >= currentBoss.exciteMax) fightState.excite = currentBoss.exciteMax;
 
-    if (now - lastSave > 3000) {
-      lastSave = now;
-      saveState();
-    }
-
-    arenaClicks.textContent = String(st.fight.clicks);
-    arenaDamage.textContent = String(Math.floor(st.fight.damage));
+    arenaClicks.textContent = String(fightState.clicks);
+    arenaDamage.textContent = String(Math.floor(fightState.damage));
     bumpEl(arenaClicks);
     bumpEl(arenaDamage);
 
-    exciteValue.textContent = fmt(st.fight.excite) + ' / ' + fmt(currentBoss.exciteMax);
+    exciteValue.textContent = fmt(fightState.excite) + ' / ' + fmt(currentBoss.exciteMax);
     bumpEl(exciteValue);
 
     updateBar();
     updateHitbox();
 
     var rect = bossHitbox.getBoundingClientRect();
-    var cx = rect.left + rect.width/2 + (Math.random()-0.5)*rect.width*0.6;
-    var cy = rect.top + rect.height/2 + (Math.random()-0.5)*rect.height*0.6;
-    spawnFloat(cx, cy, '+' + (Math.floor(power*10)/10));
-    spawnRipple(cx, cy);
+    var cx = rect.left + rect.width/2 + (Math.random()-0.5)*rect.width*0.4;
+    var cy = rect.top + rect.height/2 + (Math.random()-0.5)*rect.height*0.4;
+    playClickNumbers(cx, cy, Math.floor(power*10)/10);
 
-    var pct = st.fight.excite / currentBoss.exciteMax;
-    if (pct > 0.85) {
-      bossHitbox.classList.remove('shake');
-      void bossHitbox.offsetWidth;
-      bossHitbox.classList.add('shake');
-      setTimeout(function(){ bossHitbox.classList.remove('shake'); }, 260);
-    }
-
-    if (st.fight.excite >= currentBoss.exciteMax) {
-      saveState();
+    if (fightState.excite >= currentBoss.exciteMax) {
       endFight(currentBoss, true);
     }
   }
 
-  function spawnFloat(x,y,text) {
+  function spawnNumber(x, y, text, isMini) {
     var el = document.createElement('div');
     el.className = 'float-text';
+    if (Math.random() < 0.2) el.classList.add('sway');
+    if (isMini) el.classList.add('mini');
     el.textContent = text;
-    el.style.left = x+'px'; el.style.top = y+'px';
-    el.style.fontSize = (1.2 + Math.random()*0.3) + 'rem';
-    el.style.marginLeft = ((Math.random()-0.5)*40) + 'px';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
     document.body.appendChild(el);
-    setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 1000);
+    el.addEventListener('animationend', function() {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    }, { once: true });
   }
 
-  function spawnRipple(x,y) {
-    var r = document.createElement('div');
-    r.className = 'click-ripple';
-    r.style.left = x+'px'; r.style.top = y+'px';
-    document.body.appendChild(r);
-    setTimeout(function(){ if (r.parentNode) r.parentNode.removeChild(r); }, 700);
+  function playClickNumbers(x, y, gained) {
+    spawnNumber(x, y, '-' + gained, false);
+    var extraCount = 1 + (Math.random() < 0.5 ? 1 : 0);
+    for (var i = 0; i < extraCount; i++) {
+      (function(idx) {
+        setTimeout(function() {
+          var ox = x + (Math.random() - 0.5) * 50;
+          var oy = y + (Math.random() - 0.5) * 50;
+          spawnNumber(ox, oy, '-' + gained, true);
+        }, 30 + idx * 25);
+      })(i);
+    }
   }
 
   function showBossList() {
     if (fightInterval) { clearInterval(fightInterval); fightInterval = null; }
     isFightActive = false;
     currentBoss = null;
+    fightState = null;
     lastClick = 0;
-    lastSave = 0;
     arena.classList.remove('active');
     bossList.style.display = '';
-    bossTabs.style.display = '';
+    document.getElementById('bossTabs').style.display = '';
     tabsBar.classList.remove('hidden');
     bossHitbox.classList.remove('hot', 'critical', 'shake');
     exciteBarFill.style.width = '0%';
@@ -1245,11 +1315,15 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     refreshList();
   }
 
+  function saveAndSync() {
+    try { if (window.pahomSaveNow) window.pahomSaveNow(); } catch(e) {}
+    try { if (window.pahomForceSave) window.pahomForceSave(); } catch(e) {}
+  }
+
   function endFight(boss, win) {
-    if (!boss) return;
+    if (!boss || !fightState) return;
     var now = Date.now();
     var st = getSt(boss.id);
-    if (!st.fight) return;
     isFightActive = false;
     if (fightInterval) { clearInterval(fightInterval); fightInterval = null; }
     var droppedItems = [];
@@ -1268,6 +1342,17 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
         localStorage.setItem('pahomPlayerExp', String(exp));
         localStorage.setItem('pahomPlayerLevel', String(lv));
       } catch(e) {}
+
+      var bossStats = { wins: 0, losses: 0, earned: 0 };
+      try {
+        var raw = JSON.parse(localStorage.getItem('pahomBossStats') || 'null');
+        if (raw && typeof raw === 'object') {
+          bossStats = { wins: raw.wins || 0, losses: raw.losses || 0, earned: raw.earned || 0 };
+        }
+      } catch(e) {}
+      bossStats.wins++;
+      bossStats.earned += boss.reward;
+      try { localStorage.setItem('pahomBossStats', JSON.stringify(bossStats)); } catch(e) {}
 
       var lootUpLevel = 1;
       try { lootUpLevel = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1; } catch(e) {}
@@ -1289,14 +1374,9 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
         try { localStorage.setItem('pahomBossInventory', JSON.stringify(bossInventory)); } catch(e) {}
       }
 
-      st.fight = null;
       st.cooldownUntil = now + boss.cooldownDuration;
       saveState();
-
-      try { if (window.tgSyncSaveBeacon) window.tgSyncSaveBeacon(); } catch(e) {}
-
-      var lootNames = droppedItems.map(function(l){ return l.name; }).join(', ');
-      logEvent('boss_kill', boss.name + ' | +' + boss.reward + ' | loot: ' + (lootNames || 'нет'));
+      saveAndSync();
 
       droppedItems.forEach(function(item, i) {
         showNotify(lootIconHTML(item), 'ВЫПАЛ: ' + item.name, i * 300);
@@ -1308,11 +1388,20 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       }, 600);
       return;
     } else {
-      st.fight = null;
       st.cooldownUntil = now + boss.cooldownDuration;
       saveState();
-      try { if (window.tgSyncSaveBeacon) window.tgSyncSaveBeacon(); } catch(e) {}
-      logEvent('boss_lose', boss.name);
+
+      var bossStats2 = { wins: 0, losses: 0, earned: 0 };
+      try {
+        var raw2 = JSON.parse(localStorage.getItem('pahomBossStats') || 'null');
+        if (raw2 && typeof raw2 === 'object') {
+          bossStats2 = { wins: raw2.wins || 0, losses: raw2.losses || 0, earned: raw2.earned || 0 };
+        }
+      } catch(e) {}
+      bossStats2.losses++;
+      try { localStorage.setItem('pahomBossStats', JSON.stringify(bossStats2)); } catch(e) {}
+
+      saveAndSync();
       showBossList();
       showResult(false, 0, 0, null);
     }
@@ -1332,7 +1421,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       resultReward.style.display = 'block';
       if (lootArr && lootArr.length) {
         var html = lootArr.map(function(l) {
-          return '<div class="loot-row">🎁 ' + lootIconHTML(l, '1.4rem') + ' <b>' + l.name + '</b></div>';
+          return '<div class="loot-row">🎁 ' + lootIconHTML(l, '1.3rem') + ' <b>' + l.name + '</b></div>';
         }).join('');
         resultLoot.innerHTML = html;
         resultLoot.classList.remove('hidden');
@@ -1340,10 +1429,10 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
         resultLoot.classList.add('hidden');
       }
     } else {
-      resultText.textContent = 'Не успел — босс сбежал.';
-      resultReward.style.display = 'none';
-      resultLoot.classList.add('hidden');
-    }
+          resultText.textContent = 'Не успел — босс сбежал.';
+          resultReward.style.display = 'none';
+          resultLoot.classList.add('hidden');
+        }
     resultOverlay.classList.add('show');
   }
 
@@ -1364,20 +1453,6 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     }, 1000);
   }
 
-  function autoEnter() {
-    var now = Date.now();
-    var activeBoss = null;
-    for (var i = 0; i < BOSSES.length; i++) {
-      var st = getSt(BOSSES[i].id);
-      if (st.fight && st.fight.endAt && st.fight.endAt > now) {
-        if (!st.fight.clicks && !st.fight.excite) { st.fight = null; saveState(); continue; }
-        activeBoss = BOSSES[i];
-        break;
-      }
-    }
-    if (activeBoss) enterFight(activeBoss);
-  }
-
   function switchBossGroup(group) {
     if (group === currentGroup) return;
     currentGroup = group;
@@ -1392,24 +1467,68 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   tabMain.addEventListener('click', function(){ switchBossGroup('main'); });
   tabEvent.addEventListener('click', function(){ switchBossGroup('event'); });
 
+  // СДАЧА
+  function askSurrender() {
+    if (!isFightActive) { showBossList(); return; }
+    surrenderOverlay.classList.add('show');
+  }
+
+  surrenderNo.addEventListener('click', function() {
+    surrenderOverlay.classList.remove('show');
+  });
+
+  surrenderYes.addEventListener('click', function() {
+    surrenderOverlay.classList.remove('show');
+    if (!currentBoss) return;
+    var now = Date.now();
+    var st = getSt(currentBoss.id);
+    st.cooldownUntil = now + currentBoss.cooldownDuration;
+    saveState();
+    saveAndSync();
+    showNotify('💀', 'Ты сдался. ' + currentBoss.name + ' на КД');
+    showBossList();
+    refreshList();
+  });
+
+  function handleAbandon() {
+    if (!isFightActive || !currentBoss) return;
+    var now = Date.now();
+    var st = getSt(currentBoss.id);
+    st.cooldownUntil = now + currentBoss.cooldownDuration;
+    saveState();
+    try {
+      localStorage.setItem('pahomBossAbandonedId', currentBoss.id);
+      localStorage.setItem('pahomBossAbandonedAt', String(now));
+    } catch(e) {}
+    try { if (window.tgSyncSaveBeacon) window.tgSyncSaveBeacon(); } catch(e) {}
+  }
+
   document.addEventListener('visibilitychange', function() {
-    if (document.hidden && isFightActive) {
-      saveState();
-      try { if (window.tgSyncSaveBeacon) window.tgSyncSaveBeacon(); } catch(e) {}
-    }
+    if (document.hidden) handleAbandon();
   });
-  window.addEventListener('pagehide', function() {
-    if (isFightActive) {
-      saveState();
-      try { if (window.tgSyncSaveBeacon) window.tgSyncSaveBeacon(); } catch(e) {}
+  window.addEventListener('pagehide', handleAbandon);
+  window.addEventListener('beforeunload', handleAbandon);
+
+  function checkAbandoned() {
+    var abId = null, abAt = 0;
+    try {
+      abId = localStorage.getItem('pahomBossAbandonedId');
+      abAt = parseInt(localStorage.getItem('pahomBossAbandonedAt') || '0', 10) || 0;
+    } catch(e) {}
+    if (abId && abAt) {
+      var boss = null;
+      for (var i = 0; i < BOSSES.length; i++) {
+        if (BOSSES[i].id === abId) { boss = BOSSES[i]; break; }
+      }
+      if (boss) {
+        showNotify('💨', 'Ты сбежал из боя с ' + boss.name + ' — босс на КД');
+      }
+      try {
+        localStorage.removeItem('pahomBossAbandonedId');
+        localStorage.removeItem('pahomBossAbandonedAt');
+      } catch(e) {}
     }
-  });
-  window.addEventListener('beforeunload', function() {
-    if (isFightActive) {
-      saveState();
-      try { if (window.tgSyncSaveBeacon) window.tgSyncSaveBeacon(); } catch(e) {}
-    }
-  });
+  }
 
   function init() {
     updateScore();
@@ -1419,10 +1538,10 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     refreshList();
     bossHitbox.addEventListener('click', hitBoss);
     bossHitbox.addEventListener('touchstart', function(e){ e.preventDefault(); hitBoss(); }, { passive:false });
-    arenaBack.addEventListener('click', showBossList);
+    arenaBack.addEventListener('click', askSurrender);
     resultBtn.addEventListener('click', closeResult);
     startTicker();
-    autoEnter();
+    checkAbandoned();
 
     try {
       if (window.tgSyncReady) {

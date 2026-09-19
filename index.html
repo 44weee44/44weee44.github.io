@@ -2,529 +2,482 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Кликер Пахома</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; user-select:none; -webkit-tap-highlight-color:transparent; }
 html, body {
-  width: 100%; height: 100%;
-  background: #0a0a0a;
-  overflow: hidden;
-  font-family: 'Segoe UI', Arial, sans-serif;
+  background:#050506;
+  width:100%; height:100%;
+  margin:0;
+  font-family:-apple-system, 'SF Pro Display', 'Inter', 'Segoe UI', Arial, sans-serif;
+  color:#e8e8ec;
+  overflow:hidden;
 }
-body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* ==== ФОН ==== */
-.load-bg {
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(circle at 50% 45%, rgba(184, 150, 46, 0.18), transparent 50%),
-    radial-gradient(circle at 50% 60%, rgba(106, 74, 154, 0.14), transparent 65%),
-    radial-gradient(circle at 15% 85%, rgba(192, 57, 43, 0.10), transparent 60%),
-    linear-gradient(160deg, #0d0d0d, #050505);
-  z-index: 0;
-  animation: bgPulse 6s ease-in-out infinite;
-}
-@keyframes bgPulse {
-  0%, 100% { filter: brightness(1); }
-  50%      { filter: brightness(1.18); }
+:root {
+  --bg-0:#0a0a0c;
+  --bg-2:#18181f;
+  --text-2:#8a8a92;
+  --text-3:#5a5a62;
+  --accent-2:#7af080;
+  --cyan:#7af0ff;
 }
 
-/* ==== ПЛАВАЮЩИЕ СВЕТЯЩИЕСЯ ШАРЫ ==== */
-.load-orb {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(60px);
-  z-index: 1;
-  pointer-events: none;
-  opacity: 0.4;
+/* ==================== ЗАГРУЗКА ==================== */
+.load-stage {
+  position:fixed;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:28px;
+  background:var(--bg-0);
+  z-index:20;
+  transition:opacity 1s ease, filter 1s ease, transform 1s ease;
 }
-.orb-1 { width: 280px; height: 280px; background: #b8962e; top: 3%; left: -5%; animation: orbFloat1 12s ease-in-out infinite; }
-.orb-2 { width: 250px; height: 250px; background: #6a4a9a; bottom: 3%; right: -5%; animation: orbFloat2 14s ease-in-out infinite; }
-.orb-3 { width: 200px; height: 200px; background: #c0392b; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: orbFloat3 10s ease-in-out infinite; opacity: 0.18; }
-@keyframes orbFloat1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%      { transform: translate(60px, -40px) scale(1.15); }
-  66%      { transform: translate(-30px, 60px) scale(0.9); }
-}
-@keyframes orbFloat2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%      { transform: translate(-60px, 30px) scale(1.2); }
-  66%      { transform: translate(40px, -50px) scale(0.85); }
-}
-@keyframes orbFloat3 {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.18; }
-  50%      { transform: translate(-50%, -50%) scale(1.3); opacity: 0.35; }
+.load-stage.fadeout {
+  opacity:0;
+  filter:blur(20px);
+  transform:scale(1.05);
+  pointer-events:none;
 }
 
-/* ==== ЧАСТИЦЫ (искры) ==== */
-.load-particles {
-  position: fixed;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  overflow: hidden;
+.load-stage::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size:32px 32px;
+  pointer-events:none;
+  mask-image:radial-gradient(ellipse at 50% 50%, #000 30%, transparent 80%);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 50%, #000 30%, transparent 80%);
 }
-.load-particles span {
-  position: absolute;
-  bottom: -10px;
-  width: 3px; height: 3px;
-  background: rgba(255, 215, 107, 0.85);
-  border-radius: 50%;
-  box-shadow: 0 0 12px rgba(255, 215, 107, 1);
-  animation: sparkRise linear infinite;
+.load-stage::after {
+  content:'';
+  position:absolute;
+  top:-40%; left:50%;
+  transform:translateX(-50%);
+  width:600px; height:600px;
+  background:conic-gradient(from 180deg at 50% 50%,
+    transparent 0deg, rgba(42,138,48,0.10) 30deg, transparent 60deg,
+    transparent 300deg, rgba(42,138,48,0.10) 330deg, transparent 360deg);
+  animation:spotlight 24s linear infinite;
+  pointer-events:none;
+  filter:blur(40px);
 }
-@keyframes sparkRise {
-  0%   { transform: translateY(0) translateX(0) scale(0.4); opacity: 0; }
-  10%  { opacity: 1; }
-  50%  { transform: translateY(-50vh) translateX(20px) scale(1); opacity: 1; }
-  90%  { opacity: 0.8; }
-  100% { transform: translateY(-105vh) translateX(-20px) scale(0.3); opacity: 0; }
+@keyframes spotlight { 0% { transform:translateX(-50%) rotate(0); } 100% { transform:translateX(-50%) rotate(360deg); } }
+.load-stage > * { position:relative; z-index:2; }
+
+.core {
+  position:relative;
+  width:180px; height:180px;
+  display:flex; align-items:center; justify-content:center;
+}
+.core .ring-outer {
+  position:absolute; inset:0;
+  border-radius:50%;
+  background:conic-gradient(from 0deg,
+    transparent 0deg, rgba(122,240,128,0.6) 20deg, transparent 45deg,
+    transparent 315deg, rgba(122,240,128,0.6) 340deg, transparent 360deg);
+  mask:radial-gradient(circle, transparent 88%, #000 89%, #000 100%);
+  -webkit-mask:radial-gradient(circle, transparent 88%, #000 89%, #000 100%);
+  animation:spin 6s linear infinite;
+}
+.core .ring-mid {
+  position:absolute; inset:20px;
+  border-radius:50%;
+  border:1px dashed rgba(122,240,128,0.35);
+  animation:spinCCW 12s linear infinite;
+}
+.core .ring-inner {
+  position:absolute; inset:40px;
+  border-radius:50%;
+  border:1px solid transparent;
+  border-top-color:rgba(122,240,128,0.7);
+  border-right-color:rgba(122,240,128,0.2);
+  animation:spin 3s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes spinCCW { to { transform:rotate(-360deg); } }
+
+.core .diamond {
+  position:relative;
+  width:80px; height:80px;
+  border-radius:12px;
+  background:linear-gradient(135deg, rgba(42,138,48,0.3), rgba(20,60,24,0.5));
+  border:2px solid var(--accent-2);
+  transform:rotate(45deg);
+  box-shadow:0 0 30px rgba(42,138,48,0.9), 0 0 60px rgba(42,138,48,0.4), inset 0 0 25px rgba(42,138,48,0.3);
+  animation:diamondBreath 3s ease-in-out infinite;
+  overflow:hidden;
+}
+.core .diamond::before {
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(115deg, transparent 30%, rgba(122,240,128,0.35) 50%, transparent 70%);
+  transform:translateX(-100%);
+  animation:shine 3.2s ease-in-out infinite;
+}
+@keyframes shine { 0% { transform:translateX(-100%); } 60% { transform:translateX(100%); } 100% { transform:translateX(100%); } }
+@keyframes diamondBreath {
+  0%, 100% { box-shadow:0 0 30px rgba(42,138,48,0.9), 0 0 60px rgba(42,138,48,0.4), inset 0 0 25px rgba(42,138,48,0.3); }
+  50%      { box-shadow:0 0 50px rgba(42,138,48,1), 0 0 90px rgba(42,138,48,0.6), inset 0 0 35px rgba(42,138,48,0.45); }
+}
+.core .diamond-emoji {
+  position:absolute;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%) rotate(-45deg);
+  font-size:2.4rem;
+  filter:drop-shadow(0 0 15px rgba(42,138,48,0.9));
 }
 
-/* ==== ЦЕНТР ==== */
-.load-wrap {
-  position: relative;
-  z-index: 5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 24px;
-  animation: wrapAppear 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-  padding: 20px;
+.title {
+  font-size:0.95rem; font-weight:900;
+  letter-spacing:4px; text-transform:uppercase;
+  display:flex; align-items:center; gap:12px;
+  text-shadow:0 0 20px rgba(42,138,48,0.5);
 }
-@keyframes wrapAppear {
-  0% { opacity: 0; transform: translateY(30px) scale(0.92); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+.title::before, .title::after {
+  content:''; width:24px; height:1px;
+  background:linear-gradient(90deg, transparent, var(--accent-2));
+}
+.title::after { background:linear-gradient(90deg, var(--accent-2), transparent); }
+
+.status {
+  font-size:0.68rem; color:var(--text-2);
+  font-family:'Courier New', monospace;
+  letter-spacing:1.5px; text-transform:uppercase;
+  text-align:center; min-height:1em;
+  transition:opacity 0.3s ease;
+}
+.bar-wrap {
+  width:100%; max-width:280px;
+  display:flex; flex-direction:column; gap:10px;
+}
+.bar {
+  width:100%; height:4px;
+  background:var(--bg-2); border-radius:2px; overflow:hidden;
+  box-shadow:inset 0 1px 2px rgba(0,0,0,0.9);
+}
+.bar-fill {
+  height:100%; width:0%;
+  background:linear-gradient(90deg, #2a8a30, #7af080, #b8ffb8);
+  background-size:200% 100%;
+  border-radius:2px;
+  box-shadow:0 0 12px rgba(42,138,48,0.9);
+  transition:width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  animation:barFlow 2s linear infinite;
+}
+@keyframes barFlow { 0% { background-position:0% 0%; } 100% { background-position:200% 0%; } }
+.bar-info {
+  display:flex; justify-content:space-between;
+  font-size:0.62rem; color:var(--text-3);
+  font-family:'Courier New', monospace;
+}
+.bar-info .pct {
+  color:var(--accent-2); font-weight:900; font-size:0.9rem;
+  text-shadow:0 0 10px rgba(42,138,48,0.8);
 }
 
-/* ==== КОЛЬЦО С ПРОГРЕССОМ ==== */
-.load-ring-wrap {
-  position: relative;
-  width: 220px;
-  height: 220px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* ==================== ВСПЫШКА ==================== */
+.flash {
+  position:fixed;
+  inset:0;
+  z-index:25;
+  pointer-events:none;
+  opacity:0;
+  background:radial-gradient(circle at 50% 50%,
+    rgba(122,240,255,0.85) 0%,
+    rgba(122,240,255,0.4) 25%,
+    rgba(42,138,48,0.15) 50%,
+    transparent 75%);
+}
+.flash.pop { animation:flashPop 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+@keyframes flashPop {
+  0%   { opacity:0;    transform:scale(0.7); }
+  20%  { opacity:0.9;  transform:scale(1); }
+  60%  { opacity:0.3;  transform:scale(1.05); }
+  100% { opacity:0;    transform:scale(1.15); }
 }
 
-/* Лучи, вращающиеся вокруг */
-.load-rays {
-  position: absolute;
-  inset: -20px;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0deg,
-    rgba(255, 215, 107, 0.15) 20deg,
-    transparent 40deg,
-    transparent 360deg
-  );
-  animation: raysSpin 8s linear infinite;
-  pointer-events: none;
+/* ==================== СТАРТОВЫЙ ЭКРАН ==================== */
+.start-screen {
+  position:fixed;
+  inset:0;
+  z-index:22;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:44px;
+  background:#050608;
+  opacity:0;
+  pointer-events:none;
 }
-.load-rays::after {
-  content: '';
-  position: absolute;
-  inset: 15px;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 180deg,
-    transparent 0deg,
-    rgba(106, 74, 154, 0.15) 25deg,
-    transparent 50deg,
-    transparent 360deg
-  );
-  animation: raysSpinRev 12s linear infinite;
+.start-screen.show {
+  display:flex;
+  animation:startFadeIn 1.4s ease forwards;
+  pointer-events:auto;
 }
-@keyframes raysSpin { to { transform: rotate(360deg); } }
-@keyframes raysSpinRev { to { transform: rotate(-360deg); } }
-
-/* SVG-кольцо прогресса */
-.progress-svg {
-  position: absolute;
-  inset: 0;
-  transform: rotate(-90deg);
-  pointer-events: none;
-}
-.progress-svg circle {
-  fill: none;
-  stroke-width: 4;
-  stroke-linecap: round;
-}
-.progress-track {
-  stroke: rgba(74, 74, 42, 0.5);
-}
-.progress-fill {
-  stroke: url(#gradient);
-  stroke-dasharray: 628;
-  stroke-dashoffset: 628;
-  transition: stroke-dashoffset 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  filter: drop-shadow(0 0 8px rgba(255, 215, 107, 0.9));
+@keyframes startFadeIn {
+  0%   { opacity:0; filter:brightness(0.3); }
+  60%  { opacity:1; filter:brightness(1.15); }
+  100% { opacity:1; filter:brightness(1); }
 }
 
-/* Внутренние вращающиеся кольца */
-.load-ring-outer,
-.load-ring-mid {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid transparent;
+.start-screen::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background-image:
+    repeating-linear-gradient(0deg,
+      rgba(122,240,255,0.03) 0px,
+      rgba(122,240,255,0.03) 1px,
+      transparent 1px,
+      transparent 3px);
+  pointer-events:none;
+  z-index:10;
 }
-.load-ring-outer {
-  inset: 20px;
-  border-top-color: rgba(255, 215, 107, 0.6);
-  border-right-color: rgba(255, 215, 107, 0.15);
-  animation: ringSpin 3s linear infinite;
-}
-.load-ring-mid {
-  inset: 34px;
-  border-bottom-color: rgba(106, 74, 154, 0.7);
-  border-left-color: rgba(106, 74, 154, 0.15);
-  animation: ringSpinRev 4s linear infinite;
-}
-@keyframes ringSpin { to { transform: rotate(360deg); } }
-@keyframes ringSpinRev { to { transform: rotate(-360deg); } }
-
-.load-emoji {
-  font-size: 5.5rem;
-  z-index: 3;
-  animation: emojiPulse 2.4s ease-in-out infinite;
-  filter: drop-shadow(0 0 25px rgba(184, 150, 46, 0.8));
-  position: relative;
-}
-@keyframes emojiPulse {
-  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 25px rgba(184, 150, 46, 0.8)); }
-  50%      { transform: scale(1.12) rotate(-4deg); filter: drop-shadow(0 0 50px rgba(255, 215, 107, 1)); }
+.start-screen::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.7) 100%);
+  pointer-events:none;
+  z-index:11;
 }
 
-/* ==== ЗАГОЛОВОК ==== */
-.load-title-wrap {
-  position: relative;
-  overflow: hidden;
+.glitch-bars {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:6;
+  overflow:hidden;
 }
-.load-title {
-  font-size: 1.7rem;
-  font-weight: 900;
-  letter-spacing: 6px;
-  color: #c4b08a;
-  text-transform: uppercase;
-  text-align: center;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.9);
-  position: relative;
-  padding: 4px 8px;
+.glitch-bars span {
+  position:absolute;
+  left:0; right:0;
+  height:2px;
+  background:linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity:0;
+  animation:barFlicker 8s steps(2) infinite;
 }
-.load-title::before {
-  content: '';
-  position: absolute;
-  top: 0; left: -100%;
-  width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 215, 107, 0.7), transparent);
-  animation: titleSweep 3s ease-in-out infinite;
-  mix-blend-mode: overlay;
-}
-@keyframes titleSweep {
-  0%   { left: -100%; }
-  50%  { left: 100%; }
-  100% { left: 100%; }
+.glitch-bars span:nth-child(1) { top:20%; animation-delay:0s; }
+.glitch-bars span:nth-child(2) { top:45%; animation-delay:1.2s; }
+.glitch-bars span:nth-child(3) { top:70%; animation-delay:2.4s; }
+.glitch-bars span:nth-child(4) { top:33%; animation-delay:3.6s; }
+.glitch-bars span:nth-child(5) { top:85%; animation-delay:4.8s; }
+@keyframes barFlicker {
+  0%, 100%   { opacity:0; }
+  0.5%       { opacity:0.8; }
+  1%         { opacity:0; }
+  50%        { opacity:0; }
+  50.5%      { opacity:0.5; }
+  51%        { opacity:0; }
 }
 
-/* ==== СТАТУС ==== */
-.load-status {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: #8a7a5a;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 1.5px;
-  min-height: 1.2em;
-  transition: opacity 0.3s ease, transform 0.3s ease, color 0.3s ease;
-  text-align: center;
-  padding: 0 10px;
+.start-title-wrap {
+  position:relative;
+  z-index:5;
+  text-align:center;
+  animation:flicker 6s linear infinite;
 }
-.load-status.fade { opacity: 0; transform: translateY(-5px); }
-
-/* ==== ПРОГРЕСС-БАР ==== */
-.load-bar-outer {
-  width: 300px;
-  max-width: 88vw;
-  height: 18px;
-  background: #0f0f00;
-  border: 1px solid #4a4a2a;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: inset 0 2px 6px black, 0 0 25px rgba(184, 150, 46, 0.25);
-  position: relative;
+.start-title {
+  font-size:2.6rem;
+  font-weight:900;
+  letter-spacing:14px;
+  color:var(--cyan);
+  text-shadow:
+    0 0 6px var(--cyan),
+    0 0 14px var(--cyan),
+    0 0 30px rgba(122,240,255,0.7),
+    0 0 60px rgba(122,240,255,0.4);
+  display:flex;
+  align-items:center;
+  gap:16px;
+  justify-content:center;
+  font-family:'Courier New', monospace;
 }
-.load-bar-segments {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  pointer-events: none;
-  z-index: 2;
+.start-title .q {
+  display:inline-block;
+  animation:qBlink 1.2s steps(2) infinite;
 }
-.load-bar-segments span {
-  flex: 1;
-  border-right: 1px solid rgba(10, 10, 10, 0.6);
+@keyframes flicker {
+  0%, 100%    { opacity:1; }
+  92%         { opacity:1; }
+  93%         { opacity:0.6; }
+  94%         { opacity:1; }
+  97%         { opacity:0.8; }
+  98%         { opacity:1; }
 }
-.load-bar-segments span:last-child { border-right: none; }
-
-.load-bar-inner {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #8b1a1a, #b8962e 50%, #ffd76b);
-  border-radius: 10px;
-  transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 0 20px rgba(255, 215, 107, 0.9), inset 0 0 8px rgba(255, 255, 255, 0.3);
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
-}
-.load-bar-inner::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-  transform: translateX(-100%);
-  animation: barShine 1.6s ease-in-out infinite;
-}
-@keyframes barShine {
-  0% { transform: translateX(-100%); }
-  50% { transform: translateX(100%); }
-  100% { transform: translateX(100%); }
+@keyframes qBlink {
+  0%, 49%   { opacity:1; }
+  50%, 100% { opacity:0.4; }
 }
 
-/* ==== ПРОЦЕНТЫ ==== */
-.load-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 300px;
-  max-width: 88vw;
-  gap: 10px;
+.start-choice {
+  position:relative;
+  z-index:5;
+  display:flex;
+  gap:90px;
+  align-items:center;
+  justify-content:center;
 }
-.load-percent {
-  font-size: 1.6rem;
-  font-weight: 900;
-  font-family: 'Courier New', monospace;
-  color: #ffd76b;
-  letter-spacing: 2px;
-  text-shadow: 0 0 18px rgba(255, 215, 107, 1), 0 0 30px rgba(255, 215, 107, 0.5);
-  flex-shrink: 0;
-  transition: transform 0.2s ease;
+.start-opt {
+  font-size:1.7rem;
+  font-weight:900;
+  letter-spacing:10px;
+  color:var(--cyan);
+  cursor:pointer;
+  text-shadow:
+    0 0 6px var(--cyan),
+    0 0 16px var(--cyan),
+    0 0 30px rgba(122,240,255,0.6);
+  padding:8px 6px;
+  position:relative;
+  transition:transform 0.15s ease;
+  font-family:'Courier New', monospace;
+  animation:optGlow 3s ease-in-out infinite;
 }
-.load-counter {
-  font-size: 0.75rem;
-  font-family: 'Courier New', monospace;
-  color: #8a7a5a;
-  letter-spacing: 1px;
-  flex-shrink: 0;
+.start-opt.no {
+  color:#3a7a8a;
+  text-shadow:0 0 3px #3a7a8a, 0 0 10px rgba(58,122,138,0.5);
+  animation:noDimmer 4s ease-in-out infinite;
 }
-
-/* ==== ТОЧКИ ==== */
-.load-dots {
-  display: flex;
-  gap: 10px;
-  margin-top: 4px;
+@keyframes optGlow {
+  0%, 100% { text-shadow:0 0 6px var(--cyan), 0 0 16px var(--cyan), 0 0 30px rgba(122,240,255,0.6); }
+  50%      { text-shadow:0 0 10px var(--cyan), 0 0 25px var(--cyan), 0 0 50px rgba(122,240,255,0.9); }
 }
-.load-dots span {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: #4a4a2a;
-  animation: dotPulse 1.6s ease-in-out infinite;
-  box-shadow: 0 0 0 rgba(255, 215, 107, 0);
+@keyframes noDimmer {
+  0%, 100% { opacity:0.55; }
+  50%      { opacity:0.85; }
 }
-.load-dots span:nth-child(1) { animation-delay: 0s; }
-.load-dots span:nth-child(2) { animation-delay: 0.2s; }
-.load-dots span:nth-child(3) { animation-delay: 0.4s; }
-.load-dots span:nth-child(4) { animation-delay: 0.6s; }
-.load-dots span:nth-child(5) { animation-delay: 0.8s; }
-@keyframes dotPulse {
-  0%, 100% { background: #4a4a2a; transform: scale(1); box-shadow: 0 0 0 rgba(255, 215, 107, 0); }
-  50%      { background: #ffd76b; transform: scale(1.4); box-shadow: 0 0 15px rgba(255, 215, 107, 1); }
+.start-opt.active {
+  transform:scale(1.1);
+  animation:optPulse 0.4s ease-in-out infinite alternate;
 }
-
-/* ==== ВОЛНЫ ВНИЗУ ==== */
-.load-waves {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 120px;
-  z-index: 1;
-  pointer-events: none;
-  overflow: hidden;
+@keyframes optPulse {
+  from { text-shadow:0 0 8px var(--cyan), 0 0 25px var(--cyan), 0 0 50px rgba(122,240,255,0.9); }
+  to   { text-shadow:0 0 12px #fff, 0 0 40px var(--cyan), 0 0 80px rgba(122,240,255,1); }
 }
-.load-wave {
-  position: absolute;
-  bottom: -50px;
-  left: -50%;
-  width: 200%;
-  height: 100%;
-  border-radius: 45%;
-  opacity: 0.35;
+.start-opt::before {
+  content:'>';
+  position:absolute;
+  left:-32px;
+  top:50%;
+  transform:translateY(-50%);
+  opacity:0;
+  color:var(--cyan);
+  text-shadow:0 0 10px var(--cyan);
+  font-size:1.4rem;
+  transition:opacity 0.15s ease;
 }
-.load-wave.wave-1 {
-  background: radial-gradient(ellipse at 50% 0%, rgba(184, 150, 46, 0.4), transparent 70%);
-  animation: waveMove 12s linear infinite;
+.start-opt.active::before {
+  opacity:1;
+  animation:cursorBlink 0.8s steps(2) infinite;
 }
-.load-wave.wave-2 {
-  background: radial-gradient(ellipse at 50% 0%, rgba(106, 74, 154, 0.35), transparent 70%);
-  animation: waveMove 16s linear infinite reverse;
-  opacity: 0.25;
-}
-.load-wave.wave-3 {
-  background: radial-gradient(ellipse at 50% 0%, rgba(192, 57, 43, 0.25), transparent 70%);
-  animation: waveMove 20s linear infinite;
-  opacity: 0.2;
-}
-@keyframes waveMove {
-  0%   { transform: translateX(0) rotate(0deg); }
-  100% { transform: translateX(25%) rotate(360deg); }
+@keyframes cursorBlink {
+  0%, 49%   { opacity:1; }
+  50%, 100% { opacity:0.3; }
 }
 
-/* ==== ФИНАЛ ==== */
-.load-done {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  background: rgba(5,5,5,0.96);
-  z-index: 100;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.6s ease;
-}
-.load-done.show { opacity: 1; pointer-events: auto; }
-.load-done .check {
-  font-size: 7rem;
-  color: #4cd964;
-  filter: drop-shadow(0 0 50px rgba(76, 217, 100, 1));
-  animation: checkIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.load-done .check::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(76, 217, 100, 0.5), transparent 60%);
-  animation: checkFlash 1.5s ease-out infinite;
-  pointer-events: none;
-  z-index: -1;
-}
-@keyframes checkIn {
-  0%   { opacity: 0; transform: scale(0.2) rotate(-45deg); }
-  60%  { opacity: 1; transform: scale(1.15) rotate(5deg); }
-  100% { opacity: 1; transform: scale(1) rotate(0deg); }
-}
-@keyframes checkFlash {
-  0%   { opacity: 0.8; transform: scale(0.8); }
-  100% { opacity: 0; transform: scale(2.5); }
-}
-.load-done .done-text {
-  font-size: 1.3rem;
-  font-weight: 900;
-  color: #c4b08a;
-  letter-spacing: 5px;
-  text-transform: uppercase;
-  animation: titleShine 1.6s ease-in-out infinite;
+.start-footer {
+  position:absolute;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:0.68rem;
+  color:rgba(122,240,255,0.4);
+  letter-spacing:5px;
+  text-transform:uppercase;
+  z-index:5;
+  font-weight:700;
+  font-family:'Courier New', monospace;
 }
 
-.page-exit {
-  animation: pageExit 0.5s ease forwards;
+.start-screen.glitching {
+  animation:glitch 0.6s steps(2) infinite;
 }
-@keyframes pageExit {
-  to { opacity: 0; }
+@keyframes glitch {
+  0%   { transform:translate(0,0); filter:hue-rotate(0deg); }
+  20%  { transform:translate(-3px,1px); filter:hue-rotate(20deg); }
+  40%  { transform:translate(3px,-1px); filter:hue-rotate(-10deg); }
+  60%  { transform:translate(-2px,-2px); filter:hue-rotate(15deg); }
+  80%  { transform:translate(2px,2px); filter:hue-rotate(-5deg); }
+  100% { transform:translate(0,0); filter:hue-rotate(0deg); }
 }
 
-@media (max-width: 400px) {
-  .load-ring-wrap { width: 190px; height: 190px; }
-  .load-emoji { font-size: 4.5rem; }
-  .load-title { font-size: 1.4rem; letter-spacing: 4px; }
-  .load-bar-outer, .load-info { width: 260px; }
+.start-screen.exiting {
+  animation:exitFade 0.8s ease forwards;
+}
+@keyframes exitFade {
+  0%   { opacity:1; filter:brightness(1); }
+  30%  { opacity:1; filter:brightness(2) hue-rotate(-30deg); }
+  100% { opacity:0; filter:brightness(0); }
+}
+
+@media (max-width:400px) {
+  .start-title { font-size:1.85rem; letter-spacing:9px; gap:10px; }
+  .start-choice { gap:55px; }
+  .start-opt { font-size:1.35rem; letter-spacing:7px; }
+  .start-opt::before { left:-24px; font-size:1.1rem; }
 }
 </style>
 </head>
 <body>
 
-<div class="load-bg"></div>
-
-<div class="load-orb orb-1"></div>
-<div class="load-orb orb-2"></div>
-<div class="load-orb orb-3"></div>
-
-<div class="load-particles" id="particles"></div>
-
-<div class="load-wave wave-1"></div>
-<div class="load-wave wave-2"></div>
-<div class="load-wave wave-3"></div>
-
-<div class="load-wrap" id="loadWrap">
-
-  <div class="load-ring-wrap">
-    <div class="load-rays"></div>
-
-    <svg class="progress-svg" viewBox="0 0 220 220">
-      <defs>
-        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#8b1a1a"/>
-          <stop offset="50%" stop-color="#b8962e"/>
-          <stop offset="100%" stop-color="#ffd76b"/>
-        </linearGradient>
-      </defs>
-      <circle class="progress-track" cx="110" cy="110" r="100"/>
-      <circle class="progress-fill" id="progressFill" cx="110" cy="110" r="100"/>
-    </svg>
-
-    <div class="load-ring-outer"></div>
-    <div class="load-ring-mid"></div>
-
-    <div class="load-emoji">👴</div>
-  </div>
-
-  <div class="load-title-wrap">
-    <div class="load-title">ЗАГРУЗКА ПАХОМА</div>
-  </div>
-
-  <div class="load-status" id="loadStatus">Подготовка...</div>
-
-  <div class="load-bar-outer">
-    <div class="load-bar-inner" id="loadBar"></div>
-    <div class="load-bar-segments">
-      <span></span><span></span><span></span><span></span><span></span>
-      <span></span><span></span><span></span><span></span><span></span>
+<!-- ==================== ЗАГРУЗКА ==================== -->
+<div class="load-stage" id="loadStage">
+  <div class="core">
+    <div class="ring-outer"></div>
+    <div class="ring-mid"></div>
+    <div class="ring-inner"></div>
+    <div class="diamond">
+      <span class="diamond-emoji">👴</span>
     </div>
   </div>
 
-  <div class="load-info">
-    <div class="load-percent" id="loadPercent">0%</div>
-    <div class="load-counter" id="loadCounter">0 / 0</div>
-  </div>
+  <div class="title">ЗАГРУЗКА</div>
+  <div class="status" id="status">Подготовка...</div>
 
-  <div class="load-dots">
-    <span></span><span></span><span></span><span></span><span></span>
+  <div class="bar-wrap">
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+    <div class="bar-info"><span class="pct" id="pct">0%</span><span id="steps">0 / 0</span></div>
   </div>
 </div>
 
-<div class="load-done" id="loadDone">
-  <div class="check">✓</div>
-  <div class="done-text">Готово</div>
+<!-- ==================== ВСПЫШКА ==================== -->
+<div class="flash" id="flash"></div>
+
+<!-- ==================== СТАРТОВЫЙ ЭКРАН ==================== -->
+<div class="start-screen" id="startScreen">
+  <div class="glitch-bars">
+    <span></span><span></span><span></span><span></span><span></span>
+  </div>
+
+  <div class="start-title-wrap">
+    <div class="start-title">НАЧАТЬ ИГРУ<span class="q">?</span></div>
+  </div>
+
+  <div class="start-choice" id="startChoice">
+    <div class="start-opt yes active" id="btnYes" data-action="yes">ДА</div>
+    <div class="start-opt no" id="btnNo" data-action="no">НЕТ</div>
+  </div>
+
+  <div class="start-footer">— PAHOM SYSTEMS —</div>
 </div>
 
 <script>
 (function() {
   'use strict';
 
+  /* ==================== КОНСТАНТЫ ЗАГРУЗКИ ==================== */
   var API_BASE = 'https://save-pahom.duckdns.org';
-  var MIN_DURATION_MS = 4500;
+  var MIN_DURATION_MS = 4500;       // минимальная длительность загрузки
   var startTime = Date.now();
 
   var SOUNDS = [
@@ -534,75 +487,57 @@ body {
     'Dada.m4a',
     'Aimolodca.m4a'
   ];
-
   var IMAGES = [
     'Tvn.png',
     'Penis.png',
     'Seimur.png',
     'Fon.jpeg'
   ];
-
   var SCRIPTS = [
     'income.js',
     'server-sync.js'
   ];
 
-  var loadStatus = document.getElementById('loadStatus');
-  var loadBar = document.getElementById('loadBar');
-  var loadPercent = document.getElementById('loadPercent');
-  var loadCounter = document.getElementById('loadCounter');
-  var loadDone = document.getElementById('loadDone');
-  var progressFill = document.getElementById('progressFill');
-  var particlesEl = document.getElementById('particles');
+  /* ==================== DOM ==================== */
+  var loadStage = document.getElementById('loadStage');
+  var statusEl = document.getElementById('status');
+  var barFill = document.getElementById('barFill');
+  var pctEl = document.getElementById('pct');
+  var stepsEl = document.getElementById('steps');
+  var flash = document.getElementById('flash');
+  var startScreen = document.getElementById('startScreen');
+  var btnYes = document.getElementById('btnYes');
+  var btnNo = document.getElementById('btnNo');
 
-  // ==== ЧАСТИЦЫ ====
-  (function makeParticles(){
-    var count = 45;
-    for (var i = 0; i < count; i++) {
-      var p = document.createElement('span');
-      p.style.left = (Math.random() * 100) + '%';
-      p.style.animationDuration = (6 + Math.random() * 8) + 's';
-      p.style.animationDelay = (Math.random() * 10) + 's';
-      var size = 2 + Math.random() * 3;
-      p.style.width = size + 'px';
-      p.style.height = size + 'px';
-      p.style.bottom = (-10 - Math.random() * 50) + 'px';
-      particlesEl.appendChild(p);
-    }
-  })();
-
+  /* ==================== ПРОГРЕСС ==================== */
   var totalSteps = 0;
   var doneSteps = 0;
+  var lastStatus = '';
 
   function setStatus(text) {
-    loadStatus.classList.add('fade');
+    if (text === lastStatus) return;
+    lastStatus = text;
+    statusEl.style.opacity = 0;
     setTimeout(function(){
-      loadStatus.textContent = text;
-      loadStatus.classList.remove('fade');
-    }, 150);
+      statusEl.textContent = text;
+      statusEl.style.opacity = 1;
+    }, 120);
   }
 
   function updateProgress() {
     var pct = totalSteps > 0 ? Math.min(100, Math.round((doneSteps / totalSteps) * 100)) : 0;
-    loadBar.style.width = pct + '%';
-    loadPercent.textContent = pct + '%';
-    loadCounter.textContent = doneSteps + ' / ' + totalSteps;
-
-    // Кольцо прогресса
-    var circumference = 2 * Math.PI * 100; // r=100
-    var offset = circumference * (1 - pct / 100);
-    if (progressFill) {
-      progressFill.style.strokeDasharray = circumference;
-      progressFill.style.strokeDashoffset = offset;
-    }
+    barFill.style.width = pct + '%';
+    pctEl.textContent = pct + '%';
+    stepsEl.textContent = doneSteps + ' / ' + totalSteps;
   }
 
-  function step(statusText) {
+  function step(text) {
     doneSteps++;
-    if (statusText) setStatus(statusText);
+    if (text) setStatus(text);
     updateProgress();
   }
 
+  /* ==================== ХЕЛПЕРЫ ==================== */
   function getUserId() {
     try {
       var tg = window.Telegram && window.Telegram.WebApp;
@@ -617,16 +552,12 @@ body {
   }
 
   function loadSound(url) {
-    return new Promise(function(resolve) {
+    return new Promise(function(resolve){
       var audio = new Audio();
       audio.preload = 'auto';
       audio.muted = true;
       var done = false;
-      function finish() {
-        if (done) return;
-        done = true;
-        resolve();
-      }
+      function finish() { if (done) return; done = true; resolve(); }
       audio.addEventListener('canplaythrough', finish, { once: true });
       audio.addEventListener('loadeddata', finish, { once: true });
       audio.addEventListener('error', finish, { once: true });
@@ -637,14 +568,10 @@ body {
   }
 
   function loadImage(url) {
-    return new Promise(function(resolve) {
+    return new Promise(function(resolve){
       var img = new Image();
       var done = false;
-      function finish() {
-        if (done) return;
-        done = true;
-        resolve();
-      }
+      function finish() { if (done) return; done = true; resolve(); }
       img.onload = finish;
       img.onerror = finish;
       img.src = url;
@@ -660,11 +587,7 @@ body {
       var s = document.createElement('script');
       s.src = src;
       var done = false;
-      function finish() {
-        if (done) return;
-        done = true;
-        resolve();
-      }
+      function finish() { if (done) return; done = true; resolve(); }
       s.onload = finish;
       s.onerror = finish;
       document.head.appendChild(s);
@@ -674,23 +597,22 @@ body {
 
   function pingServer() {
     return fetch(API_BASE + '/', { method: 'GET' })
-      .then(function(r) { return r.ok ? true : false; })
-      .catch(function() { return false; });
+      .then(function(r){ return r.ok ? true : false; })
+      .catch(function(){ return false; });
   }
 
   function loadPlayerData(userId) {
     if (!userId) return Promise.resolve(false);
     return fetch(API_BASE + '/api/load?userId=' + encodeURIComponent(userId))
-      .then(function(r) { return r.json(); })
-      .then(function(resp) {
+      .then(function(r){ return r.json(); })
+      .then(function(resp){
         if (!resp || !resp.data) return false;
-        var count = 0;
         for (var k in resp.data) {
-          try { localStorage.setItem(k, resp.data[k]); count++; } catch(e) {}
+          try { localStorage.setItem(k, resp.data[k]); } catch(e) {}
         }
         return true;
       })
-      .catch(function() { return false; });
+      .catch(function(){ return false; });
   }
 
   function readAllData() {
@@ -718,12 +640,10 @@ body {
       warmup.innerHTML =
         '<div style="animation:floatAnimation 7s ease-in-out infinite;"></div>' +
         '<div style="animation:glowPulse 3.5s ease-in-out infinite;"></div>' +
-        '<div style="animation:itemFadeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1);"></div>' +
-        '<div style="animation:comboPulse 0.45s cubic-bezier(0.22, 1, 0.36, 1);"></div>';
+        '<div style="animation:itemFadeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1);"></div>';
       document.body.appendChild(warmup);
-
-      requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
+      requestAnimationFrame(function(){
+        requestAnimationFrame(function(){
           setTimeout(function(){
             try { document.body.removeChild(warmup); } catch(e) {}
             resolve();
@@ -739,6 +659,7 @@ body {
     return new Promise(function(resolve){ setTimeout(resolve, remaining); });
   }
 
+  /* ==================== ЗАПУСК ЗАГРУЗКИ ==================== */
   function run() {
     totalSteps = SCRIPTS.length + 1 + 1 + SOUNDS.length + IMAGES.length + 1 + 1;
     updateProgress();
@@ -746,9 +667,7 @@ body {
     setStatus('Загрузка скриптов...');
 
     var scriptsPromise = Promise.all(SCRIPTS.map(function(src){
-      return loadScript(src).then(function(){
-        step('Загружен: ' + src);
-      });
+      return loadScript(src).then(function(){ step('Загружен: ' + src); });
     }));
 
     scriptsPromise
@@ -767,10 +686,7 @@ body {
       })
       .then(function(){
         var userId = getUserId();
-        if (!userId) {
-          step('Новый игрок');
-          return;
-        }
+        if (!userId) { step('Новый игрок'); return; }
         setStatus('Синхронизация с сервером...');
         return loadPlayerData(userId).then(function(loaded){
           step(loaded ? 'Данные синхронизированы' : 'Новый игрок');
@@ -778,27 +694,19 @@ body {
       })
       .then(function(){
         setStatus('Загрузка звуков...');
-        var soundPromises = SOUNDS.map(function(url){
-          return loadSound(url).then(function(){
-            step('Звук: ' + url);
-          });
-        });
-        return Promise.all(soundPromises);
+        return Promise.all(SOUNDS.map(function(url){
+          return loadSound(url).then(function(){ step('Звук: ' + url); });
+        }));
       })
       .then(function(){
         setStatus('Загрузка иконок...');
-        var imgPromises = IMAGES.map(function(url){
-          return loadImage(url).then(function(){
-            step('Иконка: ' + url);
-          });
-        });
-        return Promise.all(imgPromises);
+        return Promise.all(IMAGES.map(function(url){
+          return loadImage(url).then(function(){ step('Иконка: ' + url); });
+        }));
       })
       .then(function(){
         setStatus('Прогрев анимаций...');
-        return warmupAnimations().then(function(){
-          step('Анимации готовы');
-        });
+        return warmupAnimations().then(function(){ step('Анимации готовы'); });
       })
       .then(function(){
         setStatus('Финальные штрихи...');
@@ -808,32 +716,106 @@ body {
         step('Готово!');
         setStatus('Готово!');
         updateProgress();
-
-        setTimeout(function(){
-          loadDone.classList.add('show');
-        }, 200);
-
-        setTimeout(function(){
-          document.body.classList.add('page-exit');
-          setTimeout(function(){
-            window.location.href = 'seks.html';
-          }, 500);
-        }, 900);
+        // Дать бару дорисоваться до 100%
+        setTimeout(startTransition, 500);
       })
       .catch(function(err){
         console.warn('[Index] Ошибка:', err);
         setStatus('Готово (с ошибками)');
-        setTimeout(function(){
-          window.location.href = 'seks.html';
-        }, 900);
+        setTimeout(startTransition, 900);
       });
   }
 
+  /* ==================== ПЕРЕХОД: ЗАГРУЗКА → СТАРТ ==================== */
+  function startTransition() {
+    // 1. Загрузка плавно тает
+    loadStage.classList.add('fadeout');
+
+    // 2. Небольшая вспышка
+    setTimeout(function(){
+      flash.classList.add('pop');
+    }, 400);
+
+    // 3. Параллельно проявляется стартовый экран
+    setTimeout(function(){
+      startScreen.classList.add('show');
+    }, 500);
+  }
+
+  /* ==================== ЛОГИКА СТАРТОВОГО ЭКРАНА ==================== */
+  var allOpts = [btnYes, btnNo];
+  var activeIdx = 0;
+
+  function setActive(idx) {
+    activeIdx = idx;
+    allOpts.forEach(function(opt, i){
+      opt.classList.toggle('active', i === idx);
+    });
+  }
+
+  allOpts.forEach(function(opt, i){
+    opt.addEventListener('mouseenter', function(){ setActive(i); });
+    opt.addEventListener('touchstart', function(){ setActive(i); }, { passive: true });
+    opt.addEventListener('click', function(){
+      setActive(i);
+      if (opt.dataset.action === 'yes') startGame();
+      else exitGame();
+    });
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      setActive(activeIdx === 0 ? 1 : 0);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      if (activeIdx === 0) startGame();
+      else exitGame();
+    } else if (e.key === 'y' || e.key === 'Y' || e.key === 'д' || e.key === 'Д') {
+      startGame();
+    } else if (e.key === 'n' || e.key === 'N' || e.key === 'н' || e.key === 'Н') {
+      exitGame();
+    }
+  });
+
+  function startGame() {
+    startScreen.classList.add('glitching');
+    setTimeout(function(){
+      startScreen.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      startScreen.style.opacity = '0';
+      startScreen.style.transform = 'scale(1.05)';
+      setTimeout(function(){
+        window.location.href = 'seks.html';
+      }, 500);
+    }, 600);
+  }
+
+  function exitGame() {
+    startScreen.classList.add('exiting');
+    setTimeout(function(){
+      window.open('', '_self', '');
+      window.close();
+      setTimeout(function(){
+        window.location.href = 'about:blank';
+      }, 300);
+    }, 800);
+  }
+
+  // Лёгкое мерцание стартового экрана
+  setInterval(function(){
+    if (startScreen.classList.contains('show') && Math.random() < 0.15) {
+      startScreen.style.filter = 'brightness(1.15)';
+      setTimeout(function(){ startScreen.style.filter = ''; }, 60);
+    }
+  }, 2000);
+
+  setActive(0);
+
+  /* ==================== СТАРТ ==================== */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', run);
   } else {
     run();
   }
+
 })();
 </script>
 </body>
