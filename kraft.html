@@ -1012,20 +1012,9 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     }
   
     function calcIncomePerMin() {
-      var st = getCraftState();
-      var perMin = 0;
-      Object.keys(st).forEach(function(key) {
-        var m = key.match(/^(.+)_t(\d+)$/);
-        if (!m) return;
-        var id = m[1];
-        var tier = parseInt(m[2], 10);
-        var count = st[key] || 0;
-        var recipe = findSrochnikRecipe(id);
-        if (!recipe || !recipe.baseIncome) return;
-        perMin += recipe.baseIncome * tier * count;
-      });
-      return perMin;
-    }
+          if (window.pahomCalcIncomePerMin) return window.pahomCalcIncomePerMin();
+          return 0;
+        }
 
   function getSrochnikCards(recipe) {
     var cards = [];
@@ -1048,83 +1037,54 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     return cards;
   }
 
-  function canCraftTier(recipe, tier) {
-    var playerLevel = getPlayerLevel();
-    var bossInv = getBossInventory();
-    var st = getCraftState();
-
-    if (playerLevel < recipe.levelReq) {
-      return { ok: false, reason: 'Нужна выслуга ' + recipe.levelReq + ' лет' };
-    }
-
-    if (recipe.specialTierReq) {
-      for (var i = 0; i < recipe.specialTierReq.length; i++) {
-        var r = recipe.specialTierReq[i];
-        var need = r.count * tier;
-        var have = st[tierKey(r.srochnikId, r.tier)] || 0;
-        if (have < need) {
-          return { ok: false, reason: 'Не хватает ' + (findSrochnikRecipe(r.srochnikId) || {}).name + ' Т' + r.tier };
-        }
-      }
-      return { ok: true };
-    }
-
-    for (var j = 0; j < recipe.requirements.length; j++) {
-      var req = recipe.requirements[j];
-      var need2 = req.count * tier;
-      var have2 = bossInv[req.itemId] || 0;
-      if (have2 < need2) return { ok: false, reason: 'Не хватает предметов' };
-    }
-    return { ok: true };
-  }
-
   function craftTier(recipe, tier) {
-    var check = canCraftTier(recipe, tier);
-    if (!check.ok) { showNotify('❌ ' + check.reason); return; }
-
-    var bossInv = getBossInventory();
-    var st = getCraftState();
-    var isItemTiered = (recipe.type === 'item_tiered');
-
-    if (recipe.specialTierReq) {
-      for (var i = 0; i < recipe.specialTierReq.length; i++) {
-        var r = recipe.specialTierReq[i];
-        var key = tierKey(r.srochnikId, r.tier);
-        st[key] = (st[key] || 0) - r.count * tier;
-        if (st[key] <= 0) delete st[key];
+      var userId = '';
+      try { userId = (window.tgSyncUserId || localStorage.getItem('pahomServerUserId') || ''); } catch(e) {}
+  
+      if (!userId) {
+        showNotify('❌ Не удалось определить игрока');
+        return;
       }
-    } else {
-      for (var j = 0; j < recipe.requirements.length; j++) {
-        var req = recipe.requirements[j];
-        bossInv[req.itemId] = (bossInv[req.itemId] || 0) - req.count * tier;
-        if (bossInv[req.itemId] <= 0) delete bossInv[req.itemId];
-      }
+  
+      // Оптимистичная проверка (чтобы не гонять сервер за зря)
+      var check = canCraftTier(recipe, tier);
+      if (!check.ok) { showNotify('❌ ' + check.reason); return; }
+  
+      var isItemTiered = (recipe.type === 'item_tiered');
+  
+      fetch('https://save-pahom.duckdns.org/api/craft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId, recipeId: recipe.id, tier: tier })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(resp) {
+        if (!resp || !resp.ok) {
+          showNotify('❌ ' + ((resp && resp.reason) || 'Ошибка сервера'));
+          return;
+        }
+  
+        if (isItemTiered) showNotify('🛠 Получен: Дрын Пахома Т' + tier);
+        else if (recipe.id === 'wholetooth') showNotify('🛠 Получен: ' + recipe.name);
+        else showNotify('🛠 ' + recipe.name + ' Т' + tier + ' вступил в строй!');
+  
+        // Вариант 3: перечитываем всё с сервера
+        if (window.tgSyncLoad) {
+          window.tgSyncLoad(function() {
+            renderAll();
+            updateIncomeBadge();
+            updateSexpahUI();
+          });
+        } else {
+          renderAll();
+          updateIncomeBadge();
+          updateSexpahUI();
+        }
+      })
+      .catch(function() {
+        showNotify('❌ Ошибка сети');
+      });
     }
-
-    if (isItemTiered) {
-      var dKey = tierKey('dryn', tier);
-      st[dKey] = (st[dKey] || 0) + 1;
-    } else {
-      var sKey = tierKey(recipe.id, tier);
-      st[sKey] = (st[sKey] || 0) + 1;
-    }
-
-    setBossInventory(bossInv);
-    setCraftState(st);
-
-    var last = parseInt(localStorage.getItem(LAST_TICK) || '0', 10) || 0;
-    if (last === 0) localStorage.setItem(LAST_TICK, String(Date.now()));
-
-    if (isItemTiered) showNotify('🛠 Получен: Дрын Пахома Т' + tier);
-    else if (recipe.id === 'wholetooth') showNotify('🛠 Получен: ' + recipe.name);
-    else showNotify('🛠 ' + recipe.name + ' Т' + tier + ' вступил в строй!');
-
-    try { if (window.tgSyncSave) window.tgSyncSave(true); } catch(e) {}
-
-    renderAll();
-    updateIncomeBadge();
-    updateSexpahUI();
-  }
 
   // ==== УТИЛИТЫ ====
   function fmt(n) {
@@ -1311,16 +1271,24 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     if (pending <= 0) claimBtn.disabled = true;
 
     claimBtn.addEventListener('click', function() {
-      var earned = 0;
-      if (window.pahomClaimPending) earned = window.pahomClaimPending();
-      if (earned > 0) {
-        showNotify('💰 Получено: +' + fmt(earned) + ' секспахомов');
-        bumpEl(sexpahBox);
-        try { if (window.tgSyncSave) window.tgSyncSave(true); } catch(e) {}
-      }
-      updateSexpahUI();
-      updateClaimBtn();
-    });
+          if (!window.pahomClaimPending) return;
+    
+          claimBtn.disabled = true;
+          var amountEl = claimBtn.querySelector('.claim-btn-amount');
+          if (amountEl) amountEl.textContent = '...';
+    
+          window.pahomClaimPending().then(function(earned) {
+            if (earned > 0) {
+              showNotify('💰 Получено: +' + fmt(earned) + ' секспахомов');
+              bumpEl(sexpahBox);
+            } else {
+              showNotify('Нечего получать');
+            }
+            updateSexpahUI();
+            updateClaimBtn();
+            renderAll();
+          });
+        });
 
     listMy.appendChild(claimBtn);
 

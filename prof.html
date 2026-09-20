@@ -1272,36 +1272,104 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   closeStats.addEventListener('click', function() { statsModal.classList.remove('show'); });
 
   $('loveUpgradeBtn').addEventListener('click', function() {
-    var sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
-    var loveUpgrade = parseInt(localStorage.getItem('pahomUpgradeLove') || '1', 10) || 1;
-    if (loveUpgrade >= MAX_LOVE_UP) { flashMessage('loveMessage', 'Достигнут максимум', true); return; }
-    var cost = loveUpgradeCost(loveUpgrade + 1);
-    if (sexpah < cost) { flashMessage('loveMessage', 'Недостаточно секспахомов', true); return; }
-    localStorage.setItem('pahomSexpah', String(sexpah - cost));
-    loveUpgrade++;
-    localStorage.setItem('pahomUpgradeLove', String(loveUpgrade));
-    logEvent('upgrade_love', 'до ур. ' + loveUpgrade + ' (-' + cost + ')');
-    flashMessage('loveMessage', 'Улучшено до ур. ' + loveUpgrade, false);
-    updateStatsPanel();
-    updateProfile();
-    forceSave();
-  });
-
-  $('lootUpgradeBtn').addEventListener('click', function() {
-    var sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0;
-    var lootUpgrade = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1;
-    if (lootUpgrade >= MAX_LOOT_UP) { flashMessage('lootMessage', 'Достигнут максимум', true); return; }
-    var cost = lootUpgradeCost(lootUpgrade + 1);
-    if (sexpah < cost) { flashMessage('lootMessage', 'Недостаточно секспахомов', true); return; }
-    localStorage.setItem('pahomSexpah', String(sexpah - cost));
-    lootUpgrade++;
-    localStorage.setItem('pahomUpgradeLoot', String(lootUpgrade));
-    logEvent('upgrade_loot', 'до ур. ' + lootUpgrade + ' (-' + cost + ')');
-    flashMessage('lootMessage', 'Улучшено до ур. ' + lootUpgrade, false);
-    updateStatsPanel();
-    updateProfile();
-    forceSave();
-  });
+      var userId = getUserId();
+      if (!userId) { flashMessage('loveMessage', 'Не удалось определить игрока', true); return; }
+  
+      var loveUpgrade = parseInt(localStorage.getItem('pahomUpgradeLove') || '1', 10) || 1;
+      if (loveUpgrade >= MAX_LOVE_UP) { flashMessage('loveMessage', 'Достигнут максимум', true); return; }
+  
+      var btn = $('loveUpgradeBtn');
+      btn.disabled = true;
+      btn.textContent = 'ОБРАБОТКА...';
+  
+      fetch('https://save-pahom.duckdns.org/api/transaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId, action: 'buy', itemId: 'upgrade_love' })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(resp) {
+        if (!resp || !resp.ok) {
+          flashMessage('loveMessage', (resp && resp.reason) || 'Ошибка', true);
+          updateStatsPanel();
+          return;
+        }
+        // Вариант 3: перечитываем всё с сервера, чтобы localStorage === сервер
+        if (window.tgSyncLoad) {
+          window.tgSyncLoad(function(loaded) {
+            if (!loaded) {
+              // fallback — если по какой-то причине не загрузилось
+              localStorage.setItem('pahomSexpah', String(resp.newBalance));
+              localStorage.setItem('pahomUpgradeLove', String(resp.newLevel));
+            }
+            logEvent('upgrade_love', 'до ур. ' + resp.newLevel);
+            flashMessage('loveMessage', 'Улучшено до ур. ' + resp.newLevel, false);
+            updateStatsPanel();
+            updateProfile();
+          });
+        } else {
+          localStorage.setItem('pahomSexpah', String(resp.newBalance));
+          localStorage.setItem('pahomUpgradeLove', String(resp.newLevel));
+          logEvent('upgrade_love', 'до ур. ' + resp.newLevel);
+          flashMessage('loveMessage', 'Улучшено до ур. ' + resp.newLevel, false);
+          updateStatsPanel();
+          updateProfile();
+        }
+      })
+      .catch(function() {
+        flashMessage('loveMessage', 'Ошибка сети', true);
+        updateStatsPanel();
+      });
+    });
+  
+    $('lootUpgradeBtn').addEventListener('click', function() {
+      var userId = getUserId();
+      if (!userId) { flashMessage('lootMessage', 'Не удалось определить игрока', true); return; }
+  
+      var lootUpgrade = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1;
+      if (lootUpgrade >= MAX_LOOT_UP) { flashMessage('lootMessage', 'Достигнут максимум', true); return; }
+  
+      var btn = $('lootUpgradeBtn');
+      btn.disabled = true;
+      btn.textContent = 'ОБРАБОТКА...';
+  
+      fetch('https://save-pahom.duckdns.org/api/transaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId, action: 'buy', itemId: 'upgrade_loot' })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(resp) {
+        if (!resp || !resp.ok) {
+          flashMessage('lootMessage', (resp && resp.reason) || 'Ошибка', true);
+          updateStatsPanel();
+          return;
+        }
+        if (window.tgSyncLoad) {
+          window.tgSyncLoad(function(loaded) {
+            if (!loaded) {
+              localStorage.setItem('pahomSexpah', String(resp.newBalance));
+              localStorage.setItem('pahomUpgradeLoot', String(resp.newLevel));
+            }
+            logEvent('upgrade_loot', 'до ур. ' + resp.newLevel);
+            flashMessage('lootMessage', 'Улучшено до ур. ' + resp.newLevel, false);
+            updateStatsPanel();
+            updateProfile();
+          });
+        } else {
+          localStorage.setItem('pahomSexpah', String(resp.newBalance));
+          localStorage.setItem('pahomUpgradeLoot', String(resp.newLevel));
+          logEvent('upgrade_loot', 'до ур. ' + resp.newLevel);
+          flashMessage('lootMessage', 'Улучшено до ур. ' + resp.newLevel, false);
+          updateStatsPanel();
+          updateProfile();
+        }
+      })
+      .catch(function() {
+        flashMessage('lootMessage', 'Ошибка сети', true);
+        updateStatsPanel();
+      });
+    });
 
   var frameTab = document.getElementById('frameTab');
   var framePanel = document.getElementById('framePanel');

@@ -789,6 +789,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
 (function() {
   'use strict';
 
+  var API_BASE = 'https://save-pahom.duckdns.org';
   function $(id) { return document.getElementById(id); }
 
   var sexpahCount = $('sexpahCount');
@@ -1018,12 +1019,29 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   function bumpEl(el) { if (!el) return; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); setTimeout(function(){ el.classList.remove('bump'); }, 300); }
 
   function updateToolInfo() {
-    var t = 'hand';
-    try { t = localStorage.getItem('pahomTool') || 'hand'; } catch(e) {}
-    var names = { hand:'Рука', whip:'Плетка', stick:'Палка', shank:'Черенок', shovel:'Лопата', commissar:'Замполит', drin:'Дрын', tyrchik:'Тырчик', darkkatana:'Тёмная катана', abysblade:'Клинок бездны' };
-    var dmg = Math.floor(getBossDamage() * 10) / 10;
-    if (toolInfo) toolInfo.textContent = '⚔️ ' + (names[t] || 'Рука') + ' · ' + dmg;
-  }
+      var t = 'hand';
+      try { t = localStorage.getItem('pahomTool') || 'hand'; } catch(e) {}
+  
+      var names = {
+        hand:'Рука', whip:'Плетка', stick:'Палка', shank:'Черенок',
+        shovel:'Лопата', commissar:'Замполит', drin:'Дрын',
+        tyrchik:'Тырчик', darkkatana:'Тёмная катана', abysblade:'Клинок бездны'
+      };
+      var icons = {
+        hand:'✋', whip:'🐍', stick:'🥢', shank:'🔧', shovel:'🪏',
+        commissar:'🎖️', drin:'🌲', tyrchik:'⚡',
+        darkkatana:'<svg viewBox="0 0 24 24" width="1.05em" height="1.05em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M3 21l3-3" stroke="#6a4a2a"/><path d="M6 18l12-12" stroke="#1a1a1a"/><path d="M18 6l3-3" stroke="#333"/><path d="M6 18l-2 2" stroke="#4a2a1a"/><path d="M5 19l1 1" stroke="#2a1a0a"/><path d="M14 8l2 2" stroke="#555"/></svg>',
+        abysblade:'<svg viewBox="0 0 24 24" width="1.05em" height="1.05em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M3 21l3-3" stroke="#8b0000"/><path d="M6 18l12-12" stroke="#ff3b3b"/><path d="M18 6l3-3" stroke="#ff6a3b"/><path d="M6 18l-2 2" stroke="#5a0000"/><path d="M5 19l1 1" stroke="#3a0000"/><path d="M14 8l2 2" stroke="#ff8c3c"/><circle cx="19" cy="5" r="1.5" fill="#ffd76b" stroke="none"/></svg>'
+      };
+  
+      var dmg = Math.floor(getBossDamage() * 10) / 10;
+      var iconHTML = icons[t] || '✋';
+      var name = names[t] || 'Рука';
+  
+      if (toolInfo) {
+        toolInfo.innerHTML = iconHTML + ' ' + name + ' · ' + dmg;
+      }
+    }
 
   function showNotify(iconHTML, text, delay) {
     if (!notifyBar) return;
@@ -1293,6 +1311,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       })(i);
     }
   }
+  
 
   function showBossList() {
     if (fightInterval) { clearInterval(fightInterval); fightInterval = null; }
@@ -1321,91 +1340,105 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   }
 
   function endFight(boss, win) {
-    if (!boss || !fightState) return;
-    var now = Date.now();
-    var st = getSt(boss.id);
-    isFightActive = false;
-    if (fightInterval) { clearInterval(fightInterval); fightInterval = null; }
-    var droppedItems = [];
-
-    if (win) {
-      sexpah += boss.reward;
-      try { localStorage.setItem('pahomSexpah', String(sexpah)); } catch(e) {}
-      updateScore();
-      bumpEl(sexpahBox);
-
-      try {
-        var exp = parseInt(localStorage.getItem('pahomPlayerExp') || '0', 10) || 0;
-        var lv = parseInt(localStorage.getItem('pahomPlayerLevel') || '1', 10) || 1;
-        exp += (boss.exp || boss.lvl || 0);
-        while (exp >= getExpReq(lv)) { exp -= getExpReq(lv); lv++; }
-        localStorage.setItem('pahomPlayerExp', String(exp));
-        localStorage.setItem('pahomPlayerLevel', String(lv));
-      } catch(e) {}
-
-      var bossStats = { wins: 0, losses: 0, earned: 0 };
-      try {
-        var raw = JSON.parse(localStorage.getItem('pahomBossStats') || 'null');
-        if (raw && typeof raw === 'object') {
-          bossStats = { wins: raw.wins || 0, losses: raw.losses || 0, earned: raw.earned || 0 };
-        }
-      } catch(e) {}
-      bossStats.wins++;
-      bossStats.earned += boss.reward;
-      try { localStorage.setItem('pahomBossStats', JSON.stringify(bossStats)); } catch(e) {}
-
-      var lootUpLevel = 1;
-      try { lootUpLevel = parseInt(localStorage.getItem('pahomUpgradeLoot') || '1', 10) || 1; } catch(e) {}
-      var lootBonusPct = (lootUpLevel - 1) * 5;
-
-      var lootArr = Array.isArray(boss.loot) ? boss.loot : (boss.loot ? [boss.loot] : []);
-      lootArr.forEach(function(lootItem) {
-        var effectiveChance = lootItem.chance + lootBonusPct;
-        if (Math.random()*100 < effectiveChance) {
-          var lid = lootItem.id;
-          if (!bossInventory[lid]) bossInventory[lid] = 0;
-          if (bossInventory[lid] < LOOT_MAX) {
-            bossInventory[lid]++;
-            droppedItems.push(lootItem);
-          }
-        }
-      });
-      if (droppedItems.length) {
-        try { localStorage.setItem('pahomBossInventory', JSON.stringify(bossInventory)); } catch(e) {}
+      if (!boss || !fightState) return;
+      isFightActive = false;
+      if (fightInterval) { clearInterval(fightInterval); fightInterval = null; }
+  
+      var userId = '';
+      try { userId = (window.tgSyncUserId || localStorage.getItem('pahomServerUserId') || ''); } catch(e) {}
+  
+      if (!userId) {
+        showNotify('⚠️', 'Не удалось определить игрока');
+        setTimeout(function() { showBossList(); showResult(false, 0, 0, null); }, 400);
+        return;
       }
-
-      st.cooldownUntil = now + boss.cooldownDuration;
-      saveState();
-      saveAndSync();
-
-      droppedItems.forEach(function(item, i) {
-        showNotify(lootIconHTML(item), 'ВЫПАЛ: ' + item.name, i * 300);
-      });
-
-      setTimeout(function() {
-        showBossList();
-        showResult(true, boss.reward, boss.exp || boss.lvl, droppedItems);
-      }, 600);
-      return;
-    } else {
-      st.cooldownUntil = now + boss.cooldownDuration;
-      saveState();
-
-      var bossStats2 = { wins: 0, losses: 0, earned: 0 };
-      try {
-        var raw2 = JSON.parse(localStorage.getItem('pahomBossStats') || 'null');
-        if (raw2 && typeof raw2 === 'object') {
-          bossStats2 = { wins: raw2.wins || 0, losses: raw2.losses || 0, earned: raw2.earned || 0 };
+  
+      fetch('https://save-pahom.duckdns.org/api/boss/reward', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId, bossId: boss.id, win: !!win })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(resp) {
+        if (!resp || !resp.ok) {
+          showNotify('⚠️', (resp && resp.reason) || 'Ошибка сервера');
+          setTimeout(function() { showBossList(); showResult(false, 0, 0, null); }, 600);
+          return;
         }
-      } catch(e) {}
-      bossStats2.losses++;
-      try { localStorage.setItem('pahomBossStats', JSON.stringify(bossStats2)); } catch(e) {}
-
-      saveAndSync();
-      showBossList();
-      showResult(false, 0, 0, null);
+  
+        if (resp.win) {
+          // Вариант 3: перечитываем всё с сервера
+                  if (window.tgSyncLoad) {
+                    window.tgSyncLoad(function(loaded) {
+                      if (!loaded) {
+                        // fallback
+                        sexpah = resp.newBalance;
+                        try { localStorage.setItem('pahomSexpah', String(sexpah)); } catch(e) {}
+                        var st = getSt(boss.id);
+                        st.cooldownUntil = Date.now() + boss.cooldownDuration;
+                        saveState();
+                      } else {
+                        // перечитываем sexpah из localStorage (только что обновили)
+                        try { sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0; } catch(e) {}
+                        loadState(); // перечитываем pahomBossState
+                      }
+                      updateScore();
+                      bumpEl(sexpahBox);
+                    });
+                  } else {
+                    sexpah = resp.newBalance;
+                    try { localStorage.setItem('pahomSexpah', String(sexpah)); } catch(e) {}
+                    var st = getSt(boss.id);
+                    st.cooldownUntil = Date.now() + boss.cooldownDuration;
+                    saveState();
+                    updateScore();
+                    bumpEl(sexpahBox);
+                  }
+          
+                  var droppedItems = (resp.loot || []).map(function(id) {
+            var arr = Array.isArray(boss.loot) ? boss.loot : (boss.loot ? [boss.loot] : []);
+            for (var i = 0; i < arr.length; i++) {
+              if (arr[i].id === id) return arr[i];
+            }
+            return { id: id, name: id, icon: '🎁' };
+          });
+  
+          droppedItems.forEach(function(item, i) {
+            showNotify(lootIconHTML(item), 'ВЫПАЛ: ' + item.name, i * 300);
+          });
+  
+          setTimeout(function() {
+            showBossList();
+            showResult(true, resp.reward, resp.exp, droppedItems);
+          }, 600);
+         } else {
+                 if (window.tgSyncLoad) {
+                   window.tgSyncLoad(function(loaded) {
+                     if (!loaded) {
+                       var stLose = getSt(boss.id);
+                       stLose.cooldownUntil = Date.now() + boss.cooldownDuration;
+                       saveState();
+                     } else {
+                       loadState();
+                     }
+                   });
+                 } else {
+                   var stLose = getSt(boss.id);
+                   stLose.cooldownUntil = Date.now() + boss.cooldownDuration;
+                   saveState();
+                 }
+  
+          setTimeout(function() {
+            showBossList();
+            showResult(false, 0, 0, null);
+          }, 400);
+        }
+      })
+      .catch(function(err) {
+        showNotify('⚠️', 'Ошибка сети');
+        setTimeout(function() { showBossList(); showResult(false, 0, 0, null); }, 600);
+      });
     }
-  }
 
   function getExpReq(level) { return 1200 + (level - 1) * 600; }
 
@@ -1478,36 +1511,42 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   });
 
   surrenderYes.addEventListener('click', function() {
-    surrenderOverlay.classList.remove('show');
-    if (!currentBoss) return;
-    var now = Date.now();
-    var st = getSt(currentBoss.id);
-    st.cooldownUntil = now + currentBoss.cooldownDuration;
-    saveState();
-    saveAndSync();
-    showNotify('💀', 'Ты сдался. ' + currentBoss.name + ' на КД');
-    showBossList();
-    refreshList();
-  });
+      surrenderOverlay.classList.remove('show');
+      if (!currentBoss) return;
+      var boss = currentBoss;
+      var userId = '';
+      try { userId = (window.tgSyncUserId || localStorage.getItem('pahomServerUserId') || ''); } catch(e) {}
+  
+      showNotify('💀', 'Ты сдался. ' + boss.name + ' на КД');
+      if (userId) {
+        fetch('https://save-pahom.duckdns.org/api/boss/reward', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: userId, bossId: boss.id, win: false })
+        })
+        .then(function() {
+          if (window.tgSyncLoad) window.tgSyncLoad(function() { loadState(); });
+        })
+        .catch(function(){});
+      }
+      showBossList();
+      refreshList();
+    });
 
   function handleAbandon() {
     if (!isFightActive || !currentBoss) return;
-    var now = Date.now();
-    var st = getSt(currentBoss.id);
-    st.cooldownUntil = now + currentBoss.cooldownDuration;
-    saveState();
-    try {
-      localStorage.setItem('pahomBossAbandonedId', currentBoss.id);
-      localStorage.setItem('pahomBossAbandonedAt', String(now));
-    } catch(e) {}
-    try { if (window.tgSyncSaveBeacon) window.tgSyncSaveBeacon(); } catch(e) {}
+    var boss = currentBoss;
+    var userId = '';
+    try { userId = (window.tgSyncUserId || localStorage.getItem('pahomServerUserId') || ''); } catch(e) {}
+    if (userId) {
+      // sendBeacon — единственный способ отправить запрос при закрытии страницы
+      try {
+        var blob = new Blob([JSON.stringify({ userId: userId, bossId: boss.id, win: false })],
+          { type: 'application/json' });
+        navigator.sendBeacon('https://save-pahom.duckdns.org/api/boss/reward', blob);
+      } catch(e) {}
+    }
   }
-
-  document.addEventListener('visibilitychange', function() {
-    if (document.hidden) handleAbandon();
-  });
-  window.addEventListener('pagehide', handleAbandon);
-  window.addEventListener('beforeunload', handleAbandon);
 
   function checkAbandoned() {
     var abId = null, abAt = 0;

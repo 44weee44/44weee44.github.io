@@ -148,9 +148,19 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   background:var(--accent-2);
   box-shadow:0 0 12px rgba(42,138,48,0.9);
 }
+.sexpah.bump { transform:scale(1.06); box-shadow:0 0 20px rgba(42,138,48,0.6); }
+.sexpah.flash-red { animation:redFlash 0.6s ease; }
+@keyframes redFlash {
+  0%, 100% { box-shadow:0 0 0 rgba(255,74,74,0); }
+  30%      { box-shadow:0 0 25px rgba(255,74,74,1); transform:scale(1.04); }
+}
+.sexpah.flash-green { animation:greenFlash 0.6s ease; }
+@keyframes greenFlash {
+  0%, 100% { box-shadow:0 0 0 rgba(42,138,48,0); }
+  30%      { box-shadow:0 0 25px rgba(42,138,48,1); transform:scale(1.04); }
+}
 .current-tool-info .weapon-svg { display:inline-block; width:1.15em; height:1.15em; vertical-align:middle; }
 
-/* РЕДКОСТИ ОРУЖИЯ — фоны */
 .current-tool-info.rarity-common { border-color:rgba(180,180,200,0.4) !important; background:linear-gradient(135deg, rgba(154,154,154,0.15), rgba(30,30,34,0.4)); }
 .current-tool-info.rarity-common::before { background:#b4b4c8; }
 .current-tool-info.rarity-rare { border-color:rgba(59,130,246,0.55) !important; background:linear-gradient(135deg, rgba(59,130,246,0.18), rgba(15,25,50,0.4)); }
@@ -279,7 +289,6 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
 .shop-panel::-webkit-scrollbar, .inventory-panel::-webkit-scrollbar { width:5px; }
 .shop-panel::-webkit-scrollbar-thumb, .inventory-panel::-webkit-scrollbar-thumb { background:var(--line-2); border-radius:3px; }
 
-/* СЕКЦИЯ */
 .inventory-section { margin-bottom:20px; }
 .inventory-section-title {
   display:flex;
@@ -299,7 +308,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   background:var(--line);
 }
 
-/* ====== КАРТОЧКА ОРУЖИЯ ====== */
+/* КАРТОЧКА */
 .shop-item {
   position:relative;
   display:grid;
@@ -333,7 +342,6 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
 .shop-item:hover { border-color:var(--line-2); background:#16161b; transform:translateX(4px); }
 
 .shop-item-info { display:contents; }
-
 .shop-item-icon {
   position:relative;
   width:48px; height:48px;
@@ -365,7 +373,6 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
 .item-desc { font-size:0.72rem; color:var(--text-2); font-weight:600; }
 .item-rarity { font-size:0.68rem; margin-top:3px; font-weight:700; color:var(--text-2); }
 
-/* РЕДКОСТИ — те же цвета что были */
 .rarity-common { border-color:rgba(154,154,154,0.6) !important; }
 .rarity-common::before { background:#b4b4c8; }
 .rarity-common:hover { box-shadow:0 0 18px rgba(180,180,200,0.3); }
@@ -403,6 +410,11 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   transition:all 0.2s ease;
   position:relative;
   overflow:hidden;
+  min-width:100px;
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 .weapon-action::before {
   content:'';
@@ -430,19 +442,52 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
 }
 .weapon-action.buy:disabled::before { display:none; }
 
+.weapon-action.loading {
+  border-color:var(--gold);
+  color:var(--gold);
+  cursor:wait;
+  pointer-events:none;
+}
+.weapon-action.success {
+  border-color:var(--green);
+  color:var(--green);
+  pointer-events:none;
+}
+.weapon-action.error {
+  border-color:var(--red);
+  color:var(--red);
+  pointer-events:none;
+  animation:btnShake 0.4s ease;
+}
+@keyframes btnShake {
+  0%, 100% { transform:translateX(0); }
+  25%      { transform:translateX(-4px); }
+  50%      { transform:translateX(4px); }
+  75%      { transform:translateX(-2px); }
+}
+.weapon-action .spinner {
+  display:none;
+  width:12px; height:12px;
+  border:2px solid rgba(255,215,107,0.3);
+  border-top-color:var(--gold);
+  border-radius:50%;
+  animation:spinner 0.7s linear infinite;
+  margin-right:6px;
+}
+.weapon-action.loading .spinner { display:inline-block; }
+@keyframes spinner { to { transform:rotate(360deg); } }
+
 .weapon-action.owned {
   border-color:rgba(76,217,100,0.5);
   color:var(--green);
   cursor:default;
   background:rgba(76,217,100,0.08);
 }
-
 .weapon-action.equip {
   border-color:var(--accent-2);
   color:var(--accent-2);
 }
 .weapon-action.equip:hover { box-shadow:0 0 15px rgba(42,138,48,0.5); }
-
 .weapon-action.equipped {
   border-color:rgba(76,217,100,0.5);
   color:var(--green);
@@ -587,7 +632,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   bottom:120px;
   left:50%;
   transform:translateX(-50%) translateY(20px);
-  background:var(--bg-1);
+  background:var(--bg-2);
   border:1px solid var(--accent-2);
   color:var(--accent-2);
   padding:12px 24px;
@@ -609,19 +654,95 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   box-shadow:0 8px 30px rgba(0,0,0,0.8), 0 0 25px rgba(255,74,74,0.5);
 }
 
+/* ВСПЫШКА ЭКРАНА */
+.screen-flash {
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:9990;
+  background:radial-gradient(circle at 50% 50%,
+    rgba(122,240,128,0.5) 0%,
+    transparent 50%);
+  opacity:0;
+}
+.screen-flash.go { animation:flashScreen 0.6s ease-out; }
+@keyframes flashScreen {
+  0%   { opacity:0; transform:scale(0.8); }
+  20%  { opacity:1; transform:scale(1); }
+  100% { opacity:0; transform:scale(1.3); }
+}
+.screen-flash.red {
+  background:radial-gradient(circle at 50% 50%,
+    rgba(255,74,74,0.5) 0%,
+    transparent 50%);
+}
+
+/* ЛЕТЯЩИЙ ЧИП */
+.fly-chip {
+  position:fixed;
+  pointer-events:none;
+  z-index:9995;
+  padding:6px 14px;
+  border-radius:20px;
+  font-weight:900;
+  font-family:'Courier New', monospace;
+  font-size:0.9rem;
+  white-space:nowrap;
+  animation:chipFly 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.fly-chip.minus {
+  background:linear-gradient(135deg, rgba(200,30,30,0.95), rgba(120,10,10,0.95));
+  color:#fff;
+  border:1px solid #ff5a5a;
+  box-shadow:0 0 20px rgba(255,74,74,0.8), 0 0 40px rgba(255,74,74,0.4);
+}
+@keyframes chipFly {
+  0%   { opacity:0; transform:translate(-50%, -50%) scale(0.4); }
+  15%  { opacity:1; transform:translate(-50%, -70%) scale(1.15); }
+  40%  { opacity:1; transform:translate(-50%, -100%) scale(1); }
+  100% { opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.7); }
+}
+
+/* ИСКРЫ */
+.spark {
+  position:fixed;
+  pointer-events:none;
+  width:6px; height:6px;
+  border-radius:50%;
+  background:radial-gradient(circle, #b8ffb8, #2a8a30);
+  box-shadow:0 0 12px #7af080, 0 0 22px rgba(42,138,48,0.7);
+  z-index:9996;
+  animation:sparkFly 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes sparkFly {
+  0%   { opacity:0; transform:translate(-50%, -50%) scale(0.4); }
+  15%  { opacity:1; transform:translate(-50%, -50%) scale(1.2); }
+  100% { opacity:0; transform:translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(0.2); }
+}
+
+/* ЛЕТЯЩАЯ ИКОНКА */
+.fly-icon {
+  position:fixed;
+  pointer-events:none;
+  z-index:9997;
+  font-size:2rem;
+  filter:drop-shadow(0 0 15px rgba(42,138,48,0.9));
+  animation:iconFly 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes iconFly {
+  0%   { opacity:0; transform:translate(-50%, -50%) scale(0.5); }
+  20%  { opacity:1; transform:translate(-50%, -50%) scale(1.3); }
+  60%  { opacity:1; transform:translate(calc(-50% + var(--mx) * 0.7), calc(-50% + var(--my) * 0.7)) scale(0.9) rotate(180deg); }
+  100% { opacity:0; transform:translate(calc(-50% + var(--mx)), calc(-50% + var(--my))) scale(0.4) rotate(360deg); }
+}
+
 .hidden { display:none !important; }
 
 @media (max-width:400px) {
   .shop-tab { font-size:0.66rem; padding:12px 4px 10px; }
   .item-name { font-size:0.86rem; }
-  .weapon-action { padding:8px 10px; font-size:0.64rem; }
+  .weapon-action { padding:8px 10px; font-size:0.64rem; min-width:90px; }
   .tabs-bar { padding:0 15px 80px; padding-bottom:calc(80px + env(safe-area-inset-bottom, 0px)); }
-}
-@media (max-height:700px) {
-  .tabs-bar { padding-bottom:40px; padding-bottom:calc(40px + env(safe-area-inset-bottom, 0px)); }
-}
-@media (max-height:600px) {
-  .tabs-bar { padding-bottom:15px; padding-bottom:calc(15px + env(safe-area-inset-bottom, 0px)); }
 }
 </style>
 </head>
@@ -632,7 +753,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   </div>
 
   <div class="score-board">
-    <div class="sexpah">🔞 <span id="sexpahCount">0</span> секспахомов</div>
+    <div class="sexpah" id="sexpahBox">🔞 <span id="sexpahCount">0</span> секспахомов</div>
     <div class="current-tool-info" id="currentToolInfo">
       <span id="currentToolIcon">✋</span>
       <span id="currentToolName">Рука</span>
@@ -655,12 +776,12 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       <div class="shop-panel" id="buffsPanel"></div>
     </div>
     <div id="pageInventory" class="shop-page">
-      <div class="inventory-panel" id="inventoryPanel">
-        <a href="kraft.html" class="kraft-btn">
-          <span class="kraft-btn-icon">🛠️</span>
-          <span class="kraft-btn-text">Верстак Пахома</span>
-          <span class="kraft-btn-arrow">→</span>
-        </a>
+       <div class="inventory-panel" id="inventoryPanel">
+         <a href="kraft.html" class="kraft-btn">
+           <span class="kraft-btn-icon">🛠️</span>
+           <span class="kraft-btn-text">Верстак Пахома</span>
+           <span class="kraft-btn-arrow">→</span>
+         </a>
         <div id="inventoryList"></div>
       </div>
     </div>
@@ -692,19 +813,24 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="screen-flash" id="screenFlash"></div>
 
 <script>
 (function() {
   'use strict';
 
+  var API_BASE = 'https://save-pahom.duckdns.org';
+
   function $(id) { return document.getElementById(id); }
 
   var sexpahCountEl = $('sexpahCount');
+  var sexpahBox = $('sexpahBox');
   var currentToolInfo = $('currentToolInfo');
   var currentToolIconEl = $('currentToolIcon');
   var currentToolNameEl = $('currentToolName');
   var buffsTop = $('buffsTop');
   var toastEl = $('toast');
+  var screenFlash = $('screenFlash');
 
   var tabItems = $('tabItems');
   var tabBuffs = $('tabBuffs');
@@ -728,7 +854,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     shank:      { name:'Черенок',       icon:'🔧',  clickPower:7,  price:25000,   rarity:'rare' },
     shovel:     { name:'Лопата',        icon:'🪏',  clickPower:9,  price:55000,   rarity:'rare' },
     commissar:  { name:'Замполит',      icon:'🎖️', clickPower:11, price:100000,  rarity:'rare' },
-    drin:       { name:'Дрын',               icon:'🌲',  clickPower:13, price:200000,  rarity:'legendary' },
+    drin:       { name:'Дрын',          icon:'🌲',  clickPower:13, price:200000,  rarity:'legendary' },
     tyrchik:    { name:'Тырчик',        icon:'⚡',  clickPower:15, price:400000,  rarity:'legendary' },
     darkkatana: { name:'Тёмная катана', icon:null,  svg:SVG_DARK_KATANA, clickPower:20, price:750000,  rarity:'mythic' },
     abysblade:  { name:'Клинок бездны', icon:null,  svg:SVG_ABYSS_BLADE, clickPower:25, price:1200000, rarity:'mythic' }
@@ -741,6 +867,11 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     mythic: '🟣 Мифический',
     divine: '🔘 Божественный'
   };
+  
+  function weaponIconHTML(w) {
+    if (w.svg) return w.svg;
+    return w.icon || '✋';
+  }
 
   var buffs = {
     viagra: { name: 'Виагра', icon: '💊', price: 5000, duration: 5 * 60 * 1000, desc: 'Пахом возбуждается медленнее' },
@@ -748,11 +879,17 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   };
 
   var WEAPONS_OWNED_KEY = 'pahomWeaponsOwned';
+  var LOCK_DURATION = 1000;
 
   var sexpah = 0;
   var currentTool = 'hand';
   var bossInventory = {};
   var activeBuffs = {};
+
+  function getUserId() {
+    try { if (window.tgSyncUserId) return window.tgSyncUserId; } catch(e) {}
+    try { return localStorage.getItem('pahomServerUserId') || ''; } catch(e) { return ''; }
+  }
 
   function reloadState() {
     try { sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0; } catch(e) { sexpah = 0; }
@@ -780,7 +917,67 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     toastEl.classList.toggle('error', !!isError);
     toastEl.classList.add('show');
     clearTimeout(toastEl._t);
-    toastEl._t = setTimeout(function() { toastEl.classList.remove('show'); }, 2200);
+    toastEl._t = setTimeout(function() { toastEl.classList.remove('show'); }, 2500);
+  }
+
+  function flashScreen(isRed) {
+    if (!screenFlash) return;
+    screenFlash.classList.remove('go', 'red');
+    void screenFlash.offsetWidth;
+    screenFlash.classList.toggle('red', !!isRed);
+    screenFlash.classList.add('go');
+  }
+
+  function spawnSparks(x, y, count) {
+    for (var i = 0; i < count; i++) {
+      var s = document.createElement('div');
+      s.className = 'spark';
+      s.style.left = x + 'px';
+      s.style.top = y + 'px';
+      var a = Math.random() * Math.PI * 2;
+      var d = 30 + Math.random() * 60;
+      s.style.setProperty('--tx', Math.cos(a) * d + 'px');
+      s.style.setProperty('--ty', Math.sin(a) * d + 'px');
+      s.style.animationDelay = (i * 0.02) + 's';
+      document.body.appendChild(s);
+      s.addEventListener('animationend', function() {
+        if (s.parentNode) s.parentNode.removeChild(s);
+      });
+    }
+  }
+
+  function flyChip(x, y, text) {
+    var chip = document.createElement('div');
+    chip.className = 'fly-chip minus';
+    chip.textContent = text;
+    chip.style.left = x + 'px';
+    chip.style.top = y + 'px';
+    var boxRect = sexpahBox.getBoundingClientRect();
+    var dx = boxRect.left + boxRect.width / 2 - x;
+    var dy = boxRect.top + boxRect.height / 2 - y;
+    chip.style.setProperty('--dx', dx + 'px');
+    chip.style.setProperty('--dy', dy + 'px');
+    document.body.appendChild(chip);
+    chip.addEventListener('animationend', function() {
+      if (chip.parentNode) chip.parentNode.removeChild(chip);
+    });
+  }
+
+  function flyIcon(x, y, emoji) {
+    var icon = document.createElement('div');
+    icon.className = 'fly-icon';
+    icon.textContent = emoji;
+    icon.style.left = x + 'px';
+    icon.style.top = y + 'px';
+    var boxRect = sexpahBox.getBoundingClientRect();
+    var mx = boxRect.left + boxRect.width / 2 - x;
+    var my = boxRect.top + boxRect.height / 2 - y;
+    icon.style.setProperty('--mx', mx + 'px');
+    icon.style.setProperty('--my', my + 'px');
+    document.body.appendChild(icon);
+    icon.addEventListener('animationend', function() {
+      if (icon.parentNode) icon.parentNode.removeChild(icon);
+    });
   }
 
   function getOwnedWeapons() {
@@ -788,13 +985,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       var raw = JSON.parse(localStorage.getItem(WEAPONS_OWNED_KEY) || 'null');
       if (Array.isArray(raw)) return raw;
     } catch(e) {}
-    var owned = ['hand'];
-    try {
-      var cur = localStorage.getItem('pahomTool') || 'hand';
-      if (cur && weapons[cur] && owned.indexOf(cur) === -1) owned.push(cur);
-    } catch(e) {}
-    try { localStorage.setItem(WEAPONS_OWNED_KEY, JSON.stringify(owned)); } catch(e) {}
-    return owned;
+    return ['hand'];
   }
 
   function setOwnedWeapons(arr) {
@@ -805,50 +996,100 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     return getOwnedWeapons().indexOf(id) !== -1;
   }
 
-  function saveSexpah() {
-    try { localStorage.setItem('pahomSexpah', String(sexpah)); } catch(e) {}
-    try { if (window.tgSyncSave) window.tgSyncSave(true); } catch(e) {}
-  }
-
-  function saveTool() {
-    try { localStorage.setItem('pahomTool', currentTool); } catch(e) {}
-    try { if (window.tgSyncSave) window.tgSyncSave(true); } catch(e) {}
-  }
-
-  function saveBuffs() {
-    try { localStorage.setItem('pahomBuffs', JSON.stringify(activeBuffs)); } catch(e) {}
-    try { if (window.tgSyncSave) window.tgSyncSave(true); } catch(e) {}
-  }
-
-  function buyWeapon(id) {
-    if (!weapons[id]) return false;
-    if (isWeaponOwned(id)) { showToast('Уже куплено'); return false; }
-    reloadState();
-    var price = weapons[id].price || 0;
-    if (sexpah < price) {
-      showToast('Недостаточно секспахомов', true);
-      return false;
+  /* ==================== ОБРАБОТКА КНОПКИ ==================== */
+  async function processBtn(btn, labelEl, payload) {
+    var userId = getUserId();
+    if (!userId) {
+      showToast('Не удалось определить игрока', true);
+      return { ok: false };
     }
-    sexpah -= price;
-    saveSexpah();
-    var owned = getOwnedWeapons();
-    if (owned.indexOf(id) === -1) owned.push(id);
-    setOwnedWeapons(owned);
-    showToast('Куплено: ' + weapons[id].name);
-    return true;
+
+    var rect = btn.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+
+    btn.classList.add('loading');
+    labelEl.textContent = 'Обработка';
+
+    try {
+      var resp = await fetch(API_BASE + '/api/transaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ userId: userId }, payload))
+      }).then(function(r) { return r.json(); });
+
+      if (!resp || !resp.ok) {
+        btn.classList.remove('loading');
+        btn.classList.add('error');
+        labelEl.textContent = 'Ошибка';
+        flashScreen(true);
+        sexpahBox.classList.add('flash-red');
+        setTimeout(function() { sexpahBox.classList.remove('flash-red'); }, 600);
+        showToast('✗ ' + (resp.reason || 'Ошибка'), true);
+        setTimeout(function() {
+          btn.classList.remove('error');
+          renderAll();
+        }, LOCK_DURATION);
+        return { ok: false };
+      }
+
+      // Вариант 3: перечитываем всё с сервера, чтобы localStorage === сервер
+            if (window.tgSyncLoad) {
+              window.tgSyncLoad(function(loaded) {
+                if (!loaded) {
+                  // fallback
+                  sexpah = resp.newBalance;
+                  try { localStorage.setItem('pahomSexpah', String(sexpah)); } catch(e) {}
+                } else {
+                  try { sexpah = parseInt(localStorage.getItem('pahomSexpah') || '0', 10) || 0; } catch(e) {}
+                }
+                updateHeaderUI();
+              });
+            } else {
+              sexpah = resp.newBalance;
+              try { localStorage.setItem('pahomSexpah', String(sexpah)); } catch(e) {}
+              updateHeaderUI();
+            }
+      
+            flashScreen(false);
+            flyChip(cx, cy, '−' + formatSexpah(payload.price || 0));
+            spawnSparks(cx, cy, 10);
+            sexpahBox.classList.add('flash-red');
+            setTimeout(function() { sexpahBox.classList.remove('flash-red'); }, 600);
+      
+            btn.classList.remove('loading');
+            btn.classList.add('success');
+            labelEl.textContent = 'Готово';
+      
+            showToast('✓ Куплено');
+            return { ok: true, resp: resp };
+
+    } catch(err) {
+          btn.classList.remove('loading');
+          btn.classList.add('error');
+          labelEl.textContent = 'Сбой';
+          flashScreen(true);
+          showToast('✗ Ошибка сети', true);
+          setTimeout(function() {
+            btn.classList.remove('error');
+            renderAll();
+          }, LOCK_DURATION);
+          return { ok: false };
+        }
   }
 
-  function equipWeapon(id) {
-    if (!weapons[id]) return false;
-    if (!isWeaponOwned(id)) return false;
-    currentTool = id;
-    saveTool();
-    return true;
-  }
-
-  function weaponIconHTML(w) {
-    if (w.svg) return '<span class="weapon-svg">' + w.svg + '</span>';
-    return w.icon;
+  /* ==================== РЕНДЕР ==================== */
+  function updateHeaderUI() {
+    sexpahCountEl.textContent = formatSexpah(sexpah);
+    var w = weapons[currentTool] || weapons.hand;
+    if (w.svg) {
+      currentToolIconEl.innerHTML = '<span class="weapon-svg" style="display:inline-block;width:1.15em;height:1.15em;vertical-align:middle;">' + w.svg + '</span>';
+    } else {
+      currentToolIconEl.textContent = w.icon;
+    }
+    currentToolNameEl.textContent = w.name;
+    currentToolInfo.classList.remove('rarity-common','rarity-rare','rarity-legendary','rarity-mythic','rarity-divine');
+    currentToolInfo.classList.add('rarity-' + w.rarity);
   }
 
   function renderWeaponCard(key) {
@@ -863,9 +1104,10 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       actionHTML = '<button class="weapon-action owned" disabled>Куплено ✓</button>';
     } else {
       var canAfford = sexpah >= w.price;
-      actionHTML = '<button class="weapon-action buy" data-weapon="' + key + '" data-action="buy"' +
+      actionHTML = '<button class="weapon-action buy" data-weapon="' + key + '"' +
         (canAfford ? '' : ' disabled') + '>' +
-        (canAfford ? 'Купить ' + formatSexpah(w.price) : 'Нужно ' + formatSexpah(w.price)) +
+        '<span class="spinner"></span>' +
+        '<span class="label">' + (canAfford ? 'Купить ' + formatSexpah(w.price) : 'Нужно ' + formatSexpah(w.price)) + '</span>' +
         '</button>';
     }
 
@@ -875,8 +1117,8 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
         '<div class="item-name">' + w.name + '</div>' +
         '<div class="item-desc">+' + w.clickPower + ' за клик</div>' +
         '<div class="item-rarity">' + RARITY_LABEL[w.rarity] + '</div>' +
-        '</div>' +
-          actionHTML;
+      '</div>' +
+      actionHTML;
 
     return item;
   }
@@ -894,6 +1136,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       var buff = buffs[key];
       var item = document.createElement('div');
       item.className = 'shop-item';
+      var canAfford = sexpah >= buff.price;
       item.innerHTML =
         '<div class="shop-item-icon">' + buff.icon + '</div>' +
         '<div class="shop-item-info-text">' +
@@ -901,7 +1144,11 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
           '<div class="item-desc">' + buff.desc + ' · 5 мин</div>' +
           '<div class="item-rarity" style="color:var(--accent-2);">💰 ' + formatSexpah(buff.price) + '</div>' +
         '</div>' +
-        '<button class="weapon-action buy" data-buff="' + key + '">Купить</button>';
+        '<button class="weapon-action buy" data-buff="' + key + '"' +
+          (canAfford ? '' : ' disabled') + '>' +
+          '<span class="spinner"></span>' +
+          '<span class="label">Купить</span>' +
+        '</button>';
       buffsPanel.appendChild(item);
     });
   }
@@ -935,19 +1182,6 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     });
   }
 
-  function renderHeader() {
-    sexpahCountEl.textContent = formatSexpah(sexpah);
-    var w = weapons[currentTool] || weapons.hand;
-    if (w.svg) {
-      currentToolIconEl.innerHTML = '<span class="weapon-svg" style="display:inline-block;width:1.15em;height:1.15em;vertical-align:middle;">' + w.svg + '</span>';
-    } else {
-      currentToolIconEl.textContent = w.icon;
-    }
-    currentToolNameEl.textContent = w.name;
-    currentToolInfo.classList.remove('rarity-common','rarity-rare','rarity-legendary','rarity-mythic','rarity-divine');
-    currentToolInfo.classList.add('rarity-' + w.rarity);
-  }
-
   function renderBuffsTop() {
     if (!buffsTop) return;
     var now = Date.now();
@@ -976,50 +1210,80 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
 
   function renderAll() {
     reloadState();
-    renderHeader();
+    updateHeaderUI();
     renderBuffsTop();
     renderItems();
     renderBuffs();
     renderInventory();
   }
 
-  itemsPanel.addEventListener('click', function(e) {
-    var btn = e.target.closest('.weapon-action');
+  /* ==================== КЛИКИ ==================== */
+  itemsPanel.addEventListener('click', async function(e) {
+    var btn = e.target.closest('.weapon-action.buy');
     if (!btn || btn.disabled) return;
     var id = btn.dataset.weapon;
-    var action = btn.dataset.action;
-    if (!id) return;
-    if (action === 'buy') {
-      if (buyWeapon(id)) renderAll();
-    }
+    if (!id || !weapons[id]) return;
+
+    var labelEl = btn.querySelector('.label');
+    var res = await processBtn(btn, labelEl, {
+      action: 'buy',
+      itemId: id,
+      price: weapons[id].price
+    });
+
+    if (res.ok) {
+          // Локально обновим owned (сервер уже записал то же самое)
+          var owned = getOwnedWeapons();
+          if (owned.indexOf(id) === -1) owned.push(id);
+          setOwnedWeapons(owned);
+    
+          setTimeout(function() {
+            // Вариант 3: перечитаем с сервера, чтобы pahomBossInventory / pahomBossStats / pahomBossState не откатились
+            if (window.tgSyncLoad) {
+              window.tgSyncLoad(function() { renderAll(); });
+            } else {
+              renderAll();
+            }
+          }, LOCK_DURATION);
+        }
   });
 
   inventoryList.addEventListener('click', function(e) {
-    var btn = e.target.closest('.weapon-action');
+    var btn = e.target.closest('.weapon-action.equip');
     if (!btn || btn.disabled) return;
     var id = btn.dataset.weapon;
-    if (!id) return;
-    if (btn.dataset.action === 'equip-inv') {
-      if (equipWeapon(id)) { renderAll(); showToast('Экипировано: ' + weapons[id].name); }
-    }
+    if (!id || !weapons[id]) return;
+    if (!isWeaponOwned(id)) return;
+    currentTool = id;
+    try { localStorage.setItem('pahomTool', currentTool); } catch(e) {}
+    try { if (window.tgSyncSave) window.tgSyncSave(true); } catch(e) {}
+    renderAll();
+    showToast('Экипировано: ' + weapons[id].name);
   });
 
-  buffsPanel.addEventListener('click', function(e) {
-    var btn = e.target.closest('.weapon-action');
-    if (!btn) return;
+  buffsPanel.addEventListener('click', async function(e) {
+    var btn = e.target.closest('.weapon-action.buy');
+    if (!btn || btn.disabled) return;
     var key = btn.dataset.buff;
     if (!key || !buffs[key]) return;
-    reloadState();
-    var buff = buffs[key];
-    if (sexpah < buff.price) { showToast('Недостаточно секспахомов', true); return; }
-    var now = Date.now();
-    if (activeBuffs[key] && activeBuffs[key] > now) activeBuffs[key] += buff.duration;
-    else activeBuffs[key] = now + buff.duration;
-    sexpah -= buff.price;
-    saveSexpah();
-    saveBuffs();
-    showToast('Куплено: ' + buff.name);
-    renderAll();
+
+    var labelEl = btn.querySelector('.label');
+    var res = await processBtn(btn, labelEl, {
+      action: 'buy',
+      itemId: key,
+      price: buffs[key].price
+    });
+
+    if (res.ok) {
+          setTimeout(function() {
+            // Вариант 3: перечитаем с сервера — там уже обновлён pahomBuffs
+            if (window.tgSyncLoad) {
+              window.tgSyncLoad(function() { renderAll(); });
+            } else {
+              renderAll();
+            }
+          }, LOCK_DURATION);
+        }
   });
 
   var currentTab = 'items';
@@ -1039,26 +1303,13 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   tabBuffs.addEventListener('click', function() { switchShopTab('buffs'); });
   tabInventory.addEventListener('click', function() { switchShopTab('inventory'); });
 
+  // Обновление счёта и баффов раз в секунду
   setInterval(function() {
     var oldSexpah = sexpah;
     reloadState();
     renderBuffsTop();
     if (oldSexpah !== sexpah) {
-      renderHeader();
-      if (currentTab === 'items') {
-        var buttons = itemsPanel.querySelectorAll('.weapon-action.buy');
-        for (var i = 0; i < buttons.length; i++) {
-          var btn = buttons[i];
-          var id = btn.dataset.weapon;
-          if (!id || !weapons[id]) continue;
-          var owned = isWeaponOwned(id);
-          var canAfford = sexpah >= weapons[id].price;
-          if (!owned && canAfford !== !btn.disabled) {
-            renderAll();
-            break;
-          }
-        }
-      }
+      updateHeaderUI();
     }
   }, 1000);
 

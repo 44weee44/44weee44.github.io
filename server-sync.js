@@ -9,8 +9,7 @@
 
   var SYNC_KEYS = [
     'pahomSexpah', 'pahomClicks', 'pahomOverexcites', 'pahomTool',
-    'pahomBuffs', 'pahomKraftState', 'pahomKraftPending',
-    'pahomKraftLastTick', 'pahomBossInventory', 'pahomBossState',
+    'pahomBuffs', 'pahomBossInventory', 'pahomBossState',
     'pahomPlayerExp', 'pahomPlayerLevel',
     'pahomNickname', 'pahomIP', 'pahomAvatar',
     'pahomUpgradeLove', 'pahomUpgradeLoot',
