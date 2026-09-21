@@ -586,6 +586,65 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
 .tab-btn.rating-btn:hover { color:var(--gold); }
 
 /* РЕЗУЛЬТАТ */
+.processing-overlay {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,0.92);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:2100;
+  backdrop-filter:blur(8px);
+  animation:procFade 0.25s ease;
+}
+.processing-overlay.show { display:flex; }
+@keyframes procFade {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+.processing-box {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:22px;
+  padding:40px 36px;
+  background:var(--bg-1);
+  border:1px solid var(--line-2);
+  border-radius:20px;
+  box-shadow:0 25px 80px rgba(0,0,0,0.95), 0 0 50px rgba(42,138,48,0.2);
+  animation:procBoxIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes procBoxIn {
+  from { opacity:0; transform:scale(0.85); }
+  to   { opacity:1; transform:scale(1); }
+}
+.processing-spinner {
+  width:60px; height:60px;
+  border-radius:50%;
+  border:3px solid rgba(122,240,128,0.15);
+  border-top-color:var(--accent-2);
+  border-right-color:var(--accent-2);
+  animation:procSpin 1s linear infinite;
+  box-shadow:0 0 30px rgba(42,138,48,0.5), inset 0 0 15px rgba(42,138,48,0.2);
+}
+@keyframes procSpin {
+  from { transform:rotate(0deg); }
+  to   { transform:rotate(360deg); }
+}
+.processing-text {
+  font-size:0.88rem;
+  font-weight:800;
+  color:var(--accent-2);
+  letter-spacing:3px;
+  text-transform:uppercase;
+  font-family:'Courier New', monospace;
+  text-shadow:0 0 15px rgba(42,138,48,0.9);
+  animation:procPulse 1.5s ease-in-out infinite;
+}
+@keyframes procPulse {
+  0%, 100% { opacity:1; }
+  50%      { opacity:0.55; }
+}
+
 .result-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index:2000; backdrop-filter:blur(6px); }
 .result-overlay.show { display:flex; }
 .result-box { background:var(--bg-1); border:1px solid var(--line-2); border-radius:20px; padding:32px 28px; text-align:center; max-width:360px; width:88%; box-shadow:0 25px 80px rgba(0,0,0,0.95), 0 0 50px rgba(42,138,48,0.15); animation:boxIn 0.5s ease; }
@@ -762,6 +821,13 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   </div>
 </div>
 
+<div class="processing-overlay" id="processingOverlay">
+  <div class="processing-box">
+    <div class="processing-spinner"></div>
+    <div class="processing-text" id="processingText">РАССЧИТЫВАЕМ ДРОП...</div>
+  </div>
+</div>
+
 <div class="result-overlay" id="resultOverlay">
   <div class="result-box">
     <span class="result-medal win" id="resultMedal">🏆</span>
@@ -793,6 +859,8 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   function $(id) { return document.getElementById(id); }
 
   var sexpahCount = $('sexpahCount');
+  var processingOverlay = $('processingOverlay');
+  var processingText = $('processingText');
   var sexpahBox = $('sexpahBox');
   var toolInfo = $('toolInfo');
   var bossList = $('bossList');
@@ -902,7 +970,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       ] },
     { id:'saint_abyss', name:'Saint of the Abyss', face:'👁️', image:'Bezdna.png',
       group:'event', isEvent:true, eventStyle:'abyss',
-      reward:1000000, exp:1000, exciteMax:15000, clickPower:5,
+      reward:1000000, exp:5000, exciteMax:15000, clickPower:5,
       fightDuration:20*60*1000, cooldownDuration:150*60*1000,
       lvl:500, levelReq:10,
       loot:[
@@ -911,7 +979,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       ] },
     { id:'guardian', name:'Guardian of Onigashima\'s Gate', face:'⚔️', image:'Samurai.png',
       group:'event', isEvent:true, eventStyle:'samurai',
-      reward:1000000, exp:1000, exciteMax:16000, clickPower:5,
+      reward:1000000, exp:5000, exciteMax:16000, clickPower:5,
       fightDuration:20*60*1000, cooldownDuration:150*60*1000,
       lvl:500, levelReq:10,
       loot:[
@@ -921,7 +989,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       ] },
     { id:'pantera', name:'Пантера', face:'🐆', image:'Pantera.png',
       group:'event', isEvent:true, eventStyle:'pantera',
-      reward:1000000, exp:1000, exciteMax:14000, clickPower:5,
+      reward:1000000, exp:5000, exciteMax:14000, clickPower:5,
       fightDuration:20*60*1000, cooldownDuration:120*60*1000,
       lvl:500, levelReq:10,
       loot:[] }
@@ -1030,8 +1098,8 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       var icons = {
         hand:'✋', whip:'🐍', stick:'🥢', shank:'🔧', shovel:'🪏',
         commissar:'🎖️', drin:'🌲', tyrchik:'⚡',
-        darkkatana:'<svg viewBox="0 0 24 24" width="1.05em" height="1.05em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M3 21l3-3" stroke="#6a4a2a"/><path d="M6 18l12-12" stroke="#1a1a1a"/><path d="M18 6l3-3" stroke="#333"/><path d="M6 18l-2 2" stroke="#4a2a1a"/><path d="M5 19l1 1" stroke="#2a1a0a"/><path d="M14 8l2 2" stroke="#555"/></svg>',
-        abysblade:'<svg viewBox="0 0 24 24" width="1.05em" height="1.05em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:2px;"><path d="M3 21l3-3" stroke="#8b0000"/><path d="M6 18l12-12" stroke="#ff3b3b"/><path d="M18 6l3-3" stroke="#ff6a3b"/><path d="M6 18l-2 2" stroke="#5a0000"/><path d="M5 19l1 1" stroke="#3a0000"/><path d="M14 8l2 2" stroke="#ff8c3c"/><circle cx="19" cy="5" r="1.5" fill="#ffd76b" stroke="none"/></svg>'
+        darkkatana:'<svg viewBox="0 0 24 24" width="1.3em" height="1.3em" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;display:inline-block;"><path d="M3 21l3-3" stroke="#6a4a2a"/><path d="M6 18l12-12" stroke="#e0e0e0"/><path d="M18 6l3-3" stroke="#fff"/><path d="M6 18l-2 2" stroke="#4a2a1a"/><path d="M5 19l1 1" stroke="#2a1a0a"/><path d="M14 8l2 2" stroke="#aaa"/></svg>',
+        abysblade:'<svg viewBox="0 0 24 24" width="1.3em" height="1.3em" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;display:inline-block;"><path d="M3 21l3-3" stroke="#8b0000"/><path d="M6 18l12-12" stroke="#ff3b3b"/><path d="M18 6l3-3" stroke="#ff6a3b"/><path d="M6 18l-2 2" stroke="#5a0000"/><path d="M5 19l1 1" stroke="#3a0000"/><path d="M14 8l2 2" stroke="#ff8c3c"/><circle cx="19" cy="5" r="1.5" fill="#ffd76b" stroke="none"/></svg>'
       };
   
       var dmg = Math.floor(getBossDamage() * 10) / 10;
@@ -1344,14 +1412,19 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       isFightActive = false;
       if (fightInterval) { clearInterval(fightInterval); fightInterval = null; }
   
+      // Показываем "рассчитываем дроп..."
+      if (processingOverlay) processingOverlay.classList.add('show');
+      if (processingText) processingText.textContent = win ? 'РАССЧИТЫВАЕМ ДРОП...' : 'ОБРАБАТЫВАЕМ РЕЗУЛЬТАТ...';
+  
       var userId = '';
       try { userId = (window.tgSyncUserId || localStorage.getItem('pahomServerUserId') || ''); } catch(e) {}
   
       if (!userId) {
-        showNotify('⚠️', 'Не удалось определить игрока');
-        setTimeout(function() { showBossList(); showResult(false, 0, 0, null); }, 400);
-        return;
-      }
+            showNotify('⚠️', 'Не удалось определить игрока');
+            if (processingOverlay) processingOverlay.classList.remove('show');
+            setTimeout(function() { showBossList(); showResult(false, 0, 0, null); }, 400);
+            return;
+          }
   
       fetch('https://save-pahom.duckdns.org/api/boss/reward', {
         method: 'POST',
@@ -1361,10 +1434,11 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
       .then(function(r) { return r.json(); })
       .then(function(resp) {
         if (!resp || !resp.ok) {
-          showNotify('⚠️', (resp && resp.reason) || 'Ошибка сервера');
-          setTimeout(function() { showBossList(); showResult(false, 0, 0, null); }, 600);
-          return;
-        }
+                showNotify('⚠️', (resp && resp.reason) || 'Ошибка сервера');
+                if (processingOverlay) processingOverlay.classList.remove('show');
+                setTimeout(function() { showBossList(); showResult(false, 0, 0, null); }, 600);
+                return;
+              }
   
         if (resp.win) {
           // Вариант 3: перечитываем всё с сервера
@@ -1404,8 +1478,15 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
           });
   
           droppedItems.forEach(function(item, i) {
-            showNotify(lootIconHTML(item), 'ВЫПАЛ: ' + item.name, i * 300);
-          });
+                    showNotify(lootIconHTML(item), 'ВЫПАЛ: ' + item.name, i * 300);
+                  });
+          
+                  if (processingOverlay) processingOverlay.classList.remove('show');
+          
+                  setTimeout(function() {
+                    showBossList();
+                    showResult(true, resp.reward, resp.exp, droppedItems);
+                  }, 600);
   
           setTimeout(function() {
             showBossList();
@@ -1421,6 +1502,7 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
                      } else {
                        loadState();
                      }
+                     if (processingOverlay) processingOverlay.classList.remove('show');
                    });
                  } else {
                    var stLose = getSt(boss.id);
@@ -1435,9 +1517,10 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
         }
       })
       .catch(function(err) {
-        showNotify('⚠️', 'Ошибка сети');
-        setTimeout(function() { showBossList(); showResult(false, 0, 0, null); }, 600);
-      });
+              showNotify('⚠️', 'Ошибка сети');
+              if (processingOverlay) processingOverlay.classList.remove('show');
+              setTimeout(function() { showBossList(); showResult(false, 0, 0, null); }, 600);
+            });
     }
 
   function getExpReq(level) { return 1200 + (level - 1) * 600; }
@@ -1511,27 +1594,39 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
   });
 
   surrenderYes.addEventListener('click', function() {
-      surrenderOverlay.classList.remove('show');
-      if (!currentBoss) return;
-      var boss = currentBoss;
-      var userId = '';
-      try { userId = (window.tgSyncUserId || localStorage.getItem('pahomServerUserId') || ''); } catch(e) {}
+        surrenderOverlay.classList.remove('show');
+        if (!currentBoss) return;
+        var boss = currentBoss;
+        var userId = '';
+        try { userId = (window.tgSyncUserId || localStorage.getItem('pahomServerUserId') || ''); } catch(e) {}
   
-      showNotify('💀', 'Ты сдался. ' + boss.name + ' на КД');
-      if (userId) {
-        fetch('https://save-pahom.duckdns.org/api/boss/reward', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: userId, bossId: boss.id, win: false })
-        })
-        .then(function() {
-          if (window.tgSyncLoad) window.tgSyncLoad(function() { loadState(); });
-        })
-        .catch(function(){});
-      }
-      showBossList();
-      refreshList();
-    });
+        // Показываем оверлей
+        if (processingOverlay) processingOverlay.classList.add('show');
+        if (processingText) processingText.textContent = 'ОФОРМЛЯЕМ СДАЧУ...';
+  
+        showNotify('💀', 'Ты сдался. ' + boss.name + ' на КД');
+        if (userId) {
+          fetch('https://save-pahom.duckdns.org/api/boss/reward', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: userId, bossId: boss.id, win: false })
+          })
+          .then(function() {
+            if (window.tgSyncLoad) window.tgSyncLoad(function() {
+              if (processingOverlay) processingOverlay.classList.remove('show');
+              loadState();
+            });
+            else if (processingOverlay) processingOverlay.classList.remove('show');
+          })
+          .catch(function() {
+            if (processingOverlay) processingOverlay.classList.remove('show');
+          });
+        } else {
+          if (processingOverlay) processingOverlay.classList.remove('show');
+        }
+        showBossList();
+        refreshList();
+      });
 
   function handleAbandon() {
     if (!isFightActive || !currentBoss) return;
