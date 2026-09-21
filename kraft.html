@@ -1036,6 +1036,37 @@ body { display:flex; justify-content:center; align-items:center; touch-action:ma
     cards.push({ tier: nextTier, count: 0, crafted: false, nextToCraft: true });
     return cards;
   }
+  
+  function canCraftTier(recipe, tier) {
+      var playerLevel = getPlayerLevel();
+      var bossInv = getBossInventory();
+      var st = getCraftState();
+  
+      if (playerLevel < recipe.levelReq) {
+        return { ok: false, reason: 'Нужна выслуга ' + recipe.levelReq + ' лет' };
+      }
+  
+      if (recipe.specialTierReq) {
+        for (var i = 0; i < recipe.specialTierReq.length; i++) {
+          var r = recipe.specialTierReq[i];
+          var need = r.count * tier;
+          var have = st[tierKey(r.srochnikId, r.tier)] || 0;
+          if (have < need) {
+            return { ok: false, reason: 'Не хватает ' + (findSrochnikRecipe(r.srochnikId) || {}).name + ' Т' + r.tier };
+          }
+        }
+        return { ok: true };
+      }
+  
+      for (var j = 0; j < recipe.requirements.length; j++) {
+        var req = recipe.requirements[j];
+        var need2 = req.count * tier;
+        var have2 = bossInv[req.itemId] || 0;
+        if (have2 < need2) return { ok: false, reason: 'Не хватает предметов' };
+      }
+      return { ok: true };
+    }
+  
 
   function craftTier(recipe, tier) {
       var userId = '';
